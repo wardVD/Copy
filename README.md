@@ -22,14 +22,18 @@ git remote add cmg-central https://github.com/CERN-PH-CMG/cmg-cmssw.git  -f -t C
 git fetch cmg-central
 git remote add cmg-ghent git@github.com:GhentAnalysis/cmg-cmssw.git -f -t CMGTools-from-CMSSW_7_4_12_LocalDevelopmentsPass2
 git fetch cmg-ghent
-#sparse checkout
+```
+sparse checkout (extra echos can be omitted)
+```
 cp /afs/cern.ch/user/c/cmgtools/public/sparse-checkout_7412_heppy .git/info/sparse-checkout
 echo "/CMGTools/ObjectStudies/" >> .git/info/sparse-checkout
 echo "/JetMETCorrections/Type1MET/" >> .git/info/sparse-checkout
 echo "/PhysicsTools/PatAlgos/" >> .git/info/sparse-checkout
 echo "/PhysicsTools/PatUtils/" >> .git/info/sparse-checkout
-#configure local branches
+git read-tree -mu HEAD
+```
+configure local branch
+```
 git checkout -b CMGTools-from-CMSSW_7_4_12_LocalDevelopmentsPass2 cmg-ghent/CMGTools-from-CMSSW_7_4_12_LocalDevelopmentsPass2
 git push -u cmg-ghent CMGTools-from-CMSSW_7_4_12_LocalDevelopmentsPass2
-git fetch cmg-central
 ```
