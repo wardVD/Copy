@@ -20,7 +20,7 @@ minimal fetch of central and ghent fork:
 ```
 git remote add cmg-central https://github.com/CERN-PH-CMG/cmg-cmssw.git  -f -t CMGTools-from-CMSSW_7_4_12 -t heppy_74X
 git fetch cmg-central
-git remote add cmg-ghent git@github.com:GhentAnalysis/cmg-cmssw.git -f -t CMGTools-from-CMSSW_7_4_12_LocalDevelopmentsPass2
+git remote add cmg-ghent https://github.com/GhentAnalysis/cmg-cmssw.git -f -t CMGTools-from-CMSSW_7_4_12_LocalDevelopmentsPass2
 git fetch cmg-ghent
 ```
 sparse checkout (extra echos can be omitted)
