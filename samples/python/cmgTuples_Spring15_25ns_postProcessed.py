@@ -5,6 +5,24 @@ dir = dataDir
 #"ZJetsToNuNu_HT-400To600_13TeV-madgraph_RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1",
 #"ZJetsToNuNu_HT-600ToInf_13TeV-madgraph_RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1",
 
+DoubleEG_25ns={\
+"name": "DoubleEG",
+"bins": ["DoubleEG_Run2015D-PromptReco-v3/"],
+'dir' : dir
+}
+
+DoubleMuon_25ns={\
+"name": "DoubleMuon",
+"bins": ["DoubleMuon_Run2015D-PromptReco-v3/"],
+'dir':dir
+}
+
+MuonEG_25ns={\
+"name": "MuonEG",
+"bins": ["MuonEG_Run2015D-PromptReco-v3/"],
+'dir':dir
+}
+
 TTJets_inclusive_25ns={\
 "name" : "tt+Jets",
 "bins" : ["TTJets_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8_RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1/"],
@@ -12,7 +30,7 @@ TTJets_inclusive_25ns={\
 }
 
 TTLep_25ns={\
-"name" : "tt+Jets to 2L2Nu",
+"name" : "tt+Jets2L2Nu",
 "dir": dir,
 "bins" : ["TTTo2L2Nu_13TeV-powheg_RunII_Spring15DR74-Asympt25ns_MCRUN2_74_V9-v1"],
 }
@@ -79,12 +97,16 @@ DY_25ns={\
 'dir' : dataDir,
 }
 DYHT_25ns={\
-"name" : "DY",
+"name" : "DY_HT",
 "bins" : [
 "DYJetsToLL_M-50_HT-100to200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8_RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v2",
 "DYJetsToLL_M-50_HT-200to400_TuneCUETP8M1_13TeV-madgraphMLM-pythia8_RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v2",
 "DYJetsToLL_M-50_HT-400to600_TuneCUETP8M1_13TeV-madgraphMLM-pythia8_RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v2",
 "DYJetsToLL_M-50_HT-600toInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8_RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v2",
+"DYJetsToLL_M-5to50_HT-100to200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8_RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1",
+"DYJetsToLL_M-5to50_HT-200to400_TuneCUETP8M1_13TeV-madgraphMLM-pythia8_RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1",
+"DYJetsToLL_M-5to50_HT-400to600_TuneCUETP8M1_13TeV-madgraphMLM-pythia8_RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1",
+"DYJetsToLL_M-5to50_HT-600toInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8_RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1",
 ],
 'dir' : dataDir,
 }
@@ -158,3 +180,49 @@ for s in allSignalStrings:
   sm = getSignalSample(s)
   exec(s+"=sm")
   exec("allSignals.append(s)")
+
+
+
+
+
+TTW_25ns={\
+"name": "TTW",
+"bins": [
+"TTWJetsToLNu_TuneCUETP8M1_13TeV-amcatnloFXFX-madspin-pythia8_RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1",
+],
+'dir' :dir
+}
+
+TTZ_QQ_25ns={\
+"name": "TTZ_QQ",
+"bins": [
+"TTZToQQ_TuneCUETP8M1_13TeV-amcatnlo-pythia8_RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1",
+],
+'dir' :dir
+}
+
+TTZ_Lep_25ns={\
+"name": "TTZ_LLorNuNu",
+"bins": [
+"TTZToLLNuNu_M-10_TuneCUETP8M1_13TeV-amcatnlo-pythia8_RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1",
+],
+'dir' :dir
+}
+
+TTZ_All_25ns={\
+"name": "TTZ",
+"bins": [
+"TTZToQQ_TuneCUETP8M1_13TeV-amcatnlo-pythia8_RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1",
+"TTZToLLNuNu_M-10_TuneCUETP8M1_13TeV-amcatnlo-pythia8_RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1",
+],
+'dir' :dir
+}
+
+TTH_25ns={\
+"name": "TTH",
+"bins": [
+"ttHJetTobb_M125_13TeV_amcatnloFXFX_madspin_pythia8_RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1",
+"ttHJetToNonbb_M125_13TeV_amcatnloFXFX_madspin_pythia8_RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v2"
+],
+'dir' :dir
+}
