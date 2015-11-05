@@ -38,19 +38,19 @@ def looseMuID(l, ptCut=20, absEtaCut=2.4):
 def cmgMVAEleID(l,mva_cuts):
   aeta = abs(l["eta"])
   for abs_e, mva in mva_cuts.iteritems():
-    if aeta>=abs_e[0] and aeta<abs_e[1] and l["mvaIdPhys14"] >mva: return True
+    if aeta>=abs_e[0] and aeta<abs_e[1] and l["mvaIdSpring15"] >mva: return True
   return False
   
-ele_MVAID_cuts_loose = {(0,0.8):0.35 , (0.8, 1.44):0.20, (1.57, 999): -0.52}
-ele_MVAID_cuts_vloose = {(0,0.8):-0.11 , (0.8, 1.44):-0.35, (1.57, 999): -0.55}
-ele_MVAID_cuts_tight = {(0,0.8):0.73 , (0.8, 1.44):0.57, (1.57, 999):  0.05}
+ele_MVAID_cuts_vloose = {(0,0.8):-0.16 , (0.8, 1.479):-0.65, (1.57, 999): -0.74}
+#ele_MVAID_cuts_loose = {(0,0.8):0.35 , (0.8, 1.479):0.20, (1.57, 999): -0.52}
+ele_MVAID_cuts_tight = {(0,0.8):0.87 , (0.8, 1.479):0.60, (1.57, 999):  0.17}
 
 def looseEleID(l, ptCut=20, absEtaCut=2.4):
   return \
     l["pt"]>=ptCut\
     and abs(l["eta"])<absEtaCut\
     and abs(l["pdgId"])==11\
-    and cmgMVAEleID(l, ele_MVAID_cuts_loose)\
+    and cmgMVAEleID(l, ele_MVAID_cuts_tight)\
     and l["miniRelIso"]<0.2\
     and l["convVeto"]\
     and l["lostHits"]==0\
@@ -59,11 +59,11 @@ def looseEleID(l, ptCut=20, absEtaCut=2.4):
     and l["dz"] < 0.1\
 
 def getLeptons(c):
-  return [getObjDict(c, 'LepGood_', ['eta','pt','phi','charge', 'dxy', 'dz','mass', 'relIso03','tightId', 'pdgId', 'mediumMuonId', 'miniRelIso', 'sip3d', 'mvaIdPhys14', 'convVeto', 'lostHits'], i) for i in range(int(getVarValue(c, 'nLepGood')))]
+  return [getObjDict(c, 'LepGood_', ['eta','pt','phi','charge', 'dxy', 'dz','mass', 'relIso03','tightId', 'pdgId', 'mediumMuonId', 'miniRelIso', 'sip3d', 'mvaIdSpring15', 'convVeto', 'lostHits'], i) for i in range(int(getVarValue(c, 'nLepGood')))]
 def getMuons(c):
-  return [getObjDict(c, 'LepGood_', ['eta','pt','phi','charge', 'dxy', 'dz', 'relIso03','tightId', 'pdgId', 'mediumMuonId', 'miniRelIso', 'sip3d', 'mvaIdPhys14', 'convVeto', 'lostHits'], i) for i in range(int(getVarValue(c, 'nLepGood'))) if abs(getVarValue(c,"LepGood_pdgId",i))==13]
+  return [getObjDict(c, 'LepGood_', ['eta','pt','phi','charge', 'dxy', 'dz', 'relIso03','tightId', 'pdgId', 'mediumMuonId', 'miniRelIso', 'sip3d', 'mvaIdSpring15', 'convVeto', 'lostHits'], i) for i in range(int(getVarValue(c, 'nLepGood'))) if abs(getVarValue(c,"LepGood_pdgId",i))==13]
 def getElectrons(c):
-  return [getObjDict(c, 'LepGood_', ['eta','pt','phi','charge', 'dxy', 'dz', 'relIso03','tightId', 'pdgId', 'mediumMuonId', 'miniRelIso', 'sip3d', 'mvaIdPhys14', 'convVeto', 'lostHits'], i) for i in range(int(getVarValue(c, 'nLepGood'))) if abs(getVarValue(c,"LepGood_pdgId",i))==11]
+  return [getObjDict(c, 'LepGood_', ['eta','pt','phi','charge', 'dxy', 'dz', 'relIso03','tightId', 'pdgId', 'mediumMuonId', 'miniRelIso', 'sip3d', 'mvaIdSpring15', 'convVeto', 'lostHits'], i) for i in range(int(getVarValue(c, 'nLepGood'))) if abs(getVarValue(c,"LepGood_pdgId",i))==11]
 def getGoodMuons(c):
   return [l for l in getMuons(c) if looseMuID(l)]
 def getGoodElectrons(c):

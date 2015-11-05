@@ -1,6 +1,18 @@
 import ROOT
 
-from Workspace.HEPHYPythonTools.helpers import wrapStr
+def wrapStr(s="", char="#", maxL = 100):
+  "Wrap a string with a char"
+  assert type(s)==type(""), "wrapStr needs string, got %s" % str(type(s))
+  assert type(char)==type(""), "wrapStr needs character, got %s" % str(type(char))
+  if s=="":
+    return char.join(["" for i in range(maxL+1)])
+  char=char[:1]
+  l = len(s) 
+  if l>=maxL:
+    return s
+  frontL = (maxL - l )/2
+  backL  = maxL-l-frontL
+  return char.join(["" for i in range(frontL)]) + " "+s+" "+char.join(["" for i in range(backL)])
 
 def printHeader(s):
   print
