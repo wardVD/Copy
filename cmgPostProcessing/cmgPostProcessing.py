@@ -99,7 +99,7 @@ allData = False not in [s.isData for s in allSamples]
 allMC   =  True not in [s.isData for s in allSamples]
 
 assert allData or len(set([s.xSection for s in allSamples]))==1, "Not all samples have the same xSection: %s !"%(",".join([s.name for s in allSamples]))
-assert allData and len(allSamples)==1, "Don't concatenate data samples"
+assert allMC or len(allSamples)==1, "Don't concatenate data samples"
 
 for iSample, sample in enumerate(allSamples):
   tchunks, tsumWeight = getChunks(sample, maxN=maxN)
@@ -202,15 +202,16 @@ for chunk in chunks:
       s.init()
       r.init()
       t.GetEntry(i)
-      if sample.isData and not sample.lumiList.contains(r.run, r.lumi):
-#        print "Did not find run %i lumi %i in json file %s"%(r.run, r.lumi, sample.json)
-        continue
-      else:
-        if r.run not in outputLumiList.keys():
-          outputLumiList[r.run] = [r.lumi]
+      if sample.isData: 
+        if not sample.lumiList.contains(r.run, r.lumi):
+  #        print "Did not find run %i lumi %i in json file %s"%(r.run, r.lumi, sample.json)
+          continue
         else:
-          if r.lumi not in outputLumiList[r.run]:
-            outputLumiList[r.run].append(r.lumi)
+          if r.run not in outputLumiList.keys():
+            outputLumiList[r.run] = [r.lumi]
+          else:
+            if r.lumi not in outputLumiList[r.run]:
+              outputLumiList[r.run].append(r.lumi)
           
 #        print "Found run %i lumi %i in json file %s"%(r.run, r.lumi, sample.json)
       genWeight = 1 if sample.isData else t.GetLeaf('genWeight').GetValue()
