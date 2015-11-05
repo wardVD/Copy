@@ -16,11 +16,11 @@ ROOT.gSystem.Load("libFWCoreFWLite.so")
 ROOT.AutoLibraryLoader.enable()
 
 from StopsDilepton.samples.xsec import xsec
-from StopsDilepton.samples.cmgTuples_Phys14_signals import *
-from StopsDilepton.samples.cmgTuples_Data50ns_1l import *
-from StopsDilepton.samples.cmgTuples_Data25ns import *
-from StopsDilepton.samples.cmgTuples_Spring15_25ns import *
-from StopsDilepton.samples.cmgTuples_Spring15_50ns import *
+#from StopsDilepton.samples.cmgTuples_Phys14_signals import *
+#from StopsDilepton.samples.cmgTuples_Data50ns_1l import *
+#from StopsDilepton.samples.cmgTuples_Data25ns import *
+from StopsDilepton.samples.cmgTuples_Spring15_mAODv2_25ns import *
+#from StopsDilepton.samples.cmgTuples_Spring15_50ns import *
 
 target_lumi = 1000 #pb-1 Which lumi to normalize to
 
@@ -95,7 +95,7 @@ def getTreeFromChunk(c, skimCond, iSplit, nSplit):
    
 exec('allSamples=['+options.allSamples+']')
 for isample, sample in enumerate(allSamples):
-  outDir = options.targetDir+'/'+"/".join([options.skim, sample['name']])
+  outDir = options.targetDir+'/'+"/".join([options.skim, sample.name])
 
   maxN = 1 if options.small else -1
   chunks, sumWeight = getChunks(sample, maxN=maxN)
@@ -108,12 +108,12 @@ for isample, sample in enumerate(allSamples):
   os.system('mkdir -p '+tmpDir)
   os.system('rm -rf '+tmpDir+'/*')
 
-  if sample['isData']: 
+  if sample.isData: 
     lumiScaleFactor=1
     branchKeepStrings = branchKeepStrings_DATAMC + branchKeepStrings_DATA 
     jetMCInfo = []
   else:
-    lumiScaleFactor = xsec[sample['dbsName']]*target_lumi/float(sumWeight)
+    lumiScaleFactor = sample.xSection*target_lumi/float(sumWeight)
     branchKeepStrings = branchKeepStrings_DATAMC + branchKeepStrings_MC
     jetMCInfo = ['mcMatchFlav/I', 'partonId/I']
 
@@ -124,7 +124,7 @@ for isample, sample in enumerate(allSamples):
     {'prefix':'LepGood',  'nMax':8, 'vars':['pt/F', 'eta/F', 'phi/F', 'pdgId/I', 'charge/I', 'relIso03/F', 'tightId/I', 'miniRelIso/F','mass/F','sip3d/F','mediumMuonId/I', 'mvaIdPhys14/F','lostHits/I', 'convVeto/I', 'dxy/F', 'dz/F']},
     {'prefix':'Jet',  'nMax':100, 'vars':['pt/F', 'eta/F', 'phi/F', 'id/I','btagCSV/F', 'btagCMVA/F'] + jetMCInfo},
   ]
-  if not sample['isData']: 
+  if not sample.isData: 
     aliases.extend(['genMet:met_genPt', 'genMetPhi:met_genPhi'])
   if options.skim.lower() in ['dilep']:
     newVariables.extend( ['nGoodMuons/I', 'nGoodElectrons/I' ] )
@@ -186,7 +186,7 @@ for isample, sample in enumerate(allSamples):
         s.init()
         r.init()
         t.GetEntry(i)
-        genWeight = 1 if sample['isData'] else t.GetLeaf('genWeight').GetValue()
+        genWeight = 1 if sample.isData else t.GetLeaf('genWeight').GetValue()
         s.weight = lumiScaleFactor*genWeight
         if options.skim.lower()=='dilep':
           leptons = getGoodLeptons(r)
@@ -241,7 +241,7 @@ for isample, sample in enumerate(allSamples):
 
         for v in newVars:
           v['branch'].Fill()
-      newFileName = sample['name']+'_'+chunk['name']+'_'+str(iSplit)+'.root'
+      newFileName = sample.name+'_'+chunk['name']+'_'+str(iSplit)+'.root'
       filesForHadd.append(newFileName)
       if not options.small:
         f = ROOT.TFile(tmpDir+'/'+newFileName, 'recreate')
@@ -269,7 +269,7 @@ for isample, sample in enumerate(allSamples):
       size+=os.path.getsize(tmpDir+'/'+f)
       files.append(f)
       if size>(0.5*(10**9)) or f==filesForHadd[-1] or len(files)>300:
-        ofile = outDir+'/'+sample['name']+'_'+str(counter)+'.root'
+        ofile = outDir+'/'+sample.name+'_'+str(counter)+'.root'
         print "Running hadd on", tmpDir, files
         os.system('cd '+tmpDir+';hadd -f '+ofile+' '+' '.join(files))
         print "Written", ofile
