@@ -32,7 +32,7 @@ puReweighting = lambda c:puReweightingFunc(getVarValue(c, "nVert"))
 cutBranches = ["weight", "leptonPt", "met*", "nVert",'run',\
                'Jet_pt', "Jet_id", "Jet_eta", "Jet_phi", "Jet_btagCSV",
                "LepGood_pdgId", "LepGood_mediumMuonId", "LepGood_miniRelIso", "LepGood_sip3d", "LepGood_dxy", "LepGood_dz", "LepGood_convVeto", "LepGood_lostHits",
-               "Flag_HBHENoiseFilter", "Flag_HBHENoiseIsoFilter", "Flag_HBHENoiseFilterMinZeroPatched", "Flag_goodVertices", "Flag_CSCTightHaloFilter", "Flag_eeBadScFilter",
+               "Flag_HBHENoiseFilter", "Flag_HBHENoiseIsoFilter", "Flag_goodVertices", "Flag_CSCTightHaloFilter", "Flag_eeBadScFilter",
                "HLT_mumuIso", "HLT_ee_DZ", "HLT_mue",
                "is*","dl_*","l1_*","l2_*", "nGoodMuons", "nGoodElectrons"
                 ]
@@ -47,7 +47,7 @@ def getZCut(mode):
   return "(1)"
 
 #filterCut = "(Flag_HBHENoiseFilter&&Flag_HBHENoiseIsoFilter&&Flag_goodVertices&&Flag_CSCTightHaloFilter&&Flag_eeBadScFilter)"
-filterCut = "(Flag_HBHENoiseFilterMinZeroPatched&&Flag_goodVertices&&Flag_CSCTightHaloFilter&&Flag_eeBadScFilter&&run!=256729&&run!=256734)"
+filterCut = "(Flag_HBHENoiseFilter&&Flag_goodVertices&&Flag_CSCTightHaloFilter&&Flag_eeBadScFilter&&run!=256729&&run!=256734)"
 #filterCut = "(1)"
 
 #nMu = "Sum$(abs(LepGood_pdgId)==13&&LepGood_mediumMuonId==1&&LepGood_miniRelIso<0.1&&LepGood_sip3d<4.0&&abs(LepGood_dxy)<0.05&&abs(LepGood_dz)<0.1)"
