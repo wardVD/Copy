@@ -66,7 +66,7 @@ cuts=[
   ]
 #for i in range(len(cuts)+1):
 #for i in reversed(range(len(cuts)+1)):
-for i in [1+len(cuts)]:
+for i in [len(cuts)]:
   for comb in itertools.combinations(cuts,i):
 #    presel = [("isOS","isOS"), ("mRelIso01", "LepGood_miniRelIso[l1_index]<0.1&&LepGood_miniRelIso[l2_index]<0.1")]
     presel = [("isOS","isOS")]
@@ -91,7 +91,7 @@ for i in [1+len(cuts)]:
     dataSample['lumi'] = 149.5
     cutFunc = None
     lumiScaleFac = dataSample["lumi"]/1000.
-    backgrounds = [TTLep_25ns, WJetsToLNu_25ns, DY_25ns, singleTop_25ns, QCDMu_25ns] ##FIXME!!!
+    backgrounds = [TTJets_Lep, WJetsToLNu, DY, singleTop, QCD_Mu5] ##FIXME QCD!!!
     data = getYieldFromChain(getChain(dataSample,histname=""), cutString = "&&".join([cutString, dataCut]), weight='weight') 
     bkg  = 0. 
     for s in backgrounds:
