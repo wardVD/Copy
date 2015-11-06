@@ -18,7 +18,7 @@ ROOT.AutoLibraryLoader.enable()
 #from StopsDilepton.samples.xsec import xsec
 
 from StopsDilepton.samples.cmgTuples_Spring15_mAODv2_25ns import *
-from StopsDilepton.samples.cmgTuples_Data25ns_Run2015D import *
+from StopsDilepton.samples.cmgTuples_Data25ns_mAODv2 import *
 
 target_lumi = 1000 #pb-1 Which lumi to normalize to
 
