@@ -9,6 +9,7 @@ DY={\
 "DYJetsToLL_M50",
 ],
 'dir' : dir,
+'isData':False,
 }
 
 DY_LO={\
@@ -18,6 +19,7 @@ DY_LO={\
 "DYJetsToLL_M50_LO",
 ],
 'dir' : dir,
+'isData':False,
 }
 
 DY_HT_LO={\
@@ -33,6 +35,7 @@ DY_HT_LO={\
 "DYJetsToLL_M5to50_HT600toInf",
 ],
 'dir' : dir,
+'isData':False,
 }
 
 
@@ -42,6 +45,7 @@ TTJets={
 "TTJets",
 ],
 'dir' : dir,
+'isData':False,
 }
 TTJets_LO={
 "name":"TTJets (LO)",
@@ -49,6 +53,7 @@ TTJets_LO={
 "TTJets_LO",
 ],
 'dir' : dir,
+'isData':False,
 }
 
 #"TTLep_pow",
@@ -61,6 +66,7 @@ TTJets_Lep={
 "TTJets_SingleLeptonFromT_comb",
 ],
 'dir' : dir,
+'isData':False,
 }
 
 TTJets_HT_LO={
@@ -72,6 +78,7 @@ TTJets_HT_LO={
 "TTJets_LO_HT2500toInf",
 ],
 'dir' : dir,
+'isData':False,
 }
 
 singleTop={
@@ -85,6 +92,7 @@ singleTop={
 "T_tWch_DS",
 ],
 'dir' : dir,
+'isData':False,
 }
 
 TTX={\
@@ -100,6 +108,7 @@ TTX={\
 "tZq_nunu",
 ],
 'dir' : dir,
+'isData':False,
 }
 
 WJetsToLNu={
@@ -107,7 +116,8 @@ WJetsToLNu={
 "bins":[
 "WJetsToLNu",
 ],
-'dir':dir
+'dir':dir,
+'isData':False,
 }
 
 WJetsToLNu_LO={
@@ -115,7 +125,8 @@ WJetsToLNu_LO={
 "bins":[
 "WJetsToLNu_LO",
 ],
-'dir':dir
+'dir':dir,
+'isData':False,
 }
 
 WJetsToLNu_HT={
@@ -130,7 +141,8 @@ WJetsToLNu_HT={
 "WJetsToLNu_HT1200to2500",
 "WJetsToLNu_HT2500toInf",
 ],
-'dir':dir
+'dir':dir,
+'isData':False,
 }
 
 diBoson={
@@ -144,7 +156,8 @@ diBoson={
 "ZZTo2L2Q",
 "ZZTo2Q2Nu",
 ],
-'dir':dir
+'dir':dir,
+'isData':False,
 }
 triBoson={
 "name":"triBoson",
@@ -153,7 +166,8 @@ triBoson={
 "WZZ",
 "ZZZ",
 ],
-'dir':dir
+'dir':dir,
+'isData':False,
 }
 
 QCD_HT={\
@@ -169,6 +183,7 @@ QCD_HT={\
 "QCD_HT2000toInf",
 ],
 'dir' : dir,
+'isData':False,
 }
 
 QCD_Mu5={\
@@ -179,7 +194,7 @@ QCD_Mu5={\
 "QCD_Pt50to80_Mu5",
 "QCD_Pt80to120_Mu5",
 "QCD_Pt120to170_Mu5",
-"QCD_Pt170to300_Mu5",
+#"QCD_Pt170to300_Mu5",
 "QCD_Pt300to470_Mu5",
 "QCD_Pt470to600_Mu5",
 "QCD_Pt600to800_Mu5",
@@ -187,6 +202,7 @@ QCD_Mu5={\
 "QCD_Pt1000toInf_Mu5",
 ],
 'dir' : dir,
+'isData':False,
 }
 
 QCD_EMbcToE={\
@@ -208,6 +224,41 @@ QCD_EMbcToE={\
 "QCD_Pt300toInf_EMEnriched",
 ],
 'dir' : dir,
+'isData':False,
+}
+
+QCD_Mu5EMbcToE={\
+"name" : "QCD (Mu5+EM+bcToE)",
+"bins" : [
+
+"QCD_Pt20to30_Mu5",
+"QCD_Pt50to80_Mu5",
+"QCD_Pt80to120_Mu5",
+"QCD_Pt120to170_Mu5",
+#"QCD_Pt170to300_Mu5",
+"QCD_Pt300to470_Mu5",
+"QCD_Pt470to600_Mu5",
+"QCD_Pt600to800_Mu5",
+"QCD_Pt800to1000_Mu5",
+"QCD_Pt1000toInf_Mu5",
+
+"QCD_Pt_15to20_bcToE",
+"QCD_Pt_20to30_bcToE",
+"QCD_Pt_30to80_bcToE",
+"QCD_Pt_80to170_bcToE",
+"QCD_Pt_170to250_bcToE",
+"QCD_Pt_250toInf_bcToE",
+"QCD_Pt15to20_EMEnriched",
+"QCD_Pt20to30_EMEnriched",
+"QCD_Pt30to50_EMEnriched",
+"QCD_Pt50to80_EMEnriched",
+"QCD_Pt80to120_EMEnriched",
+"QCD_Pt120to170_EMEnriched",
+"QCD_Pt170to300_EMEnriched",
+"QCD_Pt300toInf_EMEnriched",
+],
+'dir' : dir,
+'isData':False,
 }
 
 
@@ -233,4 +284,5 @@ QCD_Pt={\
 "QCD_Pt3200",
 ],
 'dir' : dir,
+'isData':False,
 }

@@ -14,17 +14,15 @@ from StopsDilepton.tools.localInfo import *
 
 #preselection = 'met_pt>40&&Sum$((Jet_pt)*(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id))>100&&Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id&&Jet_btagCSV>0.814)==2&&Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id)>=2&&Sum$(LepGood_pt>20)>=2'
 preselection = 'isOS&&abs(dl_mass-90.2)<=15.&&isMuMu==1&&nGoodMuons==2&&nGoodElectrons==0'
-dataCut = "(HLT_mumuIso&&Flag_HBHENoiseFilterMinZeroPatched&&Flag_goodVertices&&Flag_CSCTightHaloFilter&&Flag_eeBadScFilter)"
-prefix="doubleMu_onZ_isOS"
+dataCut = "(HLT_mumuIso&&Flag_HBHENoiseFilter&&Flag_goodVertices&&Flag_CSCTightHaloFilter&&Flag_eeBadScFilter)&&weight>0"
+prefix="doubleMu_onZ_isOS_1200pb"
 
 #load all the samples
-from StopsDilepton.samples.cmgTuples_Spring15_50ns_postProcessed import *
-from StopsDilepton.samples.cmgTuples_Spring15_25ns_postProcessed import *
-from StopsDilepton.samples.cmgTuples_Data50ns_1l_postProcessed import *
-from StopsDilepton.samples.cmgTuples_Data25ns_postProcessed import *
+from StopsDilepton.samples.cmgTuples_Spring15_mAODv2_25ns_postProcessed import *
+from StopsDilepton.samples.cmgTuples_Data25ns_mAODv2_postProcessed import *
 
-backgrounds = [TTJets_25ns, DY_25ns, singleTop_25ns, WJetsToLNu_25ns, QCDMu_25ns]
-#backgrounds = [TTJets_25ns, DY_25ns, singleTop_25ns, diBosons_25ns, WJetsHTToLNu_25ns]#, QCD]
+backgrounds = [DY, TTJets_Lep, TTX, diBoson,  singleTop,  singleTop, WJetsToLNu, QCD_Mu5 ] 
+#backgrounds = [TTJets_25ns, DY_25ns, singleTop_25ns, diBoson_25ns, WJetsHTToLNu_25ns]#, QCD]
 for b in backgrounds:
   b['isData']=False
 
@@ -55,19 +53,14 @@ for pk in plots.keys():
     
 
 #Some coloring
-TTJets_50ns["color"]=ROOT.kRed
-TTJets_25ns["color"]=ROOT.kRed
-WJetsHTToLNu_25ns["color"]=ROOT.kGreen
-WJetsToLNu_25ns["color"]=ROOT.kGreen
+TTJets_Lep["color"]=ROOT.kBlack
+WJetsToLNu["color"]=ROOT.kGreen
 #TTVH["color"]=ROOT.kMagenta
-diBosons_50ns["color"]=ROOT.kMagenta
-diBosons_25ns["color"]=ROOT.kMagenta
-#QCDMu_50ns["color"]=ROOT.kMagenta
-QCDMu_25ns["color"]=ROOT.kMagenta
-singleTop_50ns["color"]=ROOT.kOrange
-singleTop_25ns["color"]=ROOT.kOrange
-DY_50ns["color"]=ROOT.kBlue
-DY_25ns["color"]=ROOT.kBlue
+DY["color"]=ROOT.kBlue
+diBoson["color"]=ROOT.kRed
+QCD_Mu5["color"]=ROOT.kCyan
+TTX["color"]=ROOT.kMagenta
+singleTop["color"]=ROOT.kOrange
 
 for pk in plots.keys():
   #Make a stack for backgrounds
@@ -100,7 +93,7 @@ for pk in plots.keys():
 #  signalPlot.Draw("same")
 #  l.AddEntry(signalPlot, signal+" x 100")
   l.Draw()
-  c1.Print(plotDir+"/"+prefix+'_'+plots[pk]["name"]+".png")
+  c1.Print(plotDir+"/pngTMP/"+prefix+'_'+plots[pk]["name"]+".png")
 
   plots[pk]['sum'].Scale(1./plots[pk]['sum'].Integral())
   plots[pk]['histo'][data['name']].Scale(1./plots[pk]['histo'][data['name']].Integral())
@@ -108,7 +101,7 @@ for pk in plots.keys():
   plots[pk]['histo'][data['name']].Draw()
   plots[pk]['histo'][data['name']].SetName("nVtxReweight")
   plots[pk]['histo'][data['name']].SetTitle("nVtxReweight")
-  c1.Print(plotDir+"/"+prefix+'_'+plots[pk]["name"]+"_reweight.png")
-  f = ROOT.TFile(plotDir+"/"+prefix+'_'+plots[pk]["name"]+"_reweight.root", "recreate")
+  c1.Print(plotDir+"/pngTMP/"+prefix+'_'+plots[pk]["name"]+"_reweight.png")
+  f = ROOT.TFile(plotDir+"/pngTMP/"+prefix+'_'+plots[pk]["name"]+"_reweight.root", "recreate")
   plots[pk]['histo'][data['name']].Write()
   f.Close()

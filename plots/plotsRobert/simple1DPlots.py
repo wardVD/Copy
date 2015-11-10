@@ -2,10 +2,11 @@ from optparse import OptionParser
 parser = OptionParser()
 parser.add_option("--mode", dest="mode", default="doubleMu", type="string", action="store", help="doubleMu, doubleEle, muEle")
 parser.add_option("--zMode", dest="zMode", default="onZ", type="string", action="store", help="onZ, offZ, allZ")
-#parser.add_option("--small", dest="small", default = False, action="store_true", help="small")
+parser.add_option("--small", dest="small", default = False, action="store_true", help="small?")
+parser.add_option("--addLeptonID", dest="addLeptonID", default = False, action="store_true", help="add leptonID plots?")
 #parser.add_option("--OS", dest="OS", default = True, action="store_true", help="require OS?")
 
-(options, args) = parser.parse_args()
+(opts, args) = parser.parse_args()
 
 import ROOT
 ROOT.TH1F().SetDefaultSumw2()
@@ -14,10 +15,7 @@ from math import cos,sin,sqrt,cosh,pi
 import os, copy, sys
 import itertools
 
-small = False
-#from StopsDilepton.samples.cmgTuples_Spring15_50ns_postProcessed import *
 from StopsDilepton.samples.cmgTuples_Spring15_mAODv2_25ns_postProcessed import *
-#from StopsDilepton.samples.cmgTuples_Data50ns_1l_postProcessed import *
 from StopsDilepton.samples.cmgTuples_Data25ns_mAODv2_postProcessed import *
 from StopsDilepton.tools.objectSelection import getLeptons, getMuons, getElectrons, getGoodMuons, getGoodElectrons, getGoodLeptons, mZ
 from StopsDilepton.tools.helpers import getVarValue, getYieldFromChain, getChain
@@ -25,9 +23,9 @@ from StopsDilepton.tools.localInfo import plotDir
 from simplePlotHelpers import plot, stack, loopAndFill, drawNMStacks
 from StopsDilepton.tools.puReweighting import getReweightingFunction
 
-puReweightingFunc = getReweightingFunction(era="Run2015D_205pb")
-#puReweightingFunc = getReweightingFunction(era="Run2015D_205pb_doubleMu_onZ_isOS")
+puReweightingFunc = getReweightingFunction(era="doubleMu_onZ_isOS_1200pb_nVert_reweight")
 puReweighting = lambda c:puReweightingFunc(getVarValue(c, "nVert"))
+#puReweighting = None
 
 cutBranches = ["weight", "leptonPt", "met*", "nVert",'run',\
                'Jet_pt', "Jet_id", "Jet_eta", "Jet_phi", "Jet_btagCSV",
@@ -36,9 +34,10 @@ cutBranches = ["weight", "leptonPt", "met*", "nVert",'run',\
                "HLT_mumuIso", "HLT_ee_DZ", "HLT_mue",
                "is*","dl_*","l1_*","l2_*", "nGoodMuons", "nGoodElectrons"
                 ]
-subdir = "png25ns_2l"
+subdir = "png25ns_2l_mAODv2_PUrw"
 #preprefixes = ["PUDoubleMuOnZIsOS"]
-preprefixes = []
+preprefixes = [] if not opts.small else ['small']
+maxN = 1 if opts.small else -1
 
 def getZCut(mode):
   zstr = "abs(dl_mass - "+str(mZ)+")"
@@ -47,7 +46,7 @@ def getZCut(mode):
   return "(1)"
 
 #filterCut = "(Flag_HBHENoiseFilter&&Flag_HBHENoiseIsoFilter&&Flag_goodVertices&&Flag_CSCTightHaloFilter&&Flag_eeBadScFilter)"
-filterCut = "(Flag_HBHENoiseFilter&&Flag_goodVertices&&Flag_CSCTightHaloFilter&&Flag_eeBadScFilter&&run!=256729&&run!=256734)"
+filterCut = "(Flag_HBHENoiseFilter&&Flag_goodVertices&&Flag_CSCTightHaloFilter&&Flag_eeBadScFilter&&weight>0)"
 #filterCut = "(1)"
 
 #nMu = "Sum$(abs(LepGood_pdgId)==13&&LepGood_mediumMuonId==1&&LepGood_miniRelIso<0.1&&LepGood_sip3d<4.0&&abs(LepGood_dxy)<0.05&&abs(LepGood_dz)<0.1)"
@@ -60,42 +59,44 @@ cuts=[
  ("njet2", "(Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id))>=2"),
  ("nbtag1", "Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id&&Jet_btagCSV>0.890)>=1"),
  ("mll20", "dl_mass>20"),
- ("met140", "met_pt>140"),
- ("metSig8", "met_pt/sqrt(Sum$(Jet_pt*(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id)))>8"),
- ("dPhiJet0-dPhiJet1", "cos(met_phi-Jet_phi[0])<cos(0.25)&&cos(met_phi-Jet_phi[1])<cos(0.25)"),
+# ("met80", "met_pt>80"),
+# ("metSig5", "met_pt/sqrt(Sum$(Jet_pt*(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id)))>5"),
+# ("dPhiJet0-dPhiJet1", "cos(met_phi-Jet_phi[0])<cos(0.25)&&cos(met_phi-Jet_phi[1])<cos(0.25)"),
   ]
 #for i in range(len(cuts)+1):
-#for i in reversed(range(len(cuts)+1)):
-for i in [len(cuts)]:
+for i in reversed(range(len(cuts)+1)):
+#for i in [len(cuts)]:
   for comb in itertools.combinations(cuts,i):
 #    presel = [("isOS","isOS"), ("mRelIso01", "LepGood_miniRelIso[l1_index]<0.1&&LepGood_miniRelIso[l2_index]<0.1")]
     presel = [("isOS","isOS")]
     presel.extend( comb )
 
-    prefix = '_'.join(preprefixes+[options.mode, options.zMode, '-'.join([p[0] for p in presel])]) 
+    prefix = '_'.join(preprefixes+[opts.mode, opts.zMode, '-'.join([p[0] for p in presel])]) 
     preselCuts = [p[1] for p in presel]
 
-    if options.mode=="doubleMu":
-      cutString = "&&".join(["isMuMu==1&&nGoodMuons==2&&nGoodElectrons==0", getZCut(options.zMode)] + preselCuts)
+    if opts.mode=="doubleMu":
+      cutString = "&&".join(["isMuMu==1&&nGoodMuons==2&&nGoodElectrons==0", getZCut(opts.zMode)] + preselCuts)
       dataCut = "&&".join([triggerMuMu, filterCut])
       dataSample = DoubleMuon_Run2015D
-    if options.mode=="doubleEle":
-      cutString = "&&".join(["isEE==1&&nGoodMuons==0&&nGoodElectrons==2", getZCut(options.zMode)] + preselCuts)
+      QCDSample = QCD_Mu5
+    if opts.mode=="doubleEle":
+      cutString = "&&".join(["isEE==1&&nGoodMuons==0&&nGoodElectrons==2", getZCut(opts.zMode)] + preselCuts)
       dataCut = "&&".join([triggerEleEle, filterCut])
       dataSample = DoubleEG_Run2015D
-    if options.mode=="muEle":
-      cutString = "&&".join(["isEMu==1&&nGoodMuons==1&&nGoodElectrons==1", getZCut(options.zMode)] + preselCuts)
+      QCDSample = QCD_EMbcToE
+    if opts.mode=="muEle":
+      cutString = "&&".join(["isEMu==1&&nGoodMuons==1&&nGoodElectrons==1", getZCut(opts.zMode)] + preselCuts)
       dataCut = "&&".join([triggerMuEle, filterCut])
       dataSample = MuonEG_Run2015D
+      QCDSample = QCD_Mu5EMbcToE
 
-    dataSample['lumi'] = 149.5
     cutFunc = None
     lumiScaleFac = dataSample["lumi"]/1000.
-    backgrounds = [TTJets_Lep, WJetsToLNu, DY, singleTop, QCD_Mu5] ##FIXME QCD!!!
-    data = getYieldFromChain(getChain(dataSample,histname=""), cutString = "&&".join([cutString, dataCut]), weight='weight') 
+    backgrounds = [TTJets_Lep, WJetsToLNu, DY, singleTop, QCDSample, TTX, diBoson] 
+    data = getYieldFromChain(getChain(dataSample,histname="",maxN=maxN), cutString = "&&".join([cutString, dataCut]), weight='weight') 
     bkg  = 0. 
     for s in backgrounds:
-      bkg+= getYieldFromChain(getChain(s,histname=""), cutString, weight='weight')
+      bkg+= getYieldFromChain(getChain(s,histname="", maxN=maxN), cutString, weight='weight')
 
     scaleFac = data/(bkg*lumiScaleFac)
 
@@ -120,9 +121,9 @@ for i in [len(cuts)]:
       MC_WJetsToLNu      = plot(var, binning, cut, sample=WJetsToLNu,   style=style_WJets,     weightString="weight", weightFunc=puReweighting)
       MC_DY              = plot(var, binning, cut, sample=DY,           style=style_DY,        weightString="weight", weightFunc=puReweighting)
       MC_singleTop       = plot(var, binning, cut, sample=singleTop,    style=style_singleTop, weightString="weight", weightFunc=puReweighting)
-      MC_QCD             = plot(var, binning, cut, sample=QCD_Mu5,        style=style_QCD,       weightString="weight", weightFunc=puReweighting)
+      MC_QCD             = plot(var, binning, cut, sample=QCDSample,        style=style_QCD,       weightString="weight", weightFunc=puReweighting)
       MC_TTX             = plot(var, binning, cut, sample=TTX,          style=style_TTX, weightString="weight", weightFunc=puReweighting)
-      MC_diBoson         = plot(var, binning, cut, sample=diBosons,     style=style_diBoson, weightString="weight", weightFunc=puReweighting)
+      MC_diBoson         = plot(var, binning, cut, sample=diBoson,     style=style_diBoson, weightString="weight", weightFunc=puReweighting)
       #FIXME triBoson
       mcStack = [MC_TTJets, MC_DY,  MC_QCD, MC_singleTop, MC_WJetsToLNu, MC_diBoson, MC_TTX]
       for s in mcStack:
@@ -134,9 +135,9 @@ for i in [len(cuts)]:
 
       for pL in plotLists:
         for p in pL:
-          p.sample['small']=small
+          p.sample['small']=opts.small
 
-      opt = {'small':small, 'yHeadRoomFac':12, 'labels':labels, 'logX':False, 'logY':True, 'yRange':[0.11, "auto"], 'ratio':ratioOps, 'fileName':var['name']}
+      opt = {'small':opts.small, 'yHeadRoomFac':12, 'labels':labels, 'logX':False, 'logY':True, 'yRange':[0.11, "auto"], 'ratio':ratioOps, 'fileName':var['name']}
     #  opt = {'small':small, 'yHeadRoomFac':12, 'labels':labels, 'logX':False, 'logY':True, 'yRange':[0.11, "auto"], 'ratio':None, 'fileName':var['name']}
 
       if opt.has_key('ratio') and opt['ratio']:
@@ -381,26 +382,64 @@ for i in [len(cuts)]:
         cut={'string':cutString,'func':cutFunc, 'dataCut':dataCut})
     allStacks.append(jet4pt_stack)
 
-#    nbtags_stack  = getStack(
-#        labels={'x':'number of b-tags (CSVM)','y':'Number of Events'},
-#        var={'name':'nBTags','TTreeFormula':"Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id&&Jet_btagCSV>0.890)", 'overFlow':'upper'},
-#        binning={'binning':[8,0,8]},
-#        cut={'string':cutString,'func':cutFunc, 'dataCut':dataCut})
-#    allStacks.append(nbtags_stack)
-#
-#    njets_stack  = getStack(
-#        labels={'x':'number of jets','y':'Number of Events'},
-#        var={'name':'njets','TTreeFormula':'Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id)', 'overFlow':'upper'},
-#        binning={'binning':[14,0,14]},
-#        cut={'string':cutString,'func':cutFunc, 'dataCut':dataCut})
-#    allStacks.append(njets_stack)
-#
-#    nVert_stack  = getStack(
-#        labels={'x':'vertex multiplicity','y':'Number of Events'},
-#        var={'name':'nVert','leaf':"nVert", 'overFlow':'upper'},
-#        binning={'binning':[50,0,50]},
-#        cut={'string':cutString,'func':cutFunc, 'dataCut':dataCut})
-#    allStacks.append(nVert_stack)
+    nbtags_stack  = getStack(
+        labels={'x':'number of b-tags (CSVM)','y':'Number of Events'},
+        var={'name':'nBTags','TTreeFormula':"Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id&&Jet_btagCSV>0.890)", 'overFlow':'upper'},
+        binning={'binning':[8,0,8]},
+        cut={'string':cutString,'func':cutFunc, 'dataCut':dataCut})
+    allStacks.append(nbtags_stack)
+
+    njets_stack  = getStack(
+        labels={'x':'number of jets','y':'Number of Events'},
+        var={'name':'njets','TTreeFormula':'Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id)', 'overFlow':'upper'},
+        binning={'binning':[14,0,14]},
+        cut={'string':cutString,'func':cutFunc, 'dataCut':dataCut})
+    allStacks.append(njets_stack)
+
+    nVert_stack  = getStack(
+        labels={'x':'vertex multiplicity','y':'Number of Events'},
+        var={'name':'nVert','leaf':"nVert", 'overFlow':'upper'},
+        binning={'binning':[50,0,50]},
+        cut={'string':cutString,'func':cutFunc, 'dataCut':dataCut})
+    allStacks.append(nVert_stack)
+
+# OBJ: TBranch LepGood_charge  charge for Leptons after the preselection : 0 at: 0x504dc00
+# OBJ: TBranch LepGood_tightId POG Tight ID (for electrons it's configured in the analyzer) for Leptons after the preselection : 0 at: 0x504e5e0
+# OBJ: TBranch LepGood_eleCutIdCSA14_25ns_v1 Electron cut-based id (POG CSA14_25ns_v1): 0=none, 1=veto, 2=loose, 3=medium, 4=tight for Leptons after the preselection : 0 at: 0x504f030
+# OBJ: TBranch LepGood_eleCutIdCSA14_50ns_v1 Electron cut-based id (POG CSA14_50ns_v1): 0=none, 1=veto, 2=loose, 3=medium, 4=tight for Leptons after the preselection : 0 at: 0x504fad0
+# OBJ: TBranch LepGood_dxy d_{xy} with respect to PV, in cm (with sign) for Leptons after the preselection : 0 at: 0x5050570
+# OBJ: TBranch LepGood_dz  d_{z} with respect to PV, in cm (with sign) for Leptons after the preselection : 0 at: 0x5050f70
+# OBJ: TBranch LepGood_edxy  #sigma(d_{xy}) with respect to PV, in cm for Leptons after the preselection : 0 at: 0x5051970
+# OBJ: TBranch LepGood_edz #sigma(d_{z}) with respect to PV, in cm for Leptons after the preselection : 0 at: 0x5052370
+# OBJ: TBranch LepGood_ip3d  d_{3d} with respect to PV, in cm (absolute value) for Leptons after the preselection : 0 at: 0x5052d70
+# OBJ: TBranch LepGood_sip3d S_{ip3d} with respect to PV (significance) for Leptons after the preselection : 0 at: 0x5053780
+# OBJ: TBranch LepGood_convVeto  Conversion veto (always true for muons) for Leptons after the preselection : 0 at: 0x5054180
+# OBJ: TBranch LepGood_lostHits  Number of lost hits on inner track for Leptons after the preselection : 0 at: 0x5054be0
+# OBJ: TBranch LepGood_relIso03  PF Rel Iso, R=0.3, pile-up corrected for Leptons after the preselection : 0 at: 0x5055640
+# OBJ: TBranch LepGood_relIso04  PF Rel Iso, R=0.4, pile-up corrected for Leptons after the preselection : 0 at: 0x50560a0
+# OBJ: TBranch LepGood_miniRelIso  PF Rel miniRel, pile-up corrected for Leptons after the preselection : 0 at: 0x5056b00
+# OBJ: TBranch LepGood_relIsoAn04  PF Activity Annulus, pile-up corrected for Leptons after the preselection : 0 at: 0x5057560
+# OBJ: TBranch LepGood_tightCharge Tight charge criteria: for electrons, 2 if isGsfCtfScPixChargeConsistent, 1 if only isGsfScPixChargeConsistent, 0 otherwise; for muons, 2 if ptError/pt < 0.20, 0 otherwise  for Leptons after the preselection : 0 at: 0x5057fc0
+# OBJ: TBranch LepGood_mcMatchId Match to source from hard scatter (pdgId of heaviest particle in chain, 25 for H, 6 for t, 23/24 for W/Z), zero if non-prompt or fake for Leptons after the preselection : 0 at: 0x5058aa0
+# OBJ: TBranch LepGood_mcMatchAny  Match to any final state leptons: 0 if unmatched, 1 if light flavour (including prompt), 4 if charm, 5 if bottom for Leptons after the preselection : 0 at: 0x5059560
+# OBJ: TBranch LepGood_mcMatchTau  True if the leptons comes from a tau for Leptons after the preselection : 0 at: 0x505a010
+# OBJ: TBranch LepGood_mcPt  p_{T} of associated gen lepton for Leptons after the preselection : 0 at: 0x505aa70
+# OBJ: TBranch LepGood_mediumMuonId  Muon POG Medium id for Leptons after the preselection : 0 at: 0x505b470
+# OBJ: TBranch LepGood_pdgId pdgId for Leptons after the preselection : 0 at: 0x505bec0
+# OBJ: TBranch LepGood_pt  pt for Leptons after the preselection : 0 at: 0x505c8a0
+# OBJ: TBranch LepGood_eta eta for Leptons after the preselection : 0 at: 0x505d280
+# OBJ: TBranch LepGood_phi phi for Leptons after the preselection : 0 at: 0x505dc60
+# OBJ: TBranch LepGood_mass  mass for Leptons after the preselection : 0 at: 0x505e640
+# OBJ: TBranch LepGood_mvaIdPhys14 EGamma POG MVA ID for non-triggering electrons, Phys14 re-training; 1 for muons for Leptons after the preselection : 0 at: 0x505f020
+# OBJ: TBranch LepGood_mvaIdSpring15 EGamma POG MVA ID for non-triggering electrons, Spring15 re-training; 1 for muons for Leptons after the preselection : 0 at: 0x505fab0
+# OBJ: TBranch LepGood_mvaTTH  Lepton MVA (TTH version) for Leptons after the preselection : 0 at: 0x5060540
+# OBJ: TBranch LepGood_jetPtRatiov1  pt(lepton)/pt(nearest jet) for Leptons after the preselection : 0 at: 0x5060f30
+# OBJ: TBranch LepGood_jetPtRelv1  pt of the lepton transverse to the jet axis (subtracting the lepton) for Leptons after the preselection : 0 at: 0x5061980
+# OBJ: TBranch LepGood_jetPtRatiov2  pt(lepton)/[rawpt(jet-PU-lep)*L2L3Res+pt(lepton)] for Leptons after the preselection : 0 at: 0x5062400
+# OBJ: TBranch LepGood_jetPtRelv2  pt of the lepton transverse to the jet axis (subtracting the lepton) - v2 for Leptons after the preselection : 0 at: 0x5062e70
+# OBJ: TBranch LepGood_jetBTagCSV  CSV btag of nearest jet for Leptons after the preselection : 0 at: 0x50638f0
+# OBJ: TBranch LepGood_jetBTagCMVA CMA btag of nearest jet for Leptons after the preselection : 0 at: 0x5064340
+# OBJ: TBranch LepGood_jetDR deltaR(lepton, nearest jet) for Leptons after the preselection : 0 at: 0x5064d90
 
     loopAndFill(allStacks)
 
