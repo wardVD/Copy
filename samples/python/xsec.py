@@ -1,3 +1,6 @@
+
+assert False, "This file is outdated, use src/CMGTools/RootTools/python/samples/ for x-sec"
+
 class xsec_(dict):
 
     def reduceID(self, id):
