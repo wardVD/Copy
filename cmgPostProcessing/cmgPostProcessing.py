@@ -1,5 +1,5 @@
 import ROOT
-import sys, os, copy, random, subprocess, datetime
+import sys, os, copy, random, subprocess, datetime, shutil
 from array import array
 from StopsDilepton.tools.convertHelpers import compileClass, readVar, printHeader, typeStr, createClassString
 
@@ -30,7 +30,10 @@ subDir = "/afs/hephy.at/data/rschoefbeck01/cmgTuples/postProcessed_mAODv2" #Outp
 branchKeepStrings_DATAMC = ["run", "lumi", "evt", "isData", "rho", "nVert", 
 #                     "nJet25", "nBJetLoose25", "nBJetMedium25", "nBJetTight25", "nJet40", "nJet40a", "nBJetLoose40", "nBJetMedium40", "nBJetTight40", 
 #                     "nLepGood20", "nLepGood15", "nLepGood10", "htJet25", "mhtJet25", "htJet40j", "htJet40", "mhtJet40", "nSoftBJetLoose25", "nSoftBJetMedium25", "nSoftBJetTight25", 
-                     "met*","Flag_*","HLT_*",
+                     "met_pt", "met_phi","met_Jet*", "met_Unclustered*", "met_sumEt", "met_rawPt", "met_rawSumEt",
+                     "metNoHF_pt", "metNoHF_phi",
+                     "puppiMet_pt","puppiMet_phi","puppiMet_sumEt","puppiMet_rawPt","puppiMet_rawPhi","puppiMet_rawSumEt",
+                     "Flag_*","HLT_*",
 #                     "nFatJet","FatJet_*", 
                      "nJet", "Jet_*", 
                      "nLepGood", "LepGood_*", 
@@ -39,11 +42,11 @@ branchKeepStrings_DATAMC = ["run", "lumi", "evt", "isData", "rho", "nVert",
                      ] 
 
 #branches to be kept for MC samples only
-branchKeepStrings_MC = [ "nTrueInt", "genWeight", "xsec", "puWeight", 
+branchKeepStrings_MC = [ "nTrueInt", "genWeight", "xsec", "puWeight", "met_gen*", 
 #                     "GenSusyMScan1", "GenSusyMScan2", "GenSusyMScan3", "GenSusyMScan4", "GenSusyMGluino", "GenSusyMGravitino", "GenSusyMStop", "GenSusyMSbottom", "GenSusyMStop2", "GenSusyMSbottom2", "GenSusyMSquark", "GenSusyMNeutralino", "GenSusyMNeutralino2", "GenSusyMNeutralino3", "GenSusyMNeutralino4", "GenSusyMChargino", "GenSusyMChargino2", 
 #                     "ngenLep", "genLep_*", 
 #                     "nGenPart", "GenPart_*",
-                     "ngenPartAll","genPartAll_*" ,
+                     "ngenPartAll","genPartAll_*","ngenLep","genLep_*"
 #                     "ngenTau", "genTau_*", 
 #                     "ngenLepFromTau", "genLepFromTau_*"
                       ]
@@ -110,15 +113,15 @@ sample=allSamples[0]
 if len(allSamples)>1:
   sample.name=sample.name+'_comb'  
 
-outDir = options.targetDir+'/'+"/".join([options.skim, sample.name])
+outDir = os.path.join(options.targetDir, options.skim, sample.name)
 if os.path.exists(outDir) and os.listdir(outDir) != [] and not options.overwrite:
   print "Found non-empty directory: %s -> skipping!"%outDir
   sys.exit(0)
-
-tmpDir = outDir+'/tmp/'
-os.system('mkdir -p '+outDir) 
-os.system('mkdir -p '+tmpDir)
-os.system('rm -rf '+tmpDir+'/*')
+else:
+  tmpDir = os.path.join(outDir,'tmp')
+  if os.path.exists(outDir): shutil.rmtree(outDir)
+  os.makedirs(outDir)
+  os.makedirs(tmpDir)
 
 if sample.isData: 
   lumiScaleFactor=1
@@ -202,20 +205,20 @@ for chunk in chunks:
       s.init()
       r.init()
       t.GetEntry(i)
+
+      genWeight = 1 if sample.isData else t.GetLeaf('genWeight').GetValue()
+      s.weight = lumiScaleFactor*genWeight if not sample.isData else 1
       if sample.isData: 
         if not sample.lumiList.contains(r.run, r.lumi):
   #        print "Did not find run %i lumi %i in json file %s"%(r.run, r.lumi, sample.json)
-          continue
+          s.weight=0
         else:
           if r.run not in outputLumiList.keys():
             outputLumiList[r.run] = [r.lumi]
           else:
             if r.lumi not in outputLumiList[r.run]:
               outputLumiList[r.run].append(r.lumi)
-          
 #        print "Found run %i lumi %i in json file %s"%(r.run, r.lumi, sample.json)
-      genWeight = 1 if sample.isData else t.GetLeaf('genWeight').GetValue()
-      s.weight = lumiScaleFactor*genWeight
       if options.skim.lower()=='dilep':
         leptons = getGoodLeptons(r)
         s.nGoodMuons      = len(filter( lambda l:abs(l['pdgId'])==13, leptons))
@@ -304,7 +307,7 @@ if not options.small:
       size=0
       counter+=1
       files=[]
-  os.system("rm -rf "+tmpDir)
+  shutil.rmtree(tmpDir)
   if allData:
     jsonFile = outDir+'/'+sample.name+'.json'
     LumiList(runsAndLumis = outputLumiList).writeJSON(jsonFile)

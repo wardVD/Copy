@@ -2,9 +2,10 @@ from StopsDilepton.tools.helpers import getVarValue, getObjDict
 from math import *
 
 mZ=90.2
-   
-def getJets(c):
-  return [getObjDict(c, 'Jet_', ['eta','pt','phi','btagCMVA','btagCSV', 'id'], i) for i in range(int(getVarValue(c, 'nJet')))]
+
+jetVars = ['eta','pt','phi','btagCMVA','btagCSV', 'id']   
+def getJets(c, jetVars=jetVars):
+  return [getObjDict(c, 'Jet_', jetVars, i) for i in range(int(getVarValue(c, 'nJet')))]
 
 def getGoodJets(c):
   return filter(lambda j:j['pt']>30 and abs(j['eta'])<2.4 and j['id'], getJets(c))
@@ -22,7 +23,7 @@ def getGenParts(c):
   return [getObjDict(c, 'GenPart_', ['eta','pt','phi','charge', 'pdgId', 'motherId', 'grandmotherId'], i) for i in range(int(getVarValue(c, 'nGenPart')))]
 
 def getGenPartsAll(c):
-  return [getObjDict(c, 'genPartAll_', ['eta','pt','phi','charge', 'pdgId', 'motherId', 'grandmotherId'], i) for i in range(int(getVarValue(c, 'ngenPartAll')))]
+  return [getObjDict(c, 'genPartAll_', ['eta','pt','phi','charge', 'pdgId', 'motherId', 'grandmotherId','daughterIndex1','daughterIndex2'], i) for i in range(int(getVarValue(c, 'ngenPartAll')))]
 
 def looseMuID(l, ptCut=20, absEtaCut=2.4):
   return \
@@ -58,18 +59,20 @@ def looseEleID(l, ptCut=20, absEtaCut=2.4):
     and l["dxy"] < 0.05\
     and l["dz"] < 0.1\
 
-def getLeptons(c):
-  return [getObjDict(c, 'LepGood_', ['eta','pt','phi','charge', 'dxy', 'dz','mass', 'relIso03','tightId', 'pdgId', 'mediumMuonId', 'miniRelIso', 'sip3d', 'mvaIdSpring15', 'convVeto', 'lostHits'], i) for i in range(int(getVarValue(c, 'nLepGood')))]
-def getMuons(c):
-  return [getObjDict(c, 'LepGood_', ['eta','pt','phi','charge', 'dxy', 'dz', 'relIso03','tightId', 'pdgId', 'mediumMuonId', 'miniRelIso', 'sip3d', 'mvaIdSpring15', 'convVeto', 'lostHits'], i) for i in range(int(getVarValue(c, 'nLepGood'))) if abs(getVarValue(c,"LepGood_pdgId",i))==13]
-def getElectrons(c):
-  return [getObjDict(c, 'LepGood_', ['eta','pt','phi','charge', 'dxy', 'dz', 'relIso03','tightId', 'pdgId', 'mediumMuonId', 'miniRelIso', 'sip3d', 'mvaIdSpring15', 'convVeto', 'lostHits'], i) for i in range(int(getVarValue(c, 'nLepGood'))) if abs(getVarValue(c,"LepGood_pdgId",i))==11]
-def getGoodMuons(c):
-  return [l for l in getMuons(c) if looseMuID(l)]
-def getGoodElectrons(c):
-  return [l for l in getElectrons(c) if looseEleID(l)]
-def getGoodLeptons(c):
-  return [l for l in getLeptons(c) if (abs(l["pdgId"])==11 and looseEleID(l)) or (abs(l["pdgId"])==13 and looseMuID(l))]
+leptonVars=['eta','pt','phi','mass','charge', 'dxy', 'dz', 'relIso03','tightId', 'pdgId', 'mediumMuonId', 'miniRelIso', 'sip3d', 'mvaIdSpring15', 'convVeto', 'lostHits']
+
+def getLeptons(c, collVars=leptonVars):
+  return [getObjDict(c, 'LepGood_', collVars, i) for i in range(int(getVarValue(c, 'nLepGood')))]
+def getMuons(c, collVars=leptonVars):
+  return [getObjDict(c, 'LepGood_', collVars, i) for i in range(int(getVarValue(c, 'nLepGood'))) if abs(getVarValue(c,"LepGood_pdgId",i))==13]
+def getElectrons(c, collVars=leptonVars):
+  return [getObjDict(c, 'LepGood_', collVars, i) for i in range(int(getVarValue(c, 'nLepGood'))) if abs(getVarValue(c,"LepGood_pdgId",i))==11]
+def getGoodMuons(c, collVars=leptonVars):
+  return [l for l in getMuons(c, collVars) if looseMuID(l)]
+def getGoodElectrons(c, collVars=leptonVars):
+  return [l for l in getElectrons(c, collVars) if looseEleID(l)]
+def getGoodLeptons(c, collVars=leptonVars):
+  return [l for l in getLeptons(c, collVars) if (abs(l["pdgId"])==11 and looseEleID(l)) or (abs(l["pdgId"])==13 and looseMuID(l))]
 def m_ll(l1,l2):
   return sqrt(2.*l1['pt']*l2['pt']*(cosh(l1['eta']-l2['eta']) - cos(l1['phi']-l2['phi'])))
 def pt_ll(l1,l2):

@@ -11,21 +11,23 @@ from StopsDilepton.tools.mt2Calculator import mt2Calculator
 mt2Calc = mt2Calculator()
 from StopsDilepton.tools.localInfo import *
 
-prefix="def"
 reduceStat = 1
 lumiScale = 10.
 
 #load all the samples
-from StopsDilepton.samples.cmgTuples_Spring15_25ns_postProcessed import *
+from StopsDilepton.samples.cmgTuples_Spring15_mAODv2_25ns_postProcessed import *
 
-ttjets = TTJets_inclusive_25ns
-ttjets['name']="TTLep_inclusive"
-#sample['name']="TTLep_25ns"
-#sample = TTLep_25ns
+#ttjets = TTJets_Lep
+#ttjets['name']="TTLep_1l2l"
+ttjets = TTJets
+ttjets['name']="TTJetsNLO"
 ttjets['chain'] = getChain(ttjets,histname="")
 #prefix = "mRelIso01"
-prefix = "test"
-others={'name':'ST/VV/TTX', 'chain':getChain([WJetsToLNu_25ns,DY_25ns,singleTop_25ns,TTX_25ns,diBosons_25ns], histname="")}
+prefix="mAODv2"
+#others={'name':'ST/VV/TTX', 'chain':getChain([WJetsToLNu,DY,singleTop,TTX,diBoson], histname="")}
+
+#samples = [ttjets, others]
+samples = [ttjets]
 
 cuts=[
  ("lepVeto", "nGoodMuons+nGoodElectrons==2"),
@@ -43,6 +45,7 @@ preselection = "&&".join([c[1] for c in cuts])
 
 plots = {\
   'mt2ll_reco':               {'label':'reco',               'color':ROOT.kBlack, 'title':'M_{T2ll} (GeV)', 'binning': [315/15,0,315], 'histo':{}},
+  'mt2ll_puppi':              {'label':'puppi',              'color':ROOT.kPink, 'title':'M_{T2ll} (GeV)', 'binning': [315/15,0,315], 'histo':{}},
   'mt2ll_genMetPt':           {'label':'met: genPt',         'color':ROOT.kRed, 'title':'M_{T2ll} (GeV)', 'binning': [315/15,0,315], 'histo':{}},
   'mt2ll_genMetPhi':          {'label':'met: genPhi',        'color':ROOT.kBlue, 'title':'M_{T2ll} (GeV)', 'binning': [315/15,0,315], 'histo':{}},
   'mt2ll_genMet':             {'label':'met: genMet',        'color':ROOT.kGreen, 'title':'M_{T2ll} (GeV)', 'binning': [315/15,0,315], 'histo':{}},
@@ -55,9 +58,20 @@ plots = {\
 #  'mt2blbl': {'title':'M_{T2blbl} (GeV)', 'name':'mt2blbl', 'binning': [21,0,420], 'histo':{}},
 }
 
+#plots = {\
+#  'mt2ll_reco':               {'label':'reco',               'color':ROOT.kBlack, 'title':'M_{T2ll} (GeV)', 'binning': [28,70,140], 'histo':{}},
+#  'mt2ll_puppi':              {'label':'puppi',              'color':ROOT.kPink, 'title':'M_{T2ll} (GeV)', 'binning': [28,70,140], 'histo':{}},
+#  'mt2ll_genMetPt':           {'label':'met: genPt',         'color':ROOT.kRed, 'title':'M_{T2ll} (GeV)', 'binning': [28,70,140], 'histo':{}},
+#  'mt2ll_genMetPhi':          {'label':'met: genPhi',        'color':ROOT.kBlue, 'title':'M_{T2ll} (GeV)', 'binning': [28,70,140], 'histo':{}},
+#  'mt2ll_genMet':             {'label':'met: genMet',        'color':ROOT.kGreen, 'title':'M_{T2ll} (GeV)', 'binning': [28,70,140], 'histo':{}},
+#  'mt2ll_metJetCorr':         {'label':'met: gen-jet corr.', 'color':ROOT.kMagenta, 'title':'M_{T2ll} (GeV)', 'binning': [28,70,140], 'histo':{}},
+#  'mt2ll_LepGenMatch':        {'label':'lep: genMatch',      'color':ROOT.kCyan, 'title':'M_{T2ll} (GeV)', 'binning': [28,70,140], 'histo':{}},
+#  'mt2ll_LepGenPt':           {'label':'lep: genPt',         'color':ROOT.kViolet, 'title':'M_{T2ll} (GeV)', 'binning': [28,70,140], 'histo':{}},
+#  'mt2ll_LepGenPt_genMet':    {'label':'gen lep + gen Met',  'color':ROOT.kOrange, 'title':'M_{T2ll} (GeV)', 'binning': [28,70,140], 'histo':{}},
+#}
 
 #make plot in each sample:
-for sample in [ttjets, others]:
+for sample in samples:
   for pk in plots.keys():
     plots[pk]['histo'][sample['name']] = ROOT.TH1F("plot_"+sample["name"], "plot_"+sample["name"], *(plots[pk]['binning']))
     plots[pk]['histo'][sample['name']].SetLineColor(plots[pk]['color'])
@@ -76,6 +90,8 @@ for sample in [ttjets, others]:
     weight = reduceStat*getVarValue(chain, "weight")*lumiScale 
     met = getVarValue(chain, "met_pt")
     metPhi = getVarValue(chain, "met_phi")
+    puppiMet = getVarValue(chain, "puppiMet_pt")
+    puppiMetPhi = getVarValue(chain, "puppiMet_phi")
     genMet = getVarValue(chain, "met_genPt")
     genMetPhi = getVarValue(chain, "met_genPhi")
     leptons = getGoodLeptons(chain, leptonVars+['mcMatchId', 'mcMatchAny', 'mcPt']) 
@@ -89,6 +105,10 @@ for sample in [ttjets, others]:
     mt2Calc.setLeptons(l0pt, l0eta, l0phi, l1pt, l1eta, l1phi)
     mt2ll = mt2Calc.mt2ll()
     plots['mt2ll_reco']['histo'][sample["name"]].Fill(mt2ll, weight)
+
+    mt2Calc.setMet(puppiMet,puppiMetPhi)
+    mt2ll = mt2Calc.mt2ll()
+    plots['mt2ll_puppi']['histo'][sample["name"]].Fill(mt2ll, weight)
 
     mt2Calc.setMet(genMet,metPhi)
     mt2ll_genMetPt = mt2Calc.mt2ll()
@@ -140,6 +160,11 @@ plotList=[
 'mt2ll_genMet',
 'mt2ll_LepGenPt_genMet']],
 
+['puppi', ['mt2ll_reco',
+'mt2ll_genMet',
+'mt2ll_LepGenPt_genMet',
+'mt2ll_puppi']],
+
 ['gen2', ['mt2ll_reco',
 'mt2ll_genMet',
 'mt2ll_metJetCorr']],
@@ -172,11 +197,11 @@ for name, keys in plotList:
     if first:
       first=False
       opt=opt+"same"
-  plots['mt2ll_reco']['histo'][others['name']].GetXaxis().SetTitle(plots[pk]["title"])
-  plots['mt2ll_reco']['histo'][others['name']].SetLineStyle(ROOT.kDashed)
-  plots['mt2ll_reco']['histo'][others['name']].SetLineColor(ROOT.kBlack)
-  plots[pk]['histo'][others['name']].Draw(opt)
-  l.AddEntry(plots['mt2ll_reco']['histo'][others['name']], others['name'])
+#  plots['mt2ll_reco']['histo'][others['name']].GetXaxis().SetTitle(plots[pk]["title"])
+#  plots['mt2ll_reco']['histo'][others['name']].SetLineStyle(ROOT.kDashed)
+#  plots['mt2ll_reco']['histo'][others['name']].SetLineColor(ROOT.kBlack)
+#  plots['mt2ll_reco']['histo'][others['name']].Draw(opt)
+#  l.AddEntry(plots['mt2ll_reco']['histo'][others['name']], others['name'])
   l.Draw()
   c1.SetLogy()
   c1.Print(plotDir+"/png2L/"+prefix+"_"+ttjets['name']+'_mt2ll_'+name+'_tail.png')

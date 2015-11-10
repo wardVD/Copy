@@ -1,4 +1,4 @@
-data_path = "/afs/hephy.at/data/rschoefbeck01/cmgTuples/MC25ns_v2_1l/" 
+data_path = "/data/rschoefbeck/cmgTuples/MC25ns_v2_1l/"
 from CMGTools.RootTools.samples.samples_13TeV_RunIISpring15MiniAODv2 import * 
 from StopsDilepton.samples.helpers import getSubDir 
 import os

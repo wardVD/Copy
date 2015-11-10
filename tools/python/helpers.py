@@ -4,10 +4,23 @@ from array import array
 ROOT.gROOT.LoadMacro("$CMSSW_BASE/src/StopsDilepton/tools/scripts/tdrstyle.C")
 ROOT.setTDRStyle()
 
+
+def deltaPhi(phi1, phi2):
+  dphi = phi2-phi1
+  if  dphi > pi:
+    dphi -= 2.0*pi
+  if dphi <= -pi:
+    dphi += 2.0*pi
+  return abs(dphi)
+def deltaR2(l1, l2):
+  return deltaPhi(l1['phi'], l2['phi'])**2 + (l1['eta'] - l2['eta'])**2
+def deltaR(l1, l2):
+  return sqrt(deltaR2(l1,l2))
+
 def getFileList(dir, histname='histo', maxN=-1):
   import os
   filelist = os.listdir(os.path.expanduser(dir))
-  filelist = [dir+'/'+f for f in filelist if histname in f]
+  filelist = [dir+'/'+f for f in filelist if histname in f and f.endswith(".root")]
   if maxN>=0:
     filelist = filelist[:maxN]
   return filelist
@@ -34,7 +47,7 @@ def getChain(sampleList, histname='histo', maxN=-1, treeName="Events"):
           for f in getFileList(dir+'/'+b, histname, maxN):
             i+=1
             c.Add(f)
-  print "Added ",i,'files from sample',s['name']
+    print "Added ",i,'files from sample',s['name']
   return c
 
 #def getChunks(sample,  maxN=-1):
