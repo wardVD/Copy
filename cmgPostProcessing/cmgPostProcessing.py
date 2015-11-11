@@ -104,17 +104,14 @@ allMC   =  True not in [s.isData for s in allSamples]
 assert allData or len(set([s.xSection for s in allSamples]))==1, "Not all samples have the same xSection: %s !"%(",".join([s.name for s in allSamples]))
 assert allMC or len(allSamples)==1, "Don't concatenate data samples"
 
-for iSample, sample in enumerate(allSamples):
-  tchunks, tsumWeight = getChunks(sample, maxN=maxN)
-  chunks+=tchunks; sumWeight += tsumWeight
-  print "Now %i chunks from sample %s with sumWeight now %f"%(len(chunks), sample.name, sumWeight)
+assert False not in [hasattr(s, 'path') for s in allSamples], "Not all samples have a path: "+", ".join([s.name for s in allSamples])
 
 sample=allSamples[0]
 if len(allSamples)>1:
   sample.name=sample.name+'_comb'  
 
 outDir = os.path.join(options.targetDir, options.skim, sample.name)
-if os.path.exists(outDir) and os.listdir(outDir) != [] and not options.overwrite:
+if os.path.exists(outDir) and any([True for f in os.listdir(outDir) if f.endswith('.root')]) and not options.overwrite:
   print "Found non-empty directory: %s -> skipping!"%outDir
   sys.exit(0)
 else:
@@ -122,6 +119,11 @@ else:
   if os.path.exists(outDir): shutil.rmtree(outDir)
   os.makedirs(outDir)
   os.makedirs(tmpDir)
+
+for iSample, sample in enumerate(allSamples):
+  tchunks, tsumWeight = getChunks(sample, maxN=maxN)
+  chunks+=tchunks; sumWeight += tsumWeight
+  print "Now %i chunks from sample %s with sumWeight now %f"%(len(chunks), sample.name, sumWeight)
 
 if sample.isData: 
   lumiScaleFactor=1

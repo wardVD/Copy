@@ -3,6 +3,7 @@ from CMGTools.RootTools.samples.samples_13TeV_RunIISpring15MiniAODv2 import *
 from StopsDilepton.samples.helpers import getSubDir 
 import os
 
+mcSamples = []
 for s in samples:
   s.isData = False
   s.treeName = "tree"
@@ -14,14 +15,16 @@ for s in samples:
   s.rootFileLocation = "tree.root"
   subDir = getSubDir(s.dataset)
   if not subDir:
-    print "Not a good dataset name: %s"%s.dataset
+    print "Warning: Not a good dataset name: %s"%s.dataset
     continue
   path = '/'.join([ data_path, getSubDir(s.dataset) ] )
   if os.path.exists(path):
-    print "Found %s in %s"%(s.name, path)
     s.path = path
     s.chunkString = subDir
+    mcSamples.append(s)
   else:
     print "Did not find %s in %s"%(s.name, path)
    
-  
+print 
+print "Found %i MC datasets in %s\n%s"% (len(mcSamples), data_path, (", ".join([s.name for s in mcSamples])))
+print 
