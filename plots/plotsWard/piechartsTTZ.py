@@ -82,8 +82,6 @@ for cut in piechart.keys():
       piechart[cut][flavor][piece]["TTZ_Lep_NuNu"] = 0
       piechart[cut][flavor][piece][TTZ_QQ_25ns["name"]] = 0
 
-
-
 for s in backgrounds:
   chain = s["chain"]
 
@@ -219,7 +217,8 @@ for s in backgrounds:
         neutrinogencondition = False
         leptongencondition  = False
         
-        if 23 in gen_motherId:
+#        if 23 in gen_motherId:
+        if True:
 
           for ipdg, pdg in enumerate(gen_pdgId):
             if ((abs(pdg) == 12) or (abs(pdg) == 14) or (abs(pdg) == 16)) and gen_motherId[ipdg]==23 : neutrinogencondition = True
@@ -236,9 +235,9 @@ for s in backgrounds:
                 if s == TTZ_QQ_25ns:       piechart[str(cut)]["SF"]["(>=2,>=1)"][s["name"]]+=weight
                 elif neutrinogencondition: piechart[str(cut)]["SF"]["(>=2,>=1)"]["TTZ_Lep_NuNu"] += weight
                 elif leptongencondition:   piechart[str(cut)]["SF"]["(>=2,>=1)"]["TTZ_Lep_LL"] += weight
-
   del eList
 
+print othercounterTTZ, '\n'
 
 def makefigure(piechart,mt2llcut):
   

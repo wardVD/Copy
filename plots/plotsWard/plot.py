@@ -14,7 +14,7 @@ mt2Calc = mt2Calculator()
 #######################################################
 #        SELECT WHAT YOU WANT TO DO HERE              #
 #######################################################
-reduceStat         = 100 #recude the statistics, i.e. 10 is ten times less samples to look at
+reduceStat         = 1 #recude the statistics, i.e. 10 is ten times less samples to look at
 makedraw1D         = False
 makedraw2D         = False
 makelatextables    = False #Ignore this if you're not Ward
@@ -26,7 +26,6 @@ dphicut            = 0.25
 mllcut             = 20
 ngoodleptons       = 2
 luminosity         = 10000
-
 
 presel_met         = 'met_pt>'+str(metcut)
 presel_nbjet       = 'Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id&&Jet_btagCSV>'+str(btagcoeff)+')>=1'
@@ -43,14 +42,18 @@ preselection = presel_met+'&&'+presel_nbjet+'&&'+presel_njet+'&&'+presel_metsig+
 #######################################################
 #                 load all the samples                #
 #######################################################
-#from StopsDilepton.samples.cmgTuplesPostProcessed_PHYS14 import *
 from StopsDilepton.samples.cmgTuples_Spring15_25ns_postProcessed import *
 backgrounds = [diBosons_25ns,WJetsToLNu_25ns,TTX_25ns,singleTop_25ns,QCDMu_25ns,DY_25ns,DYHT_25ns,TTLep_25ns]
 #backgrounds = []
 signals = [SMS_T2tt_2J_mStop425_mLSP325, SMS_T2tt_2J_mStop500_mLSP325, SMS_T2tt_2J_mStop650_mLSP325, SMS_T2tt_2J_mStop850_mLSP100]
-#signals = [SMS_T2tt_2J_mStop650_mLSP325]
+#signals = []
 data = [DoubleEG_25ns,DoubleMuon_25ns,MuonEG_25ns]
-#data = []
+#data = [DoubleEG_25ns]
+
+for d in data:
+  d['isData'] = True
+for s in backgrounds+signals:
+  s['isData'] = False
 
 #######################################################
 #            get the TChains for each sample          #
@@ -66,9 +69,9 @@ metbinning = [20,0,800]
 mt2llbinning = [3,0,300]
 mt2bbbinning = [3,70,370]
 mt2blblbinning = [3,0,300]
-mt2llbinninglong = [25,0,300]
-mt2bbbinninglong = [25,70,370]
-mt2blblbinninglong = [25,0,300]
+mt2llbinninglong = [15,0,300]
+mt2bbbinninglong = [15,70,370]
+mt2blblbinninglong = [15,0,300]
 kinMetSigbinning = [25,0,25]
 leadingjetptbinning = [25,25,575]
 subleadingjetptbinning = [25,25,575]
@@ -301,8 +304,6 @@ treefiles = glob.glob('./trees_metcut'+str(int(metcut))+'/*')
 for f in treefiles:
   os.remove(f)
 
-
-
 #######################################################
 #            Start filling in the histograms          #
 #######################################################
@@ -365,11 +366,16 @@ for s in backgrounds+signals+data:
   chain.SetBranchStatus("isEE",1)
   chain.SetBranchStatus("isEMu",1)
   chain.SetBranchStatus("isMuMu",1)
+  if s in data:
+    chain.SetBranchStatus("HLT_mumuIso",1)
+    chain.SetBranchStatus("HLT_ee_DZ",1)
+    chain.SetBranchStatus("HLT_mue",1)
   if s not in data: 
     chain.SetBranchStatus("genWeight",1)
     chain.SetBranchStatus("Jet_mcMatchFlav",1)
     chain.SetBranchStatus("xsec",1)
     chain.SetBranchStatus("Jet_partonId",1)
+    chain.SetBranchStatus("puWeight",1)
 
   #Using Event loop
   #get EList after preselection
@@ -392,9 +398,8 @@ for s in backgrounds+signals+data:
     chain.GetEntry(eList.GetEntry(ev))
     mt2Calc.reset()
     #event weight (L= 4fb^-1)
-    weight = reduceStat*getVarValue(chain, "weight")
-
-    if s not in data: weight = weight*(luminosity/1000.)
+    #weight = reduceStat*getVarValue(chain, "weight")*getVarValue(chain, "puWeight")*(luminosity/1000.) if not s['isData'] else 1
+    weight = reduceStat*getVarValue(chain, "weight")*(luminosity/1000.) if not s['isData'] else 1
 
     #MET
     met = getVarValue(chain, "met_pt")
@@ -416,6 +421,18 @@ for s in backgrounds+signals+data:
     isMuMu = getVarValue(chain, "isMuMu")
     isEMu = getVarValue(chain, "isEMu")
 
+    #triggers
+    if s in data:
+      triggerMuMu = getVarValue(chain,"HLT_mumuIso")
+      triggerEleEle = getVarValue(chain,"HLT_ee_DZ")
+      triggerMuEle = getVarValue(chain,"HLT_mue")
+    trigger = False
+
+    if s == DoubleEG_25ns and triggerEleEle == 1: trigger = True
+    if s == DoubleMuon_25ns and triggerMuMu == 1: trigger = True
+    if s == MuonEG_25ns and triggerMuEle == 1: trigger = True
+    if s not in data: trigger = True
+
     #SF and OF channels
     leptons = {\
       'mu':   {'name': 'mumu', 'file': muons},
@@ -426,7 +443,7 @@ for s in backgrounds+signals+data:
     for lep in leptons.keys():
       plots[leptons[lep]['name']]['mll']['histo'][s["name"]].Fill(mll,weight) #mll as n-1 plot without Z-mass cut
 
-      if (lep == "emu" and isEMu) or (((lep == "e" and isEE) or (lep == "mu" and isMuMu)) and abs(mll-90.2)>15):
+      if ((lep == "emu" and isEMu) or (((lep == "e" and isEE) or (lep == "mu" and isMuMu)) and abs(mll-90.2)>15)) and trigger:
         jets = filter(lambda j:j['pt']>30 and abs(j['eta'])<2.4 and j['id'], getJets(chain))
         ht = sum([j['pt'] for j in jets])
         PhiMetJet1 = deltaPhi(metPhi,getVarValue(chain, "Jet_phi",0))
@@ -603,7 +620,6 @@ histopad =  [0.01, 0.2, 0.99, 0.99]
 datamcpad = [0.01, 0.08, 0.99, 0.3]
 
 if makedraw1D:
-
   for pk in plots.keys():
     for plot in plots[pk].keys():
       #Make a stack for backgrounds
@@ -621,11 +637,15 @@ if makedraw1D:
         bkg_stack.Add(plots[pk][plot]['histo'][b["name"]],"h")
         l.AddEntry(plots[pk][plot]['histo'][b["name"]], b["name"])
         #if b != backgrounds[0]: totalbackground.Add(plots[pk][plot]['histo'][b["name"]])
-      if len(data)!= 0:datahist = plots[pk][plot]['histo'][data[0]["name"]].Clone()
-      for d in data[1:]:
-        datahist.Add(plots[pk][plot]['histo'][d["name"]])
+      if len(data)!= 0: 
+        if pk == 'emu' : datahist = plots[pk][plot]['histo'][MuonEG_25ns["name"]].Clone()
+        elif pk == 'ee' : datahist = plots[pk][plot]['histo'][DoubleEG_25ns["name"]].Clone()
+        elif pk == 'mumu' : datahist = plots[pk][plot]['histo'][DoubleMuon_25ns["name"]].Clone()
+
+      print "first: ", datahist.Integral()
+
       if len(data)!= 0: datahist.SetMarkerColor(ROOT.kBlack)
-    #Plot!
+      #Plot!
       c1 = ROOT.TCanvas()
       #pad1 = ROOT.TPad("","",histopad[0],histopad[1],histopad[2],histopad[3])
       #pad1.Draw()
@@ -648,10 +668,10 @@ if makedraw1D:
       signalPlot_2.SetLineWidth(3)
       signalPlot_1.Draw("HISTsame")
       signalPlot_2.Draw("HISTsame")
-      #if len(data)!= 0:datahist.Draw("peSAME")
+      if len(data)!= 0:datahist.Draw("peSAME")
       l.AddEntry(signalPlot_1, signal['name'][0]+" x " + str(signalscaling), "l")
       l.AddEntry(signalPlot_2, signal['name'][2]+" x " + str(signalscaling), "l")
-      #if len(data)!= 0: l.AddEntry(datahist, "data", "pe")
+      if len(data)!= 0: l.AddEntry(datahist, "data", "pe")
       l.Draw()
       channeltag = ROOT.TPaveText(0.4,0.75,0.59,0.85,"NDC")
       firstlep, secondlep = pk[:len(pk)/2], pk[len(pk)/2:]
@@ -706,12 +726,9 @@ if makedraw1D:
       #if b != backgrounds[0]: 
       #  totalbackground.Add(plots['ee'][plot]['histo'][b["name"]])
       #  totalbackground.Add(plots['mumu'][plot]['histo'][b["name"]])
-    if len(data)!= 0:
-      datahist = plots['ee'][plot]['histo'][data[0]["name"]].Clone()
-      datahist.Add(plots['mumu'][plot]['histo'][data[0]["name"]])
-      for d in data[1:]:
-        datahist.Add(plots['ee'][plot]['histo'][d["name"]])
-        datahist.Add(plots['mumu'][plot]['histo'][d["name"]])
+    if len(data)!= 0: 
+      datahist = plots['ee'][plot]['histo'][DoubleEG_25ns["name"]].Clone()
+      datahist.Add(plots['mumu'][plot]['histo'][DoubleMuon_25ns["name"]])
       datahist.SetMarkerColor(ROOT.kBlack)
     c1 = ROOT.TCanvas()
     #pad1 = ROOT.TPad("","",histopad[0],histopad[1],histopad[2],histopad[3])
@@ -737,10 +754,10 @@ if makedraw1D:
     signalPlot_2.SetLineWidth(3)
     signalPlot_1.Draw("HISTsame")
     signalPlot_2.Draw("HISTsame")
-    #if len(data)!= 0: datahist.Draw("peSAME")
+    if len(data)!= 0: datahist.Draw("peSAME")
     l.AddEntry(signalPlot_1, signal['name'][0]+" x " + str(signalscaling), "l")
     l.AddEntry(signalPlot_2, signal['name'][2]+" x " + str(signalscaling), "l")
-    #if len(data)!= 0: l.AddEntry(datahist, "data", "pe")
+    if len(data)!= 0: l.AddEntry(datahist, "data", "pe")
     l.Draw()
     channeltag = ROOT.TPaveText(0.4,0.75,0.59,0.85,"NDC")
     channeltag.AddText("SF")
