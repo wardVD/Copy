@@ -55,8 +55,15 @@ TTJets_LO={
 'dir' : dir,
 'isData':False,
 }
+TTLep_pow={
+"name":"TTLep (pow)",
+"bins":[
+"TTLep_pow",
+],
+'dir' : dir,
+'isData':False,
+}
 
-#"TTLep_pow",
 
 TTJets_Lep={
 "name":"TTJets (Lep)",
@@ -194,7 +201,7 @@ QCD_Mu5={\
 "QCD_Pt50to80_Mu5",
 "QCD_Pt80to120_Mu5",
 "QCD_Pt120to170_Mu5",
-#"QCD_Pt170to300_Mu5",
+"QCD_Pt170to300_Mu5",
 "QCD_Pt300to470_Mu5",
 "QCD_Pt470to600_Mu5",
 "QCD_Pt600to800_Mu5",
@@ -235,7 +242,7 @@ QCD_Mu5EMbcToE={\
 "QCD_Pt50to80_Mu5",
 "QCD_Pt80to120_Mu5",
 "QCD_Pt120to170_Mu5",
-#"QCD_Pt170to300_Mu5",
+"QCD_Pt170to300_Mu5",
 "QCD_Pt300to470_Mu5",
 "QCD_Pt470to600_Mu5",
 "QCD_Pt600to800_Mu5",
