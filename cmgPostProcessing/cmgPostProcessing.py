@@ -17,9 +17,6 @@ ROOT.AutoLibraryLoader.enable()
 
 #from StopsDilepton.samples.xsec import xsec
 
-from StopsDilepton.samples.cmgTuples_Spring15_mAODv2_25ns import *
-from StopsDilepton.samples.cmgTuples_Data25ns_mAODv2 import *
-
 target_lumi = 1000 #pb-1 Which lumi to normalize to
 
 defSampleStr = "MuonEG_Run2015B_PromptReco"  #Which samples to run for by default (will be overritten by --samples option)
@@ -65,8 +62,15 @@ parser.add_option("--small", dest="small", default = False, action="store_true",
 parser.add_option("--overwrite", dest="overwrite", default = False, action="store_true", help="Overwrite?")
 
 (options, args) = parser.parse_args()
-assert options.skim in ['none', 'dilep'], "Unknown skim: %s"%options.skim
+assert options.skim in ['inclusive', 'dilep'], "Unknown skim: %s"%options.skim
 skimCond = "(1)"
+
+from StopsDilepton.samples.cmgTuples_Data25ns_mAODv2 import *
+if options.skim=="dilep":
+  from StopsDilepton.samples.cmgTuples_Spring15_mAODv2_25ns_1l import *
+elif options.skim=="inclusive":
+  from StopsDilepton.samples.cmgTuples_Spring15_mAODv2_25ns_0l import *
+
 
 if options.skim.lower()=='dilep':
   skimCond += "&&Sum$(LepGood_pt>20&&abs(LepGood_eta)<2.5)>=2"

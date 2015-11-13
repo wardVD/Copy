@@ -15,7 +15,7 @@ from math import cos,sin,sqrt,cosh,pi
 import os, copy, sys
 import itertools
 
-from StopsDilepton.samples.cmgTuples_Spring15_mAODv2_25ns_postProcessed import *
+from StopsDilepton.samples.cmgTuples_Spring15_mAODv2_25ns_1l_postProcessed import *
 from StopsDilepton.samples.cmgTuples_Data25ns_mAODv2_postProcessed import *
 from StopsDilepton.tools.objectSelection import getLeptons, getMuons, getElectrons, getGoodMuons, getGoodElectrons, getGoodLeptons, mZ
 from StopsDilepton.tools.helpers import getVarValue, getYieldFromChain, getChain
@@ -23,9 +23,9 @@ from StopsDilepton.tools.localInfo import plotDir
 from simplePlotHelpers import plot, stack, loopAndFill, drawNMStacks
 from StopsDilepton.tools.puReweighting import getReweightingFunction
 
-puReweightingFunc = getReweightingFunction(era="doubleMu_onZ_isOS_1200pb_nVert_reweight")
-puReweighting = lambda c:puReweightingFunc(getVarValue(c, "nVert"))
-#puReweighting = None
+#puReweightingFunc = getReweightingFunction(era="doubleMu_onZ_isOS_1200pb_nVert_reweight")
+#puReweighting = lambda c:puReweightingFunc(getVarValue(c, "nVert"))
+puReweighting = None
 
 cutBranches = ["weight", "leptonPt", "met*", "nVert",'run',\
                'Jet_pt', "Jet_id", "Jet_eta", "Jet_phi", "Jet_btagCSV",
@@ -34,7 +34,8 @@ cutBranches = ["weight", "leptonPt", "met*", "nVert",'run',\
                "HLT_mumuIso", "HLT_ee_DZ", "HLT_mue",
                "is*","dl_*","l1_*","l2_*", "nGoodMuons", "nGoodElectrons"
                 ]
-subdir = "png25ns_2l_mAODv2_PUrw_mcTrig"
+#subdir = "png25ns_2l_mAODv2_PUrw_mcTrig"
+subdir = "png25ns_2l_mAODv2_mcTrig"
 #preprefixes = ["PUDoubleMuOnZIsOS"]
 preprefixes = [] if not opts.small else ['small']
 maxN = 1 if opts.small else -1
@@ -56,16 +57,16 @@ triggerEleEle = "HLT_ee_DZ"
 triggerMuEle = "HLT_mue"
 
 cuts=[
-# ("njet2", "(Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id))>=2"),
-# ("nbtag1", "Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id&&Jet_btagCSV>0.890)>=1"),
-# ("mll20", "dl_mass>20"),
+ ("njet2", "(Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id))>=2"),
+ ("nbtag1", "Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id&&Jet_btagCSV>0.890)>=1"),
+ ("mll20", "dl_mass>20"),
  ("met80", "met_pt>80"),
  ("metSig5", "met_pt/sqrt(Sum$(Jet_pt*(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id)))>5"),
  ("dPhiJet0-dPhiJet1", "cos(met_phi-Jet_phi[0])<cos(0.25)&&cos(met_phi-Jet_phi[1])<cos(0.25)"),
   ]
-for i in range(len(cuts)+1):
+#for i in range(len(cuts)+1):
 #for i in reversed(range(len(cuts)+1)):
-#for i in [len(cuts)]:
+for i in [len(cuts)]:
   for comb in itertools.combinations(cuts,i):
 #    presel = [("isOS","isOS"), ("mRelIso01", "LepGood_miniRelIso[l1_index]<0.1&&LepGood_miniRelIso[l2_index]<0.1")]
     presel = [("isOS","isOS")]

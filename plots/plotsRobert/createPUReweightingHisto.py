@@ -18,7 +18,7 @@ dataCut = "(HLT_mumuIso&&Flag_HBHENoiseFilter&&Flag_goodVertices&&Flag_CSCTightH
 prefix="doubleMu_onZ_isOS_1200pb"
 
 #load all the samples
-from StopsDilepton.samples.cmgTuples_Spring15_mAODv2_25ns_postProcessed import *
+from StopsDilepton.samples.cmgTuples_Spring15_mAODv2_25ns_1l_postProcessed import *
 from StopsDilepton.samples.cmgTuples_Data25ns_mAODv2_postProcessed import *
 
 backgrounds = [DY, TTJets_Lep, TTX, diBoson,  singleTop,  singleTop, WJetsToLNu, QCD_Mu5 ] 
