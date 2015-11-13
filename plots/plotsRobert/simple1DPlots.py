@@ -34,7 +34,7 @@ cutBranches = ["weight", "leptonPt", "met*", "nVert",'run',\
                "HLT_mumuIso", "HLT_ee_DZ", "HLT_mue",
                "is*","dl_*","l1_*","l2_*", "nGoodMuons", "nGoodElectrons"
                 ]
-subdir = "png25ns_2l_mAODv2_PUrw"
+subdir = "png25ns_2l_mAODv2_PUrw_mcTrig"
 #preprefixes = ["PUDoubleMuOnZIsOS"]
 preprefixes = [] if not opts.small else ['small']
 maxN = 1 if opts.small else -1
@@ -56,15 +56,15 @@ triggerEleEle = "HLT_ee_DZ"
 triggerMuEle = "HLT_mue"
 
 cuts=[
- ("njet2", "(Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id))>=2"),
- ("nbtag1", "Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id&&Jet_btagCSV>0.890)>=1"),
- ("mll20", "dl_mass>20"),
-# ("met80", "met_pt>80"),
-# ("metSig5", "met_pt/sqrt(Sum$(Jet_pt*(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id)))>5"),
-# ("dPhiJet0-dPhiJet1", "cos(met_phi-Jet_phi[0])<cos(0.25)&&cos(met_phi-Jet_phi[1])<cos(0.25)"),
+# ("njet2", "(Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id))>=2"),
+# ("nbtag1", "Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id&&Jet_btagCSV>0.890)>=1"),
+# ("mll20", "dl_mass>20"),
+ ("met80", "met_pt>80"),
+ ("metSig5", "met_pt/sqrt(Sum$(Jet_pt*(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id)))>5"),
+ ("dPhiJet0-dPhiJet1", "cos(met_phi-Jet_phi[0])<cos(0.25)&&cos(met_phi-Jet_phi[1])<cos(0.25)"),
   ]
-#for i in range(len(cuts)+1):
-for i in reversed(range(len(cuts)+1)):
+for i in range(len(cuts)+1):
+#for i in reversed(range(len(cuts)+1)):
 #for i in [len(cuts)]:
   for comb in itertools.combinations(cuts,i):
 #    presel = [("isOS","isOS"), ("mRelIso01", "LepGood_miniRelIso[l1_index]<0.1&&LepGood_miniRelIso[l2_index]<0.1")]
@@ -75,24 +75,24 @@ for i in reversed(range(len(cuts)+1)):
     preselCuts = [p[1] for p in presel]
 
     if opts.mode=="doubleMu":
-      cutString = "&&".join(["isMuMu==1&&nGoodMuons==2&&nGoodElectrons==0", getZCut(opts.zMode)] + preselCuts)
-      dataCut = "&&".join([triggerMuMu, filterCut])
+      cutString = "&&".join(["isMuMu==1&&nGoodMuons==2&&nGoodElectrons==0", triggerMuMu, getZCut(opts.zMode)] + preselCuts)
+      dataCut = "&&".join([filterCut])
       dataSample = DoubleMuon_Run2015D
       QCDSample = QCD_Mu5
     if opts.mode=="doubleEle":
-      cutString = "&&".join(["isEE==1&&nGoodMuons==0&&nGoodElectrons==2", getZCut(opts.zMode)] + preselCuts)
-      dataCut = "&&".join([triggerEleEle, filterCut])
+      cutString = "&&".join(["isEE==1&&nGoodMuons==0&&nGoodElectrons==2", triggerEleEle, getZCut(opts.zMode)] + preselCuts)
+      dataCut = "&&".join([filterCut])
       dataSample = DoubleEG_Run2015D
       QCDSample = QCD_EMbcToE
     if opts.mode=="muEle":
-      cutString = "&&".join(["isEMu==1&&nGoodMuons==1&&nGoodElectrons==1", getZCut(opts.zMode)] + preselCuts)
-      dataCut = "&&".join([triggerMuEle, filterCut])
+      cutString = "&&".join(["isEMu==1&&nGoodMuons==1&&nGoodElectrons==1",triggerMuEle,  getZCut(opts.zMode)] + preselCuts)
+      dataCut = "&&".join([filterCut])
       dataSample = MuonEG_Run2015D
       QCDSample = QCD_Mu5EMbcToE
 
     cutFunc = None
     lumiScaleFac = dataSample["lumi"]/1000.
-    backgrounds = [TTJets_Lep, WJetsToLNu, DY, singleTop, QCDSample, TTX, diBoson] 
+    backgrounds = [TTJets, WJetsToLNu, DY, singleTop, QCDSample, TTX, diBoson] 
     data = getYieldFromChain(getChain(dataSample,histname="",maxN=maxN), cutString = "&&".join([cutString, dataCut]), weight='weight') 
     bkg  = 0. 
     for s in backgrounds:
@@ -117,7 +117,7 @@ for i in reversed(range(len(cuts)+1)):
       style_singleTop    = {'legendText':'single top',  'style':"f", 'linethickNess':0, 'errorBars':False,      'color':40, 'markerStyle':None, 'markerSize':None}
       
       data               = plot(var, binning, cut, sample=dataSample,       style=style_Data)
-      MC_TTJets          = plot(var, binning, cut, sample=TTJets_Lep,       style=style_TTJets,    weightString="weight", weightFunc=puReweighting)
+      MC_TTJets          = plot(var, binning, cut, sample=TTJets,       style=style_TTJets,    weightString="weight", weightFunc=puReweighting)
       MC_WJetsToLNu      = plot(var, binning, cut, sample=WJetsToLNu,   style=style_WJets,     weightString="weight", weightFunc=puReweighting)
       MC_DY              = plot(var, binning, cut, sample=DY,           style=style_DY,        weightString="weight", weightFunc=puReweighting)
       MC_singleTop       = plot(var, binning, cut, sample=singleTop,    style=style_singleTop, weightString="weight", weightFunc=puReweighting)

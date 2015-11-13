@@ -89,6 +89,16 @@ def getChain(sampleList, histname='histo', maxN=-1, treeName="Events"):
 #    print "Failed:",s
 #  return goodChunks, sumWeights
 
+def testRootFile(f):
+  try: 
+    rf = ROOT.TFile.Open(f)
+    good = (not rf.IsZombie()) and (not rf.TestBit(ROOT.TFile.kRecovered))
+    rf.Close()
+    return good
+  except:
+    pass
+  return False 
+
 def getChunks(sample,  maxN=-1):
   import os, subprocess
   chunks = [{'name':x} for x in os.listdir(sample.path) if x.startswith(sample.chunkString+'_Chunk') or x==sample.chunkString]
@@ -108,7 +118,7 @@ def getChunks(sample,  maxN=-1):
         sumW = float(line[0].split()[2])
         inputFilename = '/'.join([sample.path, s['name'], sample.rootFileLocation])
 #        print sumW, inputFilename
-        if os.path.isfile(inputFilename):
+        if os.path.isfile(inputFilename) and testRootFile(inputFilename):
           sumWeights+=sumW
           s['file']=inputFilename
           goodChunks.append(s)
