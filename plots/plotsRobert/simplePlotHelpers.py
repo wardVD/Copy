@@ -14,7 +14,7 @@ ROOT.TH1D.SetDefaultSumw2()
 #  ROOT.gROOT.ProcessLine('int iPeriod = 3;')
 topMargin = 0.07
 #from Workspace.HEPHYPythonTools.helpers import getFileList, getVarValue
-from StopsDilepton.tools.helpers import getVarValue, getFileList
+from StopsDilepton.tools.helpers import getVarValue, getFileList, getPlotFromChain
 
 #ROOT_colors = [ROOT.kBlack, ROOT.kRed-7, ROOT.kBlue-2, ROOT.kGreen+3, ROOT.kOrange+1,ROOT.kRed-3, ROOT.kAzure+6, ROOT.kCyan+3, ROOT.kOrange , ROOT.kRed-10]
 #upperrightlines=[[0.62,0.7,"#font[22]{CMS preliminary 2012}"],[0.62,0.65,"#sqrt{s} = 8TeV"]]
@@ -26,11 +26,12 @@ class plot:
   def __init__(self, var, binning, cut, sample, style, weightString = None, weightFunc=None, options=None):
     if var:
       self.leaf = var['leaf'] if var.has_key('leaf') else None
+      self.string = var['string'] if var.has_key('string') else None
       self.func = var['func'] if var.has_key('func') else None
       self.TTreeFormula = var['TTreeFormula'] if var.has_key('TTreeFormula') else None
       assert not ( var.has_key('func') and not var.has_key('branches')), "Error: Need(!) to specify used branches in case of function in var %s" %repr(var)
       self.usedBranches = var['branches'] if var.has_key('branches') else []
-      assert sum(bool(x) for x in [self.leaf, self.func, self.TTreeFormula])==1, "Error: Should specify exactly one of 'leaf', 'func' or 'TTreeFormula' in var %s" % repr(var)
+      assert sum(bool(x) for x in [self.leaf, self.func, self.TTreeFormula, self.string])==1, "Error: Should specify exactly one of 'leaf', 'func', 'TTreeFormula' or 'string' in var %s" % repr(var)
       if self.leaf:
         assert type(self.leaf) == types.StringType, "Error: 'leaf' should be StringType in var %s" % repr(var)
         self.title=self.leaf 
@@ -40,6 +41,10 @@ class plot:
       if self.TTreeFormula:
         assert type(self.TTreeFormula) == types.StringType, "Error: 'TTreeFormula' should be StringType in var %s" % repr(var)
         self.title="TTreeFormula"
+      if self.string:
+        assert type(self.string) == types.StringType, "Error: 'string' should be StringType in var %s" % repr(var)
+        self.title="DrawString"
+      assert not (weightFunc and self.string), "Can't use weightFunc when 'string' is specified in var %s"%repr(var)
       self.name = "_".join([var['name'], self.title, sample['name']])
 
       self.ind = var['ind'] if var.has_key('ind') else -1
@@ -47,8 +52,8 @@ class plot:
      
       self.overFlow = var['overFlow'] if var.has_key('overFlow') else None
 
-#    self.additionalCutFunc=additionalCutFunc #Not yet implemented
-    self.binning=binning
+    self.binning=None
+    self.binningIsExplicit=False
     self.cut = cut
     self.style=style
     self.sample=sample
@@ -61,8 +66,10 @@ class plot:
 
     rClass = ROOT.TProfile if options and options.has_key('isProfile') and options['isProfile'] else ROOT.TH1D
     if binning:
-      binninArgs = binning['binning'] if not (self.binning.has_key('isExplicit') and self.binning['isExplicit']) else [len(binning['binning']) - 1, array('d',binning['binning'])]
-      self.histo = rClass(self.name, self.name, *binninArgs)
+      binningArgs = binning['binning'] if not (binning.has_key('isExplicit') and binning['isExplicit']) else [len(binning['binning']) - 1, array('d',binning['binning'])]
+      self.binning = binning['binning'] 
+      self.binningIsExplicit = binning['isExplicit'] if binning.has_key('isExplicit') else False
+      self.histo = rClass(self.name, self.name, *binningArgs)
       self.histo.Sumw2()
       self.histo.Reset()
 
@@ -101,7 +108,7 @@ def switchOnBranches(c, usedBranches):
               c.SetBranchStatus(br2, 1)
 #              print "Turning on branch", br,"(aliased from",b, ")"
 
-def loopAndFill(stacks):
+def loopAndFill(stacks, mode="loop"):
   allSamples=[]
   allSampleNames=[]
   allPlots = []
@@ -121,7 +128,10 @@ def loopAndFill(stacks):
         if not p.sample in allSamples:
           assert p.sample.has_key('dir') or p.sample.has_key('dirname'), "Missing key dir or dirname in sample %s"%repr(p.sample)
           allSamples.append(p.sample)
-  
+  if mode=='loop':
+    assert not any ([p.string for p in allPlots]), "Loop mode is %s but specified 'string' for: %s"%(mode, ", ".join([p.name for p in allPlots if p.string]))
+  if mode=='draw': 
+    assert all([p.string for p in allPlots]), "Loop mode is %s but specified no 'string' for: %s"%(mode, ", ".join([p.name for p in allPlots if not p.string])) 
   print "Found",len(allSamples),'different samples:',", ".join(s['name'] for s in allSamples)
   for s in allSamples:
     cutStringForSample=[]
@@ -155,51 +165,62 @@ def loopAndFill(stacks):
       if ntot==0:
         print "Warning! Found zero events in",s['name'],'bin',b," -> do nothing"
         continue
-      for ics, cutString in enumerate(s['plotsPerCutForSample'].keys()):
-        plotsToFill = s['plotsPerCutForSample'][cutString]
-        elistName = "eList_"+s['name']+'_'+b+'_'+str(ics)
-        elist = ROOT.TEventList(elistName)
-        c.Draw(">>"+elistName,cutString)
-#        print "elist",elist,elist.GetN(),cutString,'plots',plotsToFill
-        number_events = elist.GetN() if not (s.has_key('small')  and s['small']) else min(elist.GetN(), 100)
-        print "Reading: ", s["name"], b, "with",number_events,"events passing cutString", cutString, 'and will fill', len([p.name for p in plotsToFill]),'vars.'
-        for p in plotsToFill:
-          if not (p.cut.has_key('func') and p.cut['func']):
-            p.cut['func']=None
-          if p.TTreeFormula:
-            assert p.TTreeFormula and not (p.TTreeFormula==""), "Problem in TTreeFormula %s" % p.TTreeFormula
-            fString='ROOT.TTreeFormula("'+p.name+'","'+p.TTreeFormula+'",c)'
-            exec('p.ttreeFormula='+fString)
-            print "Created TTreeFormula:",fString
-        for i in range(0,number_events):
-          if (i%10000 == 0) and i>0 :
-            print i
-          c.GetEntry(elist.GetEntry(i))
-#          try:
-#            if val>170:
-#              print "Get",i, elist.GetEntry(i)
-#          except:
-#            pass 
+      if mode.lower()=='loop':
+        for ics, cutString in enumerate(s['plotsPerCutForSample'].keys()):
+          plotsToFill = s['plotsPerCutForSample'][cutString]
+          elistName = "eList_"+s['name']+'_'+b+'_'+str(ics)
+          elist = ROOT.TEventList(elistName)
+          c.Draw(">>"+elistName,cutString)
+  #        print "elist",elist,elist.GetN(),cutString,'plots',plotsToFill
+          number_events = elist.GetN()# if not (s.has_key('small')  and s['small']) else min(elist.GetN(), 100)
+          print "Reading: ", s["name"], b, "with",number_events,"events passing cutString", cutString, 'and will fill', len([p.name for p in plotsToFill]),'vars.'
           for p in plotsToFill:
-#            print p.cut['func'],  p.cut['func'](c)
-            if (not p.cut['func']) or p.cut['func'](c):
-              weight = c.GetLeaf(p.weightString).GetValue() if p.weightString else 1.
-              reWeight = p.weightFunc(c) if p.weightFunc else 1.
-#              print c, p.weightFunc, p.weightFunc(c), getVarValue(c, "nVert"), c.GetLeaf("nVert").GetValue(), c.nVert
-              if p.leaf:
-                val =  getVarValue(c, p.leaf, p.ind)
-#                print "Fill leaf",p.leaf, p.ind, val, weight,sampleScaleFac
-              if p.TTreeFormula:
-                p.ttreeFormula.UpdateFormulaLeaves()
-                val = p.ttreeFormula.EvalInstance()
-              if p.func:
-                val = p.func(c)
-#              if val>170:print val, reWeight, weight, sampleScaleFac, p.leaf, p.ind, i, c.GetEntries(), elist.GetEntry(i),"x",c.GetLeaf('Jet_pt').GetValue(4), c.GetLeaf('met_pt').GetValue(), c.GetLeaf('lumi').GetValue(), c.GetLeaf('evt').GetValue()
-              if val<float('inf'):
-                p.histo.Fill(val, reWeight*weight*sampleScaleFac)
-#              print p.histo.GetName(), b, val, weight*sampleScaleFac, reWeight*weight*sampleScaleFac
+            if not (p.cut.has_key('func') and p.cut['func']):
+              p.cut['func']=None
+            if p.TTreeFormula:
+              assert p.TTreeFormula and not (p.TTreeFormula==""), "Problem in TTreeFormula %s" % p.TTreeFormula
+              fString='ROOT.TTreeFormula("'+p.name+'","'+p.TTreeFormula+'",c)'
+              exec('p.ttreeFormula='+fString)
+              print "Created TTreeFormula:",fString
+          for i in range(0,number_events):
+            if (i%10000 == 0) and i>0 :
+              print i
+            c.GetEntry(elist.GetEntry(i))
+            for p in plotsToFill:
+  #            print p.cut['func'],  p.cut['func'](c)
+              if (not p.cut['func']) or p.cut['func'](c):
+                weight = c.GetLeaf(p.weightString).GetValue() if p.weightString else 1.
+                reWeight = p.weightFunc(c) if p.weightFunc else 1.
+  #              print c, p.weightFunc, p.weightFunc(c), getVarValue(c, "nVert"), c.GetLeaf("nVert").GetValue(), c.nVert
+                if p.leaf:
+                  val =  getVarValue(c, p.leaf, p.ind)
+  #                print "Fill leaf",p.leaf, p.ind, val, weight,sampleScaleFac
+                if p.TTreeFormula:
+                  p.ttreeFormula.UpdateFormulaLeaves()
+                  val = p.ttreeFormula.EvalInstance()
+                if p.func:
+                  val = p.func(c)
+  #              if val>170:print val, reWeight, weight, sampleScaleFac, p.leaf, p.ind, i, c.GetEntries(), elist.GetEntry(i),"x",c.GetLeaf('Jet_pt').GetValue(4), c.GetLeaf('met_pt').GetValue(), c.GetLeaf('lumi').GetValue(), c.GetLeaf('evt').GetValue()
+                if val<float('inf'):
+                  p.histo.Fill(val, reWeight*weight*sampleScaleFac)
+  #              print p.histo.GetName(), b, val, weight*sampleScaleFac, reWeight*weight*sampleScaleFac
+      elif mode.lower()=='draw':
+        for ics, cutString in enumerate(s['plotsPerCutForSample'].keys()):
+          plotsToFill = s['plotsPerCutForSample'][cutString]
+          print "Reading: ", s["name"], b, "with cutString", cutString, 'and will fill', len([p.name for p in plotsToFill]),'vars.'
+          for p in plotsToFill:
+#            print c, p.string, p.binning, cutString, p.weightString, p.binningIsExplicit, sampleScaleFac
+            tmp = getPlotFromChain(c, p.string, p.binning, cutString, p.weightString, binningIsExplicit=p.binningIsExplicit)
+            tmp.Scale(sampleScaleFac)
+            p.histo.Add(tmp)
+#      for ics, cutString in enumerate(s['plotsPerCutForSample'].keys()):
+#        plotsToFill = s['plotsPerCutForSample'][cutString]
+#        for p in plotsToFill:
+#          print c.GetEntries(), p.name,p.histo.Integral()
+#      c.GetListOfFiles().ls()
       c.Reset()
       del c
+      
 #do over-flow bins
   for p in allPlots:
     if p.overFlow and p.overFlow in [ "upper", "both"]:
@@ -264,7 +285,7 @@ def drawStack(stk, maskedArea=None):
           xLowAbs, xHighAbs = p.histo.GetBinLowEdge(iBin), p.histo.GetBinLowEdge(iBin)+p.histo.GetBinWidth(iBin)
           xLow = (xLowAbs -  p.histo.GetXaxis().GetXmin())/(p.histo.GetXaxis().GetXmax() - p.histo.GetXaxis().GetXmin())
           xHigh = (xHighAbs -  p.histo.GetXaxis().GetXmin())/(p.histo.GetXaxis().GetXmax() - p.histo.GetXaxis().GetXmin())
-          yFracMax =  maskedArea['yLow'] if xHigh>maskedArea['xLow'] and xLow<maskedArea['xHigh'] else 1
+          yFracMax =  maskedArea['yLow'] if maskedArea and xHigh>maskedArea['xLow'] and xLow<maskedArea['xHigh'] else 1
           deltaLogY = 0.5 if yFracMax==1 else 0.3
           y =  p.histo.GetBinContent(iBin)
 #          print 'masked X:', maskedArea['xLow'], maskedArea['xHigh'], 'yFracMax', yFracMax, 'iBin',iBin, 'XHigh/Low', xHigh, xLow,  'y', y, logYMaxGlobal
@@ -341,8 +362,6 @@ def drawStack(stk, maskedArea=None):
       try:
         hcopy.GetYaxis().SetRangeUser(*(stk.options['yRange']) )
       except:pass
-
-      
       if first:
         if p.style['style'] == "e":
           hcopy.Draw("e1")
