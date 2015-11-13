@@ -15,7 +15,7 @@ reduceStat = 1
 lumiScale = 10.
 
 #load all the samples
-from StopsDilepton.samples.cmgTuples_Spring15_mAODv2_25ns_postProcessed import *
+from StopsDilepton.samples.cmgTuples_Spring15_mAODv2_25ns_1l_postProcessed import *
 
 #ttjets = TTJets_Lep
 #ttjets['name']="TTLep_1l2l"

@@ -15,7 +15,7 @@ from math import cos,sin,sqrt,cosh,pi
 import os, copy, sys
 import itertools
 
-from StopsDilepton.samples.cmgTuples_Spring15_mAODv2_25ns_postProcessed import *
+from StopsDilepton.samples.cmgTuples_Spring15_mAODv2_25ns_1l_postProcessed import *
 from StopsDilepton.samples.cmgTuples_Data25ns_mAODv2_postProcessed import *
 from StopsDilepton.tools.objectSelection import getLeptons, getMuons, getElectrons, getGoodMuons, getGoodElectrons, getGoodLeptons, mZ
 from StopsDilepton.tools.helpers import getVarValue, getYieldFromChain, getChain
