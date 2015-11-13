@@ -20,7 +20,7 @@ mt2Calc = mt2Calculator()
 #######################################################
 reduceStat         = 1 #recude the statistics, i.e. 10 is ten times less samples to look at
 btagcoeff          = 0.89
-metcut             = 140.
+metcut             = 80.
 metsignifcut       = 8.
 dphicut            = 0.25
 mllcut             = 20

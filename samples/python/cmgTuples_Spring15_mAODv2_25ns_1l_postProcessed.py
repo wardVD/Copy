@@ -1,5 +1,6 @@
 import copy, os, sys
 from StopsDilepton.tools.localInfo import dataDir
+import ROOT
 dir = dataDir 
 
 DY={\
@@ -10,6 +11,7 @@ DY={\
 ],
 'dir' : dir,
 'isData':False,
+'color': 8,
 }
 
 DY_LO={\
@@ -20,6 +22,7 @@ DY_LO={\
 ],
 'dir' : dir,
 'isData':False,
+'color': 8,
 }
 
 DY_HT_LO={\
@@ -36,6 +39,7 @@ DY_HT_LO={\
 ],
 'dir' : dir,
 'isData':False,
+'color': 8,
 }
 
 
@@ -46,6 +50,7 @@ TTJets={
 ],
 'dir' : dir,
 'isData':False,
+'color': 7,
 }
 TTJets_LO={
 "name":"TTJets (LO)",
@@ -54,6 +59,7 @@ TTJets_LO={
 ],
 'dir' : dir,
 'isData':False,
+'color': 7,
 }
 TTLep_pow={
 "name":"TTLep (pow)",
@@ -62,6 +68,7 @@ TTLep_pow={
 ],
 'dir' : dir,
 'isData':False,
+'color': 7,
 }
 
 
@@ -74,6 +81,7 @@ TTJets_Lep={
 ],
 'dir' : dir,
 'isData':False,
+'color': 7,
 }
 
 TTJets_HT_LO={
@@ -86,6 +94,7 @@ TTJets_HT_LO={
 ],
 'dir' : dir,
 'isData':False,
+'color': 7,
 }
 
 singleTop={
@@ -100,6 +109,7 @@ singleTop={
 ],
 'dir' : dir,
 'isData':False,
+'color': 40,
 }
 
 TTX={\
@@ -116,6 +126,7 @@ TTX={\
 ],
 'dir' : dir,
 'isData':False,
+'color': ROOT.kPink,
 }
 
 WJetsToLNu={
@@ -125,6 +136,7 @@ WJetsToLNu={
 ],
 'dir':dir,
 'isData':False,
+'color': ROOT.kRed-10,
 }
 
 WJetsToLNu_LO={
@@ -134,6 +146,7 @@ WJetsToLNu_LO={
 ],
 'dir':dir,
 'isData':False,
+'color': ROOT.kRed-10,
 }
 
 WJetsToLNu_HT={
@@ -150,6 +163,7 @@ WJetsToLNu_HT={
 ],
 'dir':dir,
 'isData':False,
+'color': ROOT.kRed-10,
 }
 
 diBoson={
@@ -165,6 +179,7 @@ diBoson={
 ],
 'dir':dir,
 'isData':False,
+'color': ROOT.kOrange,
 }
 triBoson={
 "name":"triBoson",
@@ -175,6 +190,7 @@ triBoson={
 ],
 'dir':dir,
 'isData':False,
+'color': ROOT.kYellow,
 }
 
 QCD_HT={\
@@ -191,6 +207,7 @@ QCD_HT={\
 ],
 'dir' : dir,
 'isData':False,
+'color': 46,
 }
 
 QCD_Mu5={\
@@ -210,6 +227,7 @@ QCD_Mu5={\
 ],
 'dir' : dir,
 'isData':False,
+'color': 46,
 }
 
 QCD_EMbcToE={\
@@ -232,6 +250,7 @@ QCD_EMbcToE={\
 ],
 'dir' : dir,
 'isData':False,
+'color': 46
 }
 
 QCD_Mu5EMbcToE={\
@@ -266,6 +285,7 @@ QCD_Mu5EMbcToE={\
 ],
 'dir' : dir,
 'isData':False,
+'color': 46,
 }
 
 
@@ -292,4 +312,5 @@ QCD_Pt={\
 ],
 'dir' : dir,
 'isData':False,
+'color': 46
 }
