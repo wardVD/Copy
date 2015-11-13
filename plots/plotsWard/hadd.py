@@ -1,6 +1,6 @@
 import os, sys
 
-dir = './trees_metcut' + sys.argv[1]
+dir = './trees_metcut_' + sys.argv[1] + '_metsig_' + sys.argv[2]
 
 os.chdir(dir)
 

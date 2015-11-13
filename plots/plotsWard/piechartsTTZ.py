@@ -20,7 +20,7 @@ mt2Calc = mt2Calculator()
 #######################################################
 reduceStat         = 1 #recude the statistics, i.e. 10 is ten times less samples to look at
 btagcoeff          = 0.89
-metcut             = 140.
+metcut             = 80.
 metsignifcut       = 8.
 dphicut            = 0.25
 mllcut             = 20
@@ -217,13 +217,12 @@ for s in backgrounds:
         neutrinogencondition = False
         leptongencondition  = False
         
-#        if 23 in gen_motherId:
-        if True:
-
+        if 23 in gen_motherId:
+        
           for ipdg, pdg in enumerate(gen_pdgId):
             if ((abs(pdg) == 12) or (abs(pdg) == 14) or (abs(pdg) == 16)) and gen_motherId[ipdg]==23 : neutrinogencondition = True
             if (abs(pdg) == 11 or abs(pdg) == 13 or abs(pdg) == 15) and gen_motherId[ipdg]==23: leptongencondition = True
-
+            
           for cut in mt2llcuts:
               
             if mt2ll >= cut and PhiMetJet_small > dphicut:

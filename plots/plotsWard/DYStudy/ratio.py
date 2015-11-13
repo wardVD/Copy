@@ -33,11 +33,13 @@ presel_mll         = 'dl_mass>'+str(mllcut)
 presel_ngoodlep    = '((nGoodMuons+nGoodElectrons)=='+str(ngoodleptons)+')'
 presel_OS          = 'isOS'
 presel_dphi        = 'cos(met_phi-Jet_phi[0])<cos(0.25)&&cos(met_phi-Jet_phi[1])<cos(0.25)'
-presel_SFZveto     = '( (isMuMu==1||isEE==1)&&abs(dl_mass-90.2)>=15 || isEMu==1 )'
+presel_isSF        = 'isMuMu == 1 || isEE == 1'
+presel_onZ         = 'abs(dl_mass-90.2)<15'
+presel_offZ        = 'abs(dl_mass-90.2)>=15'
 
 #preselection: MET>40, njets>=2, n_bjets>=1, n_lep>=2
 #For now see here for the Sum$ syntax: https://root.cern.ch/root/html/TTree.html#TTree:Draw@2
-preselection = presel_ngoodlep+'&&'+presel_OS+'&&'+presel_njet+'&&'+presel_nbjet+'&&'+presel_mll+'&&'+presel_dphi
+preselection = presel_ngoodlep+'&&'+presel_OS+'&&'+presel_njet+'&&'+presel_nbjet+'&&'+presel_mll+'&&'+presel_dphi+'&&'+presel_isSF
 
 #######################################################
 #                 load all the samples                #
@@ -54,10 +56,7 @@ for s in backgrounds:
 
 
 mt2llbinning = "(10,0,400)"
-metbinning = "(10,0,500)"
-leadingbinning = "(10,0,1000)"
-subleadingbinning = "(10,0,500)"
-mllbinning = "(10,0,200)"
+mllbinning = "(10,0,800)"
 
 
 plots = {\
@@ -65,7 +64,7 @@ plots = {\
     '_ratio': {'title':'M^{2}_{T}(ll) (GeV)', 'name':'MT2ll', 'binning': mt2llbinning, 'histo':{}},
     },
   'dl_mass':{\
-    '_ratio': {'title':'M_{ll} (GeV)', 'name':'Mll', 'binning': mt2llbinning, 'histo':{}},
+    '_ratio': {'title':'M_{ll} (GeV)', 'name':'Mll', 'binning': mllbinning, 'histo':{}},
     },
   }
 
@@ -116,8 +115,11 @@ for i,b in enumerate(backgrounds):
     c1 = ROOT.TCanvas()
 
     for j,selection in enumerate(plots[plot].keys()):
+
       integral = plots[plot][selection]['histo'][b["name"]].Integral()
       plots[plot][selection]['histo'][b["name"]].Scale(1./integral)
+
+      print plot, selection, integral
 
       plots[plot][selection]['histo'][b["name"]].SetLineColor(j+1)
       plots[plot][selection]['histo'][b["name"]].SetLineWidth(1)
@@ -125,7 +127,7 @@ for i,b in enumerate(backgrounds):
       plots[plot][selection]['histo'][b["name"]].Draw("pe1same")
       if j == 0: 
         plots[plot][selection]['histo'][b["name"]].SetMaximum(3)
-        plots[plot][selection]['histo'][b["name"]].SetMinimum(10**-7)
+        plots[plot][selection]['histo'][b["name"]].SetMinimum(10**-4)
         plots[plot][selection]['histo'][b["name"]].GetXaxis().SetTitle(plots[plot][selection]['title'])
         plots[plot][selection]['histo'][b["name"]].GetYaxis().SetTitle("Events (A.U.)")
       l.AddEntry(plots[plot][selection]['histo'][b["name"]],plots[plot][selection]['name'])
