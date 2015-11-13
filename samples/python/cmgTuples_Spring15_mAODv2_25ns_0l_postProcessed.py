@@ -4,7 +4,7 @@ import copy, os, sys
 #if anybody else wants to use this: please add a 0l data-directory to localInfo and remove the hard coded location
 dir = "/afs/hephy.at/data/rschoefbeck01/cmgTuples/postProcessed_mAODv2/inclusive"
 
-DY={\
+GJets={\
 "name" : "Gamma + Jets",
 "bins" : [
 "GJets_HT40to100",
