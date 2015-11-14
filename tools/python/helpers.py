@@ -25,7 +25,7 @@ def getFileList(dir, histname='histo', maxN=-1):
     filelist = filelist[:maxN]
   return filelist
 
-def getChain(sampleList, histname='histo', maxN=-1, treeName="Events"):
+def getChain(sampleList, histname='', maxN=-1, treeName="Events"):
   if not type(sampleList)==type([]):
     sampleList_ = [sampleList]
   else:

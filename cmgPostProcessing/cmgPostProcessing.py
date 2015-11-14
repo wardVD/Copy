@@ -23,35 +23,6 @@ defSampleStr = "MuonEG_Run2015B_PromptReco"  #Which samples to run for by defaul
 
 subDir = "/afs/hephy.at/data/rschoefbeck01/cmgTuples/postProcessed_mAODv2" #Output directory -> The first path should go to localInfo (e.g. 'dataPath' or something)
 
-#branches to be kept for data and MC
-branchKeepStrings_DATAMC = ["run", "lumi", "evt", "isData", "rho", "nVert", 
-#                     "nJet25", "nBJetLoose25", "nBJetMedium25", "nBJetTight25", "nJet40", "nJet40a", "nBJetLoose40", "nBJetMedium40", "nBJetTight40", 
-#                     "nLepGood20", "nLepGood15", "nLepGood10", "htJet25", "mhtJet25", "htJet40j", "htJet40", "mhtJet40", "nSoftBJetLoose25", "nSoftBJetMedium25", "nSoftBJetTight25", 
-                     "met_pt", "met_phi","met_Jet*", "met_Unclustered*", "met_sumEt", "met_rawPt", "met_rawSumEt",
-                     "metNoHF_pt", "metNoHF_phi",
-                     "puppiMet_pt","puppiMet_phi","puppiMet_sumEt","puppiMet_rawPt","puppiMet_rawPhi","puppiMet_rawSumEt",
-                     "Flag_*","HLT_*",
-#                     "nFatJet","FatJet_*", 
-                     "nJet", "Jet_*", 
-                     "nLepGood", "LepGood_*", 
-#                     "nLepOther", "LepOther_*", 
-                     "nTauGood", "TauGood_*",
-                     ] 
-
-#branches to be kept for MC samples only
-branchKeepStrings_MC = [ "nTrueInt", "genWeight", "xsec", "puWeight", "met_gen*", 
-#                     "GenSusyMScan1", "GenSusyMScan2", "GenSusyMScan3", "GenSusyMScan4", "GenSusyMGluino", "GenSusyMGravitino", "GenSusyMStop", "GenSusyMSbottom", "GenSusyMStop2", "GenSusyMSbottom2", "GenSusyMSquark", "GenSusyMNeutralino", "GenSusyMNeutralino2", "GenSusyMNeutralino3", "GenSusyMNeutralino4", "GenSusyMChargino", "GenSusyMChargino2", 
-#                     "ngenLep", "genLep_*", 
-#                     "nGenPart", "GenPart_*",
-                     "ngenPartAll","genPartAll_*","ngenLep","genLep_*"
-#                     "ngenTau", "genTau_*", 
-#                     "ngenLepFromTau", "genLepFromTau_*"
-                      ]
-
-#branches to be kept for data only
-branchKeepStrings_DATA = [
-            ]
-
 from optparse import OptionParser
 parser = OptionParser()
 parser.add_option("--samples", dest="allSamples", default=defSampleStr, type="string", action="store", help="samples:Which samples.")
@@ -62,17 +33,17 @@ parser.add_option("--small", dest="small", default = False, action="store_true",
 parser.add_option("--overwrite", dest="overwrite", default = False, action="store_true", help="Overwrite?")
 
 (options, args) = parser.parse_args()
-assert options.skim in ['inclusive', 'dilep'], "Unknown skim: %s"%options.skim
+#assert options.skim.lower() in ['inclusive', 'dilep'], "Unknown skim: %s"%options.skim
 skimCond = "(1)"
 
 from StopsDilepton.samples.cmgTuples_Data25ns_mAODv2 import *
-if options.skim=="dilep":
+if options.skim.lower().startswith("dilep"):
   from StopsDilepton.samples.cmgTuples_Spring15_mAODv2_25ns_1l import *
-elif options.skim=="inclusive":
+elif options.skim.lower().startswith("inclusive"):
   from StopsDilepton.samples.cmgTuples_Spring15_mAODv2_25ns_0l import *
 
 
-if options.skim.lower()=='dilep':
+if options.skim.lower().startswith('dilep'):
   skimCond += "&&Sum$(LepGood_pt>20&&abs(LepGood_eta)<2.5)>=2"
 
 if sys.argv[0].count('ipython'):
@@ -129,6 +100,63 @@ for iSample, sample in enumerate(allSamples):
   chunks+=tchunks; sumWeight += tsumWeight
   print "Now %i chunks from sample %s with sumWeight now %f"%(len(chunks), sample.name, sumWeight)
 
+if options.skim.lower().count('tiny'):
+  #branches to be kept for data and MC
+  branchKeepStrings_DATAMC = ["run", "lumi", "evt", "isData", "nVert", 
+                       "met_pt", "met_phi",
+                       "puppiMet_pt","puppiMet_phi",  
+                       "Flag_HBHENoiseFilter", "Flag_HBHENoiseIsoFilter", "Flag_goodVertices", "Flag_CSCTightHaloFilter", "Flag_eeBadScFilter",
+                       "HLT_mumuIso", "HLT_ee_DZ", "HLT_mue"
+                       'LepGood_eta','LepGood_pt','LepGood_phi', 'LepGood_dxy', 'LepGood_dz','LepGood_tightId', 'LepGood_pdgId', 'LepGood_mediumMuonId', 'LepGood_miniRelIso', 'LepGood_sip3d', 'LepGood_mvaIdSpring15', 'LepGood_convVeto', 'LepGood_lostHits',
+                       'Jet_eta','Jet_pt','Jet_phi','Jet_btagCSV', 'Jet_id' ,
+#                       "nLepGood", "LepGood_*", 
+#                       "nTauGood", "TauGood_*",
+                       ] 
+
+  #branches to be kept for MC samples only
+  branchKeepStrings_MC = [ "nTrueInt", "genWeight", "xsec", "puWeight", "met_genPt", "met_genPhi", 
+  #                     "GenSusyMScan1", "GenSusyMScan2", "GenSusyMScan3", "GenSusyMScan4", "GenSusyMGluino", "GenSusyMGravitino", "GenSusyMStop", "GenSusyMSbottom", "GenSusyMStop2", "GenSusyMSbottom2", "GenSusyMSquark", "GenSusyMNeutralino", "GenSusyMNeutralino2", "GenSusyMNeutralino3", "GenSusyMNeutralino4", "GenSusyMChargino", "GenSusyMChargino2", 
+  #                     "ngenLep", "genLep_*", 
+  #                     "nGenPart", "GenPart_*",
+  #                     "ngenPartAll","genPartAll_*","ngenLep","genLep_*"
+  #                     "ngenTau", "genTau_*", 
+  #                     "ngenLepFromTau", "genLepFromTau_*"
+                        ]
+
+  #branches to be kept for data only
+  branchKeepStrings_DATA = [
+              ]
+
+else:
+  #branches to be kept for data and MC
+  branchKeepStrings_DATAMC = ["run", "lumi", "evt", "isData", "rho", "nVert", 
+  #                     "nJet25", "nBJetLoose25", "nBJetMedium25", "nBJetTight25", "nJet40", "nJet40a", "nBJetLoose40", "nBJetMedium40", "nBJetTight40", 
+  #                     "nLepGood20", "nLepGood15", "nLepGood10", "htJet25", "mhtJet25", "htJet40j", "htJet40", "mhtJet40", "nSoftBJetLoose25", "nSoftBJetMedium25", "nSoftBJetTight25", 
+                       "met_pt", "met_phi","met_Jet*", "met_Unclustered*", "met_sumEt", "met_rawPt", "met_rawSumEt",
+                       "metNoHF_pt", "metNoHF_phi",
+                       "puppiMet_pt","puppiMet_phi","puppiMet_sumEt","puppiMet_rawPt","puppiMet_rawPhi","puppiMet_rawSumEt",
+                       "Flag_*","HLT_*",
+  #                     "nFatJet","FatJet_*", 
+                       "nJet", "Jet_*", 
+                       "nLepGood", "LepGood_*", 
+  #                     "nLepOther", "LepOther_*", 
+                       "nTauGood", "TauGood_*",
+                       ] 
+
+  #branches to be kept for MC samples only
+  branchKeepStrings_MC = [ "nTrueInt", "genWeight", "xsec", "puWeight", "met_gen*", 
+  #                     "GenSusyMScan1", "GenSusyMScan2", "GenSusyMScan3", "GenSusyMScan4", "GenSusyMGluino", "GenSusyMGravitino", "GenSusyMStop", "GenSusyMSbottom", "GenSusyMStop2", "GenSusyMSbottom2", "GenSusyMSquark", "GenSusyMNeutralino", "GenSusyMNeutralino2", "GenSusyMNeutralino3", "GenSusyMNeutralino4", "GenSusyMChargino", "GenSusyMChargino2", 
+  #                     "ngenLep", "genLep_*", 
+  #                     "nGenPart", "GenPart_*",
+                       "ngenPartAll","genPartAll_*","ngenLep","genLep_*"
+  #                     "ngenTau", "genTau_*", 
+  #                     "ngenLepFromTau", "genLepFromTau_*"
+                        ]
+
+  #branches to be kept for data only
+  branchKeepStrings_DATA = [
+              ]
+
 if sample.isData: 
   lumiScaleFactor=1
   branchKeepStrings = branchKeepStrings_DATAMC + branchKeepStrings_DATA 
@@ -151,7 +179,7 @@ readVectors = [\
 ]
 if not sample.isData: 
   aliases.extend(['genMet:met_genPt', 'genMetPhi:met_genPhi'])
-if options.skim.lower() in ['dilep']:
+if options.skim.lower().startswith('dilep'):
   newVariables.extend( ['nGoodMuons/I', 'nGoodElectrons/I' ] )
   newVariables.extend( ['dl_pt/F', 'dl_eta/F', 'dl_phi/F', 'dl_mass/F' ] )
   newVariables.extend( ['dl_mt2ll/F', 'dl_mt2bb/F', 'dl_mt2blbl/F', 'dl_mtautau/F', 'dl_alpha0/F',  'dl_alpha1/F' ] )
@@ -225,7 +253,7 @@ for chunk in chunks:
             if r.lumi not in outputLumiList[r.run]:
               outputLumiList[r.run].append(r.lumi)
 #        print "Found run %i lumi %i in json file %s"%(r.run, r.lumi, sample.json)
-      if options.skim.lower()=='dilep':
+      if options.skim.lower().startswith('dilep'):
         leptons = getGoodLeptons(r)
         s.nGoodMuons      = len(filter( lambda l:abs(l['pdgId'])==13, leptons))
         s.nGoodElectrons  = len(filter( lambda l:abs(l['pdgId'])==11, leptons))
