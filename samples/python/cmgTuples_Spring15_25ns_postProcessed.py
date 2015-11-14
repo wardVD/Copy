@@ -1,5 +1,6 @@
 import copy, os, sys
 from StopsDilepton.tools.localInfo import dataDir
+import ROOT
 dir = dataDir 
 #"ZJetsToNuNu_HT-200To400_13TeV-madgraph_RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1",
 #"ZJetsToNuNu_HT-400To600_13TeV-madgraph_RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1",
@@ -8,31 +9,36 @@ dir = dataDir
 DoubleEG_25ns={\
 "name": "DoubleEG",
 "bins": ["DoubleEG_Run2015D-PromptReco-v3/"],
-'dir' : dir
+'dir' : dir,
+'color': ROOT.kBlack,
 }
 
 DoubleMuon_25ns={\
 "name": "DoubleMuon",
 "bins": ["DoubleMuon_Run2015D-PromptReco-v3/"],
-'dir':dir
+'dir':dir,
+'color': ROOT.kBlack,
 }
 
 MuonEG_25ns={\
 "name": "MuonEG",
 "bins": ["MuonEG_Run2015D-PromptReco-v3/"],
-'dir':dir
+'dir':dir,
+'color': ROOT.kBlack,
 }
 
 TTJets_inclusive_25ns={\
 "name" : "tt+Jets",
 "bins" : ["TTJets_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8_RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1/"],
 'dir' : dir,
+'color': 7,
 }
 
 TTLep_25ns={\
 "name" : "tt+Jets2L2Nu",
 "dir": dir,
 "bins" : ["TTTo2L2Nu_13TeV-powheg_RunII_Spring15DR74-Asympt25ns_MCRUN2_74_V9-v1"],
+'color': 7,
 }
 
 WJetsHTToLNu_25ns={\
@@ -48,6 +54,7 @@ WJetsHTToLNu_25ns={\
 "WJetsToLNu_HT-2500ToInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8_RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v2",
 ],
 'dir' : dir,
+'color': ROOT.kRed-10,
 }
 WJetsToLNu_25ns={\
 "name" : "W+Jets",
@@ -55,6 +62,7 @@ WJetsToLNu_25ns={\
 "WJetsToLNu_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8_RunIISpring15DR74-Asympt50ns_MCRUN2_74_V9A-v1"
 ],
 'dir' : dir,
+'color': ROOT.kRed-10,
 }
 diBosons_25ns={\
 "name" : "WW+WZ+ZZ",
@@ -64,6 +72,7 @@ diBosons_25ns={\
 "ZZ_TuneCUETP8M1_13TeV-pythia8_RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v3",
 ],
 'dir' : dir,
+'color': ROOT.kOrange,
 }
 
 TTX_25ns={\
@@ -75,7 +84,8 @@ TTX_25ns={\
 "ttHJetTobb_M125_13TeV_amcatnloFXFX_madspin_pythia8_RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1",
 "ttHJetToNonbb_M125_13TeV_amcatnloFXFX_madspin_pythia8_RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v2"
 ],
-'dir' :dir
+'dir' :dir,
+'color': ROOT.kPink,
 }
 
 singleTop_25ns={\
@@ -87,6 +97,7 @@ singleTop_25ns={\
 "ST_tW_top_5f_inclusiveDecays_13TeV-powheg-pythia8_TuneCUETP8M1_RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1",
 ],
 'dir' : dir,
+'color': 40,
 }
 DY_25ns={\
 "name" : "DY",
@@ -95,6 +106,7 @@ DY_25ns={\
 "DYJetsToLL_M-50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8_RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v3"
 ],
 'dir' : dataDir,
+'color': 8,
 }
 DYHT_25ns={\
 "name" : "DY_HT",
@@ -109,6 +121,7 @@ DYHT_25ns={\
 "DYJetsToLL_M-5to50_HT-600toInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8_RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1",
 ],
 'dir' : dataDir,
+'color': 8,
 }
 DYM10to50_25ns={\
 "name" : "DY M10-50",
@@ -116,6 +129,7 @@ DYM10to50_25ns={\
 "DYJetsToLL_M-10to50_TuneCUETP8M1_13TeV-amcatnloFXFX-pythia8_RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1",
 ],
 'dir' : dataDir,
+'color': 8,
 }
 QCDMu_25ns={\
 "name" : "QCD_Mu",
@@ -134,6 +148,7 @@ QCDMu_25ns={\
 "QCD_Pt-1000toInf_MuEnrichedPt5_TuneCUETP8M1_13TeV_pythia8_RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v2"
 ],
 'dir' : dir,
+'color': 46,
 }
 
 
@@ -156,6 +171,7 @@ QCDEle_25ns={\
 "QCD_Pt-300toInf_EMEnriched_TuneCUETP8M1_13TeV_pythia8_RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v2",
 ],
 'dir' : dir,
+'color': 46,
 }
 
 allSignalStrings=[\
@@ -182,7 +198,10 @@ for s in allSignalStrings:
   exec("allSignals.append(s)")
 
 
-
+SMS_T2tt_2J_mStop425_mLSP325['color'] = ROOT.kRed 
+SMS_T2tt_2J_mStop500_mLSP325['color'] = ROOT.kBlue
+SMS_T2tt_2J_mStop650_mLSP325['color'] = ROOT.kGreen
+SMS_T2tt_2J_mStop850_mLSP100['color'] = ROOT.kMagenta
 
 
 TTW_25ns={\
@@ -190,7 +209,8 @@ TTW_25ns={\
 "bins": [
 "TTWJetsToLNu_TuneCUETP8M1_13TeV-amcatnloFXFX-madspin-pythia8_RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1",
 ],
-'dir' :dir
+'dir' :dir,
+'color': ROOT.kYellow,
 }
 
 TTZ_QQ_25ns={\
@@ -198,7 +218,8 @@ TTZ_QQ_25ns={\
 "bins": [
 "TTZToQQ_TuneCUETP8M1_13TeV-amcatnlo-pythia8_RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1",
 ],
-'dir' :dir
+'dir' :dir,
+'color': 7,
 }
 
 TTZ_Lep_25ns={\
@@ -206,7 +227,8 @@ TTZ_Lep_25ns={\
 "bins": [
 "TTZToLLNuNu_M-10_TuneCUETP8M1_13TeV-amcatnlo-pythia8_RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1",
 ],
-'dir' :dir
+'dir' :dir,
+'color': 7,
 }
 
 TTZ_All_25ns={\
@@ -215,7 +237,8 @@ TTZ_All_25ns={\
 "TTZToQQ_TuneCUETP8M1_13TeV-amcatnlo-pythia8_RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1",
 "TTZToLLNuNu_M-10_TuneCUETP8M1_13TeV-amcatnlo-pythia8_RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1",
 ],
-'dir' :dir
+'dir' :dir,
+'color': 7,
 }
 
 TTH_25ns={\
@@ -224,5 +247,6 @@ TTH_25ns={\
 "ttHJetTobb_M125_13TeV_amcatnloFXFX_madspin_pythia8_RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v1",
 "ttHJetToNonbb_M125_13TeV_amcatnloFXFX_madspin_pythia8_RunIISpring15DR74-Asympt25ns_MCRUN2_74_V9-v2"
 ],
-'dir' :dir
+'dir' :dir,
+'color': 16,
 }
