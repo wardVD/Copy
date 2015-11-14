@@ -14,7 +14,7 @@ mt2Calc = mt2Calculator()
 #######################################################
 #        SELECT WHAT YOU WANT TO DO HERE              #
 #######################################################
-reduceStat         = 10 #recude the statistics, i.e. 10 is ten times less samples to look at
+reduceStat         = 100 #recude the statistics, i.e. 10 is ten times less samples to look at
 makedraw1D         = True
 makedraw2D         = False
 makelatextables    = False #Ignore this if you're not Ward
@@ -35,7 +35,7 @@ presel_mll         = 'dl_mass>'+str(mllcut)
 presel_ngoodlep    = '((nGoodMuons+nGoodElectrons)=='+str(ngoodleptons)+')'
 presel_OS          = 'isOS'
 
-dataCut = "(HLT_mumuIso&&Flag_HBHENoiseFilter&&Flag_goodVertices&&Flag_CSCTightHaloFilter&&Flag_eeBadScFilter&&Flag_HBHEIsoNoiseFilterReRun)&&weight>0"
+dataCut = '(HLT_mumuIso&&Flag_HBHENoiseFilter&&Flag_goodVertices&&Flag_CSCTightHaloFilter&&Flag_eeBadScFilter&&Flag_HBHEIsoNoiseFilterReRun)&&weight>0'
 
 #preselection: MET>40, njets>=2, n_bjets>=1, n_lep>=2
 #See here for the Sum$ syntax: https://root.cern.ch/root/html/TTree.html#TTree:Draw@2
@@ -44,16 +44,14 @@ preselection = presel_met+'&&'+presel_nbjet+'&&'+presel_njet+'&&'+presel_metsig+
 #######################################################
 #                 load all the samples                #
 #######################################################
-from StopsDilepton.samples.cmgTuples_Spring15_25ns_postProcessed import *
-backgrounds = [diBoson, WJetsToLNu, TTX, singleTop, QCD_Mu5, DY, TTJets_Lep] 
+#from StopsDilepton.samples.cmgTuples_Spring15_25ns_postProcessed import *
+from StopsDilepton.samples.cmgTuples_Spring15_mAODv2_25ns_postProcessed import *
+from StopsDilepton.samples.cmgTuples_Data25ns_mAODv2_postProcessed import *
+
+backgrounds = [DY, TTJets] 
 #signals = [SMS_T2tt_2J_mStop425_mLSP325, SMS_T2tt_2J_mStop500_mLSP325, SMS_T2tt_2J_mStop650_mLSP325, SMS_T2tt_2J_mStop850_mLSP100]
 signals = []
 data = [DoubleEG_Run2015D,DoubleMuon_Run2015D,MuonEG_Run2015D]
-
-for d in data:
-  d['isData'] = True
-for s in backgrounds+signals:
-  s['isData'] = False
 
 #######################################################
 #            get the TChains for each sample          #
@@ -347,8 +345,8 @@ for s in backgrounds+signals+data:
   #get EList after preselection
   print '\n', "Looping over %s" % s["name"]
 
-  if s not in data: eList = getEList(chain, preselection)
-  else:             eList = getEList(chain, preselection+dataCut)
+  if s['isData'] : eList = getEList(chain, preselection+'&&'+dataCut)
+  else:            eList = eList = getEList(chain, preselection)
 
   nEvents = eList.GetN()/reduceStat
   print "Found %i events in %s after preselection %s, looping over %i" % (eList.GetN(),s["name"],preselection,nEvents)
@@ -393,9 +391,9 @@ for s in backgrounds+signals+data:
       triggerMuEle = getVarValue(chain,"HLT_mue")
     trigger = False
 
-    if s == DoubleEG_25ns and triggerEleEle == 1 and isEE and   len(muons)==0 and len(electrons)==2: trigger = True
-    if s == DoubleMuon_25ns and triggerMuMu == 1 and isMuMu and len(muons)==2 and len(electrons)==0: trigger = True
-    if s == MuonEG_25ns and triggerMuEle == 1    and isEMu and  len(muons)==1 and len(electrons)==1: trigger = True
+    if "DoubleEG" in s and triggerEleEle == 1 and isEE and   len(muons)==0 and len(electrons)==2: trigger = True
+    if "DoubleMuon" in s and triggerMuMu == 1 and isMuMu and len(muons)==2 and len(electrons)==0: trigger = True
+    if "MuonEG" in s and triggerMuEle == 1    and isEMu and  len(muons)==1 and len(electrons)==1: trigger = True
     if s not in data: trigger = True
 
     #SF and OF channels
@@ -562,16 +560,7 @@ if makelatextables:
 #######################################################
 #             Drawing done here                       #
 #######################################################
-#Some coloring
 
-TTLep_25ns["color"]=7
-DY_25ns["color"]=8
-DYHT_25ns["color"]=9
-QCDMu_25ns["color"]=46
-singleTop_25ns["color"]=40
-diBosons_25ns["color"]=ROOT.kOrange
-TTX_25ns['color']=ROOT.kPink
-WJetsToLNu_25ns['color']=ROOT.kRed-10
 #Plotvariables
 signal = {'path': ["SMS_T2tt_2J_mStop425_mLSP325","SMS_T2tt_2J_mStop500_mLSP325","SMS_T2tt_2J_mStop650_mLSP325","SMS_T2tt_2J_mStop850_mLSP100"], 'name': ["T2tt(425,325)","T2tt(500,325)","T2tt(650,325)","T2tt(850,100)"]}
 yminimum = 0.1
@@ -619,20 +608,22 @@ if makedraw1D:
       bkg_stack.GetXaxis().SetLabelSize(0.)
       #c1.SetLogy()
       pad1.SetLogy()
-      signalPlot_1 = plots[pk][plot]['histo'][signal['path'][0]].Clone()
-      signalPlot_2 = plots[pk][plot]['histo'][signal['path'][2]].Clone()
-      signalPlot_1.Scale(signalscaling)
-      signalPlot_2.Scale(signalscaling)
-      signalPlot_1.SetLineColor(ROOT.kRed)
-      signalPlot_2.SetLineColor(ROOT.kBlue)
-      signalPlot_1.SetLineWidth(3)
-      signalPlot_2.SetLineWidth(3)
-      signalPlot_1.Draw("HISTsame")
-      signalPlot_2.Draw("HISTsame")
-      if len(data)!= 0:datahist.Draw("peSAME")
-      l.AddEntry(signalPlot_1, signal['name'][0]+" x " + str(signalscaling), "l")
-      l.AddEntry(signalPlot_2, signal['name'][2]+" x " + str(signalscaling), "l")
-      if len(data)!= 0: l.AddEntry(datahist, "data", "pe")
+      if len(signals)>0:
+        signalPlot_1 = plots[pk][plot]['histo'][signal['path'][0]].Clone()
+        signalPlot_2 = plots[pk][plot]['histo'][signal['path'][2]].Clone()
+        signalPlot_1.Scale(signalscaling)
+        signalPlot_2.Scale(signalscaling)
+        signalPlot_1.SetLineColor(ROOT.kRed)
+        signalPlot_2.SetLineColor(ROOT.kBlue)
+        signalPlot_1.SetLineWidth(3)
+        signalPlot_2.SetLineWidth(3)
+        signalPlot_1.Draw("HISTsame")
+        signalPlot_2.Draw("HISTsame")
+        l.AddEntry(signalPlot_1, signal['name'][0]+" x " + str(signalscaling), "l")
+        l.AddEntry(signalPlot_2, signal['name'][2]+" x " + str(signalscaling), "l")
+      if len(data)!= 0:
+        datahist.Draw("peSAME")
+        l.AddEntry(datahist, "data", "pe")
       l.Draw()
       channeltag = ROOT.TPaveText(0.4,0.75,0.59,0.85,"NDC")
       firstlep, secondlep = pk[:len(pk)/2], pk[len(pk)/2:]
@@ -707,22 +698,24 @@ if makedraw1D:
     bkg_stack_SF.GetXaxis().SetLabelSize(0.)
     pad1.SetLogy()
     c1.SetLogy()
-    signalPlot_1 = plots['ee'][plot]['histo'][signal['path'][0]].Clone()
-    signalPlot_1.Add(plots['mumu'][plot]['histo'][signal['path'][0]])
-    signalPlot_2 = plots['ee'][plot]['histo'][signal['path'][2]].Clone()
-    signalPlot_2.Add(plots['mumu'][plot]['histo'][signal['path'][2]])
-    signalPlot_1.Scale(signalscaling)
-    signalPlot_2.Scale(signalscaling)
-    signalPlot_1.SetLineColor(ROOT.kRed)
-    signalPlot_2.SetLineColor(ROOT.kBlue)
-    signalPlot_1.SetLineWidth(3)
-    signalPlot_2.SetLineWidth(3)
-    signalPlot_1.Draw("HISTsame")
-    signalPlot_2.Draw("HISTsame")
-    if len(data)!= 0: datahist.Draw("peSAME")
-    l.AddEntry(signalPlot_1, signal['name'][0]+" x " + str(signalscaling), "l")
-    l.AddEntry(signalPlot_2, signal['name'][2]+" x " + str(signalscaling), "l")
-    if len(data)!= 0: l.AddEntry(datahist, "data", "pe")
+    if len(signal)>0:
+      signalPlot_1 = plots['ee'][plot]['histo'][signal['path'][0]].Clone()
+      signalPlot_1.Add(plots['mumu'][plot]['histo'][signal['path'][0]])
+      signalPlot_2 = plots['ee'][plot]['histo'][signal['path'][2]].Clone()
+      signalPlot_2.Add(plots['mumu'][plot]['histo'][signal['path'][2]])
+      signalPlot_1.Scale(signalscaling)
+      signalPlot_2.Scale(signalscaling)
+      signalPlot_1.SetLineColor(ROOT.kRed)
+      signalPlot_2.SetLineColor(ROOT.kBlue)
+      signalPlot_1.SetLineWidth(3)
+      signalPlot_2.SetLineWidth(3)
+      signalPlot_1.Draw("HISTsame")
+      signalPlot_2.Draw("HISTsame")
+      l.AddEntry(signalPlot_1, signal['name'][0]+" x " + str(signalscaling), "l")
+      l.AddEntry(signalPlot_2, signal['name'][2]+" x " + str(signalscaling), "l")
+    if len(data)!= 0: 
+      datahist.Draw("peSAME")
+      l.AddEntry(datahist, "data", "pe")
     l.Draw()
     channeltag = ROOT.TPaveText(0.4,0.75,0.59,0.85,"NDC")
     channeltag.AddText("SF")
