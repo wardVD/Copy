@@ -1,4 +1,5 @@
-data_path = "/data/rschoefbeck/cmgTuples/Run2015D_1l_2" 
+#data_path = "/data/rschoefbeck/cmgTuples/Run2015D_1l_2" 
+data_path = "/afs/cern.ch/work/s/schoef/Run2015D_1l_4" 
 from CMGTools.RootTools.samples.samples_13TeV_DATA2015 import * 
 from StopsDilepton.samples.helpers import getSubDir 
 import os

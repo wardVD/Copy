@@ -7,21 +7,21 @@ DoubleEG_Run2015D = { "name" :"DoubleEG_Run2015D",
 "DoubleEG_Run2015D_05Oct",
 "DoubleEG_Run2015D_v4"
 ],
-"lumi":550.17+711.13,
+"lumi":551.+1001.,
 }
 MuonEG_Run2015D = { "name" :"MuonEG_Run2015D", 
 "bins":[
 "MuonEG_Run2015D_05Oct",
 "MuonEG_Run2015D_v4"
 ],
-"lumi":528.85+703.21,
+"lumi":537.+989.,
 }
 DoubleMuon_Run2015D = { "name" : "DoubleMuon_Run2015D", 
 "bins":[
 "DoubleMuon_Run2015D_05Oct",
 "DoubleMuon_Run2015D_v4"
 ],
-"lumi":552.59+711.13
+"lumi":553.+996.,
 }
 
 allSamples_Data25ns = [DoubleEG_Run2015D, MuonEG_Run2015D, DoubleMuon_Run2015D]

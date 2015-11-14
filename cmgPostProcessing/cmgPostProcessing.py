@@ -7,7 +7,7 @@ from math import *
 from StopsDilepton.tools.mt2Calculator import mt2Calculator 
 mt2Calc = mt2Calculator()
 from StopsDilepton.tools.mtautau import mtautau as mtautau_
-from StopsDilepton.tools.helpers import getChain, getChunks, getObjDict, getEList, getVarValue
+from StopsDilepton.tools.helpers import getChain, getChunks, getObjDict, getEList, getVarValue, testRootFile
 from StopsDilepton.tools.objectSelection import getLeptons, getMuons, getElectrons, getGoodMuons, getGoodElectrons, getGoodLeptons, getJets, getGoodBJets, getGoodJets, isBJet 
 
 from StopsDilepton.tools.localInfo import *
@@ -81,6 +81,11 @@ assert allMC or len(allSamples)==1, "Don't concatenate data samples"
 
 assert False not in [hasattr(s, 'path') for s in allSamples], "Not all samples have a path: "+", ".join([s.name for s in allSamples])
 
+for i, s in enumerate(allSamples):
+  tchunks, tsumWeight = getChunks(s, maxN=maxN)
+  chunks+=tchunks; sumWeight += tsumWeight
+  print "Now %i chunks from sample %s with sumWeight now %f"%(len(chunks), s.name, sumWeight)
+
 sample=allSamples[0]
 if len(allSamples)>1:
   sample.name=sample.name+'_comb'  
@@ -91,14 +96,11 @@ if os.path.exists(outDir) and any([True for f in os.listdir(outDir) if f.endswit
   sys.exit(0)
 else:
   tmpDir = os.path.join(outDir,'tmp')
-  if os.path.exists(outDir): shutil.rmtree(outDir)
-  os.makedirs(outDir)
-  os.makedirs(tmpDir)
-
-for iSample, sample in enumerate(allSamples):
-  tchunks, tsumWeight = getChunks(sample, maxN=maxN)
-  chunks+=tchunks; sumWeight += tsumWeight
-  print "Now %i chunks from sample %s with sumWeight now %f"%(len(chunks), sample.name, sumWeight)
+  if os.path.exists(outDir) and options.overwrite: #not options.update: 
+    print "Directory %s exists. Delete it."%outDir
+    shutil.rmtree(outDir)
+  if not os.path.exists(outDir): os.makedirs(outDir)
+  if not os.path.exists(tmpDir): os.makedirs(tmpDir)
 
 if options.skim.lower().count('tiny'):
   #branches to be kept for data and MC
@@ -214,6 +216,16 @@ for chunk in chunks:
   nSplit = 1+int(sourceFileSize/(200*10**6)) #split into 200MB
   if nSplit>1: print "Chunk too large, will split into",nSplit,"of appox 200MB"
   for iSplit in range(nSplit):
+    newFileName = sample.name+'_'+chunk['name']+'_'+str(iSplit)+'.root'
+    newFile = os.path.join(tmpDir, newFileName)
+    if os.path.exists(newFile):
+      good = testRootFile(newFile, checkForObjects=["Events"]) 
+      if good:
+        print "Found file and looks OK -> skipping %s"%newFile
+        continue
+      else:
+        print "Found file and looks like a zombie -> remake %s"%newFile
+         
     t = getTreeFromChunk(chunk, skimCond, iSplit, nSplit)
     if not t: 
       print "Tree object not found:", t
@@ -306,17 +318,16 @@ for chunk in chunks:
 
       for v in newVars:
         v['branch'].Fill()
-    newFileName = sample.name+'_'+chunk['name']+'_'+str(iSplit)+'.root'
     filesForHadd.append(newFileName)
     if not options.small:
-      f = ROOT.TFile(tmpDir+'/'+newFileName, 'recreate')
+      f = ROOT.TFile(newFile, 'recreate')
       t.SetBranchStatus("*",0)
       for b in branchKeepStrings + [v['stage2Name'] for v in newVars] +  [v.split(':')[1] for v in aliases]:
         t.SetBranchStatus(b, 1)
       t2 = t.CloneTree()
       t2.Write()
       f.Close()
-      print "Written",tmpDir+'/'+newFileName
+      print "Written",newFile
       del f
       del t2
       t.Delete()

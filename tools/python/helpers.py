@@ -89,15 +89,20 @@ def getChain(sampleList, histname='', maxN=-1, treeName="Events"):
 #    print "Failed:",s
 #  return goodChunks, sumWeights
 
-def testRootFile(f):
+def testRootFile(f, checkForObjects=[]):
+  rf = ROOT.TFile.Open(f)
   try: 
-    rf = ROOT.TFile.Open(f)
     good = (not rf.IsZombie()) and (not rf.TestBit(ROOT.TFile.kRecovered))
-    rf.Close()
-    return good
   except:
-    pass
-  return False 
+    return False
+  for o in checkForObjects:
+    if not rf.GetListOfKeys().Contains(o):
+      print "[testRootFile] Failed to find object %s in file %s"%(o, f) 
+      rf.Close()
+      return False
+#    print "Keys recoveredd %i zombie %i tb %i"%(rf.Recover(), rf.IsZombie(), rf.TestBit(ROOT.TFile.kRecovered))
+  rf.Close()
+  return good
 
 def getChunks(sample,  maxN=-1):
   import os, subprocess
