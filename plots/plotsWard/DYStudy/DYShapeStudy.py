@@ -19,11 +19,12 @@ makedraw1D = True
 
 btagcoeff          = 0.89
 metcut             = 0.
-metsignifcut       = 8.
+metsignifcut       = 0.
 dphicut            = 0.25
 mllcut             = 20
 ngoodleptons       = 2
 luminosity         = 10000
+mt2llcut           = 0.
 
 presel_met         = 'met_pt>'+str(metcut)
 presel_nbjet       = 'Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id&&Jet_btagCSV>'+str(btagcoeff)+')>=1'
@@ -32,23 +33,27 @@ presel_metsig      = 'met_pt/sqrt(Sum$(Jet_pt*(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_
 presel_mll         = 'dl_mass>'+str(mllcut)
 presel_ngoodlep    = '((nGoodMuons+nGoodElectrons)=='+str(ngoodleptons)+')'
 presel_OS          = 'isOS'
+presel_mt2ll       = 'dl_mt2ll>'+str(mt2llcut)
 
 #preselection: MET>40, njets>=2, n_bjets>=1, n_lep>=2
 #For now see here for the Sum$ syntax: https://root.cern.ch/root/html/TTree.html#TTree:Draw@2
-preselection = presel_met+'&&'+presel_ngoodlep+'&&'+presel_OS
+preselection = presel_met+'&&'+presel_metsig+'&&'+presel_ngoodlep+'&&'+presel_OS+'&&'+presel_mt2ll+'&&'+presel_mll
 
 #######################################################
 #                 load all the samples                #
 #######################################################
-from StopsDilepton.samples.cmgTuples_Spring15_25ns_postProcessed import *
-backgrounds = [DY_25ns,DYHT_25ns]
+from StopsDilepton.samples.cmgTuples_Spring15_mAODv2_25ns_1l_postProcessed import *
+backgrounds = [DY_LO]
 
 #######################################################
 #            get the TChains for each sample          #
 #######################################################
 for s in backgrounds:
   s['chain'] = getChain(s,histname="")
-
+  s['name'] = s["name"].replace(" ","")
+  s['name'] = s["name"].replace("(","_")
+  s['name'] = s["name"].replace(",","_")
+  s['name'] = s["name"].replace(")","_")
 
 mt2llbinning = "(10,0,400)"
 metbinning = "(10,0,500)"
@@ -91,8 +96,6 @@ plots = {\
 for s in backgrounds:
   chain = s["chain"]
   for plot in plots.keys():
-
-    if s == DYHT_25ns: preselection += '&&Sum$(Jet_pt)<150'
   
     chain.Draw(plot+">>"+plot+"_onZ_0b"+s["name"]+plots[plot]['_onZ_0b']['binning'],preselection+'&&abs(dl_mass-90.2)<15&&Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id&&Jet_btagCSV>'+str(btagcoeff)+')==0')
     plots[plot]['_onZ_0b']['histo'][s["name"]] = ROOT.gDirectory.Get(plot+"_onZ_0b"+s["name"])
@@ -120,9 +123,6 @@ print "Time to process chains: ", processtime - start
 #######################################################
 #             Drawing done here                       #
 #######################################################
-#Some coloring
-DY_25ns["color"]=8
-DYHT_25ns["color"]=9
 
 legendtextsize = 0.032
 
@@ -151,13 +151,15 @@ for i,b in enumerate(backgrounds):
       plots[plot][selection]['histo'][b["name"]].Draw("pe1same")
       if j == 0: 
         plots[plot][selection]['histo'][b["name"]].SetMaximum(3)
-        plots[plot][selection]['histo'][b["name"]].SetMinimum(10**-7)
+        plots[plot][selection]['histo'][b["name"]].SetMinimum(10**-4)
         plots[plot][selection]['histo'][b["name"]].GetXaxis().SetTitle(plots[plot][selection]['title'])
         plots[plot][selection]['histo'][b["name"]].GetYaxis().SetTitle("Events (A.U.)")
       l.AddEntry(plots[plot][selection]['histo'][b["name"]],plots[plot][selection]['name'])
     c1.SetLogy()
     l.Draw()
-    c1.Print(plotDir+"/test/DYstudy/"+plot+"_"+s["name"]+".png")
+    path = plotDir+'/test/DYstudy/met_'+str(int(metcut))+'_metsig_'+str(int(metsignifcut))+'_ngoodlep_'+str(ngoodleptons)+'_isOS_mll_'+str(int(mllcut))+'_mt2ll_'+str(int(mt2llcut))+'/'
+    if not os.path.exists(path): os.makedirs(path)
+    c1.Print(path+plot+"_"+s["name"]+".png")
 
 makeplotstime = datetime.now()
 

@@ -43,8 +43,8 @@ preselection = presel_met+'&&'+presel_nbjet+'&&'+presel_njet+'&&'+presel_metsig+
 #######################################################
 #                 load all the samples                #
 #######################################################
-from StopsDilepton.samples.cmgTuples_Spring15_25ns_postProcessed import *
-backgrounds = [TTW_25ns,TTZ_All_25ns,TTH_25ns]
+from StopsDilepton.samples.cmgTuples_Spring15_mAODv2_25ns_1l_postProcessed import *
+backgrounds = [TTH,TTW,TTZ,TZQ]
 
 #######################################################
 #            get the TChains for each sample          #
@@ -210,9 +210,10 @@ for s in backgrounds:
 
 def makefigure(piechart,mt2llcut):
 
-  TTW_25ns["color"]     = "yellow"
-  TTH_25ns["color"]     = "grey"
-  TTZ_All_25ns["color"] = "cyan"
+  backgrounds[0]["color"]     = "yellow"
+  backgrounds[1]["color"]     = "grey"
+  backgrounds[2]["color"]     = "cyan"
+  backgrounds[3]["color"]     = "red"
 
   piechart = piechart[str(mt2llcut)]
 
