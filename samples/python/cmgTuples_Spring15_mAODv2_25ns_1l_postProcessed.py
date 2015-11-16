@@ -4,7 +4,7 @@ import ROOT
 dir = dataDir 
 
 DY={\
-"name" : "DY + Jets",
+"name" : "DY",
 "bins" : [
 "DYJetsToLL_M10to50",
 "DYJetsToLL_M50",
@@ -15,7 +15,7 @@ DY={\
 }
 
 DY_LO={\
-"name" : "DY (LO) + Jets",
+"name" : "DY_LO",
 "bins" : [
 "DYJetsToLL_M5to50_LO",
 "DYJetsToLL_M50_LO",
@@ -26,7 +26,7 @@ DY_LO={\
 }
 
 DY_HT_LO={\
-"name" : "DY (LO, HT) + Jets",
+"name" : "DY_HT_LO",
 "bins" : [
 "DYJetsToLL_M50_HT100to200",
 "DYJetsToLL_M50_HT200to400",
@@ -53,7 +53,7 @@ TTJets={
 'color': 7,
 }
 TTJets_LO={
-"name":"TTJets (LO)",
+"name":"TTJets_LO",
 "bins":[
 "TTJets_LO",
 ],
@@ -73,7 +73,7 @@ TTLep_pow={
 
 
 TTJets_Lep={
-"name":"TTJets (Lep)",
+"name":"TTJets_Lep",
 "bins":[
 "TTJets_DiLepton_comb",
 "TTJets_SingleLeptonFromTbar_comb",
@@ -120,6 +120,51 @@ TTX={\
 "TTWToLNu",
 "TTWToQQ",
 "TTZToLLNuNu",
+"TTZToQQ",
+"tZq_ll",
+"tZq_nunu",
+],
+'dir' : dir,
+'isData':False,
+'color': ROOT.kPink,
+}
+
+TTH={\
+"name" : "TTH",
+"bins" : [
+"TTHbb_comb",
+"TTHnobb",
+],
+'dir' : dir,
+'isData':False,
+'color': ROOT.kPink,
+}
+
+TTW={\
+"name" : "TTW",
+"bins" : [
+"TTWToLNu",
+"TTWToQQ",
+],
+'dir' : dir,
+'isData':False,
+'color': ROOT.kPink,
+}
+
+TTZ={\
+"name" : "TTZ",
+"bins" : [
+"TTZToLLNuNu",
+"TTZToQQ",
+],
+'dir' : dir,
+'isData':False,
+'color': ROOT.kPink,
+}
+
+TZQ={\
+"name" : "TZQ",
+"bins" : [
 "TTZToQQ",
 "tZq_ll",
 "tZq_nunu",
