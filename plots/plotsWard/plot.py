@@ -24,12 +24,12 @@ makedraw2D         = False
 makelatextables    = False #Ignore this if you're not Ward
 mt2llcuts          = {'0':0.,'80':80., '100':100., '110':110., '120':120., '130':130., '140':140., '150':150.} #make plots named mt2llwithcutat..... I.E. lines 134-136
 btagcoeff          = 0.89
-metcut             = 40.
-metsignifcut       = 0.
-dphicut            = 0.
+metcut             = 100.
+metsignifcut       = 8.
+dphicut            = 0.25
 mllcut             = 20
 ngoodleptons       = 2
-luminosity         = 1200
+luminosity         = 1260
 
 presel_met         = 'met_pt>'+str(metcut)
 presel_nbjet       = 'Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id&&Jet_btagCSV>'+str(btagcoeff)+')>=1'
@@ -684,6 +684,8 @@ if makedraw1D:
       ratio.GetXaxis().SetTitleOffset(0.8)
       ratio.GetYaxis().SetLabelSize(0.1)
       ratio.GetXaxis().SetLabelSize(0.18)
+      ratio.SetMinimum(0)
+      ratio.SetMaximum(5)
       ratio.Draw("pe")
       c1.cd()
       c1.Print(plotDir+"/test/1D/"+plots[pk][plot]['name']+"_"+pk+".png")
@@ -693,6 +695,7 @@ if makedraw1D:
   for plot in plotsSF['SF'].keys():
     bkg_stack_SF = ROOT.THStack("bkgs_SF","bkgs_SF")
     l=ROOT.TLegend(0.6,0.6,0.99,1.0)
+    stuff.append(l)
     l.SetFillColor(0)
     l.SetShadowColor(ROOT.kWhite)
     l.SetBorderSize(1)
@@ -758,6 +761,7 @@ if makedraw1D:
     pad2.Draw()
     pad2.cd()
     ratio = datahist.Clone()
+    stuff.append(ratio)
     ratio.Divide(totalbackground)
     ratio.SetMarkerStyle(20)
     ratio.SetMarkerSize(0.5)
@@ -770,12 +774,15 @@ if makedraw1D:
     ratio.GetXaxis().SetTitleOffset(0.8)
     ratio.GetYaxis().SetLabelSize(0.1)
     ratio.GetXaxis().SetLabelSize(0.18)
+    ratio.SetMinimum(0)
+    ratio.SetMaximum(5)
     ratio.Draw("pe")
     c1.cd()
     c1.Print(plotDir+"/test/1D/"+plotsSF['SF'][plot]['name']+"_SF.png")
     pad1.Delete()
     pad2.Delete()
-    
+    del ratio
+    c1.Clear()
 
 if makedraw2D:
 

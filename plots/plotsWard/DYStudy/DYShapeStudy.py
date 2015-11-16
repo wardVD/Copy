@@ -34,26 +34,24 @@ presel_mll         = 'dl_mass>'+str(mllcut)
 presel_ngoodlep    = '((nGoodMuons+nGoodElectrons)=='+str(ngoodleptons)+')'
 presel_OS          = 'isOS'
 presel_mt2ll       = 'dl_mt2ll>'+str(mt2llcut)
+presel_dPhi        = 'cos(met_phi-Jet_phi[0])<cos('+str(dphicut)+')&&cos(met_phi-Jet_phi[1])<cos('+str(dphicut)+')'
 
 #preselection: MET>40, njets>=2, n_bjets>=1, n_lep>=2
 #For now see here for the Sum$ syntax: https://root.cern.ch/root/html/TTree.html#TTree:Draw@2
-preselection = presel_met+'&&'+presel_metsig+'&&'+presel_ngoodlep+'&&'+presel_OS+'&&'+presel_mt2ll+'&&'+presel_mll
+preselection = presel_njet+'&&'+presel_OS+'&&'+presel_ngoodlep+'&&'+presel_mll+'&&'+presel_dPhi+'&&'+presel_met+'&&'+presel_metsig+'&&'+presel_mt2ll
+
 
 #######################################################
 #                 load all the samples                #
 #######################################################
 from StopsDilepton.samples.cmgTuples_Spring15_mAODv2_25ns_1l_postProcessed import *
-backgrounds = [DY_LO]
+backgrounds = [DY_HT_LO]
 
 #######################################################
 #            get the TChains for each sample          #
 #######################################################
 for s in backgrounds:
   s['chain'] = getChain(s,histname="")
-  s['name'] = s["name"].replace(" ","")
-  s['name'] = s["name"].replace("(","_")
-  s['name'] = s["name"].replace(",","_")
-  s['name'] = s["name"].replace(")","_")
 
 mt2llbinning = "(10,0,400)"
 metbinning = "(10,0,500)"
@@ -96,25 +94,30 @@ plots = {\
 for s in backgrounds:
   chain = s["chain"]
   for plot in plots.keys():
-  
-    chain.Draw(plot+">>"+plot+"_onZ_0b"+s["name"]+plots[plot]['_onZ_0b']['binning'],preselection+'&&abs(dl_mass-90.2)<15&&Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id&&Jet_btagCSV>'+str(btagcoeff)+')==0')
+    
+    chain.Draw(plot+">>"+plot+"_onZ_0b"+s["name"]+plots[plot]['_onZ_0b']['binning'],'(weight)*('+preselection+'&&abs(dl_mass-90.2)<15&&Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id&&Jet_btagCSV>'+str(btagcoeff)+')==0)')
     plots[plot]['_onZ_0b']['histo'][s["name"]] = ROOT.gDirectory.Get(plot+"_onZ_0b"+s["name"])
     
-    chain.Draw(plot+">>"+plot+"_offZ_0b"+s["name"]+plots[plot]['_offZ_0b']['binning'],preselection+'&&abs(dl_mass-90.2)>15&&Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id&&Jet_btagCSV>'+str(btagcoeff)+')==0')
+    chain.Draw(plot+">>"+plot+"_offZ_0b"+s["name"]+plots[plot]['_offZ_0b']['binning'],'(weight)*('+preselection+'&&abs(dl_mass-90.2)>15&&Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id&&Jet_btagCSV>'+str(btagcoeff)+')==0)')
     plots[plot]['_offZ_0b']['histo'][s["name"]] = ROOT.gDirectory.Get(plot+"_offZ_0b"+s["name"])
 
-    chain.Draw(plot+">>"+plot+"_onZ_1mb"+s["name"]+plots[plot]['_onZ_1mb']['binning'],preselection+'&&abs(dl_mass-90.2)<15&&Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id&&Jet_btagCSV>'+str(btagcoeff)+')>=1')
+    chain.Draw(plot+">>"+plot+"_onZ_1mb"+s["name"]+plots[plot]['_onZ_1mb']['binning'],'(weight)*('+preselection+'&&abs(dl_mass-90.2)<15&&Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id&&Jet_btagCSV>'+str(btagcoeff)+')>=1)')
     plots[plot]['_onZ_1mb']['histo'][s["name"]] = ROOT.gDirectory.Get(plot+"_onZ_1mb"+s["name"])
 
-    chain.Draw(plot+">>"+plot+"_offZ_1mb"+s["name"]+plots[plot]['_offZ_1mb']['binning'],preselection+'&&abs(dl_mass-90.2)>15&&Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id&&Jet_btagCSV>'+str(btagcoeff)+')>=1')
+    chain.Draw(plot+">>"+plot+"_offZ_1mb"+s["name"]+plots[plot]['_offZ_1mb']['binning'],'(weight)*('+preselection+'&&abs(dl_mass-90.2)>15&&Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id&&Jet_btagCSV>'+str(btagcoeff)+')>=1)')
     plots[plot]['_offZ_1mb']['histo'][s["name"]] = ROOT.gDirectory.Get(plot+"_offZ_1mb"+s["name"])
-
+    
     for selection in plots[plot].keys():
-      plots[plot][selection]['histo'][s['name']].Sumw2()
-      nbinsx= plots[plot][selection]['histo'][s['name']].GetNbinsX()
-      lastbin = plots[plot][selection]['histo'][s['name']].GetBinContent(nbinsx)
-      overflowbin = plots[plot][selection]['histo'][s['name']].GetBinContent(nbinsx)
+      #plots[plot][selection]['histo'][s['name']].Sumw2()
+      nbinsx        = plots[plot][selection]['histo'][s['name']].GetNbinsX()
+      lastbin       = plots[plot][selection]['histo'][s['name']].GetBinContent(nbinsx)
+      error         = plots[plot][selection]['histo'][s['name']].GetBinError(nbinsx)
+      overflowbin   = plots[plot][selection]['histo'][s['name']].GetBinContent(nbinsx+1)
+      overflowerror = plots[plot][selection]['histo'][s['name']].GetBinError(nbinsx+1)
       plots[plot][selection]['histo'][s['name']].SetBinContent(nbinsx,lastbin+overflowbin)
+      plots[plot][selection]['histo'][s['name']].SetBinError(nbinsx,sqrt(error**2+overflowerror**2))
+      plots[plot][selection]['histo'][s['name']].SetBinContent(nbinsx+1,0.)
+      plots[plot][selection]['histo'][s['name']].SetBinError(nbinsx+1,0.)
 
 
 processtime = datetime.now()
@@ -157,7 +160,7 @@ for i,b in enumerate(backgrounds):
       l.AddEntry(plots[plot][selection]['histo'][b["name"]],plots[plot][selection]['name'])
     c1.SetLogy()
     l.Draw()
-    path = plotDir+'/test/DYstudy/met_'+str(int(metcut))+'_metsig_'+str(int(metsignifcut))+'_ngoodlep_'+str(ngoodleptons)+'_isOS_mll_'+str(int(mllcut))+'_mt2ll_'+str(int(mt2llcut))+'/'
+    path = plotDir+'/test/DYstudy/njet_2m_isOS'+'_ngoodlep_'+str(ngoodleptons)+'_mt2ll_'+str(int(mt2llcut))+'dPhi_0.25_met_'+str(int(metcut))+'_metsig_'+str(int(metsignifcut))+'_mll_'+str(int(mllcut))+'/'
     if not os.path.exists(path): os.makedirs(path)
     c1.Print(path+plot+"_"+s["name"]+".png")
 
