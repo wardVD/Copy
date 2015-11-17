@@ -101,11 +101,11 @@ singleTop={
 "name":"single T",
 "bins":[
 "TBar_tWch",
-"TBar_tWch_DS",
+#"TBar_tWch_DS",
 "TToLeptons_sch",
 "TToLeptons_tch_amcatnlo_comb",
 "T_tWch",
-"T_tWch_DS",
+#"T_tWch_DS",
 ],
 'dir' : dir,
 'isData':False,

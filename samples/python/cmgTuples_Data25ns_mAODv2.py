@@ -9,7 +9,7 @@ samples = [DoubleEG_Run2015D_Promptv4, MuonEG_Run2015D_Promptv4, DoubleMuon_Run2
 dataSamples=[]
 for s in samples:
   s.isData = True
-  s.json = "$CMSSW_BASE/src/CMGTools/TTHAnalysis/data/json/Cert_246908-259891_13TeV_PromptReco_Collisions15_25ns_JSON.txt"
+  s.json = "$CMSSW_BASE/src/CMGTools/TTHAnalysis/data/json/Cert_246908-260627_13TeV_PromptReco_Collisions15_25ns_JSON.txt"
   s.treeName = "tree"
 ##for production with heppy_batch
   s.rootFileLocation = "treeProducerSusySingleLepton/tree.root"
