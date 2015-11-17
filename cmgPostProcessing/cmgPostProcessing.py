@@ -21,7 +21,7 @@ target_lumi = 1000 #pb-1 Which lumi to normalize to
 
 defSampleStr = "MuonEG_Run2015B_PromptReco"  #Which samples to run for by default (will be overritten by --samples option)
 
-subDir = "/afs/hephy.at/data/rschoefbeck01/cmgTuples/postProcessed_mAODv2" #Output directory -> The first path should go to localInfo (e.g. 'dataPath' or something)
+subDir = "/afs/hephy.at/data/rschoefbeck01/cmgTuples/postProcessed_mAODv2_fix" #Output directory -> The first path should go to localInfo (e.g. 'dataPath' or something)
 
 from optparse import OptionParser
 parser = OptionParser()
