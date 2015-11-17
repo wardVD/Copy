@@ -12,8 +12,10 @@ def deltaPhi(phi1, phi2):
   if dphi <= -pi:
     dphi += 2.0*pi
   return abs(dphi)
+
 def deltaR2(l1, l2):
   return deltaPhi(l1['phi'], l2['phi'])**2 + (l1['eta'] - l2['eta'])**2
+
 def deltaR(l1, l2):
   return sqrt(deltaR2(l1,l2))
 
@@ -35,8 +37,11 @@ def getChain(sampleList, histname='', maxN=-1, treeName="Events"):
   for s in sampleList_:
     if type(s)==type(""):
       for f in getFileList(s, histname, maxN):
-        i+=1
-        c.Add(f)
+        if testRootFile(f, checkForObjects=[treeName]): 
+          i+=1
+          c.Add(f)
+        else:
+          print "File %s looks broken."%f
     if type(s)==type({}):
       if s.has_key('file'):
         c.Add(s['file'])
@@ -45,9 +50,12 @@ def getChain(sampleList, histname='', maxN=-1, treeName="Events"):
         for b in s['bins']:
           dir = s['dirname'] if s.has_key('dirname') else s['dir']
           for f in getFileList(dir+'/'+b, histname, maxN):
-            i+=1
-            c.Add(f)
-    print "Added ",i,'files from sample',s['name']
+            if testRootFile(f, checkForObjects=[treeName]): 
+              i+=1
+              c.Add(f)
+            else:
+              print "File %s looks broken."%f
+    print "Added ",i,'files from samples %s' %(", ".join([s['name'] for s in sampleList_]))
   return c
 
 #def getChunks(sample,  maxN=-1):
@@ -387,12 +395,4 @@ def piemaker(mt2cut,piechart):
 
   canvas.SaveAs("Pie_SF_forMT2llcutat.png")
   #canvas.Close()
-
-def deltaPhi(phi1, phi2):
-  dphi = phi2-phi1
-  if  dphi > pi:
-    dphi -= 2.0*pi
-  if dphi <= -pi:
-    dphi += 2.0*pi
-  return abs(dphi)
 
