@@ -33,8 +33,8 @@ def looseMuID(l, ptCut=20, absEtaCut=2.4):
     and l["mediumMuonId"]==1 \
     and l["miniRelIso"]<0.2 \
     and l["sip3d"]<4.0\
-    and l["dxy"]<0.05\
-    and l["dz"]<0.1\
+    and abs(l["dxy"])<0.05\
+    and abs(l["dz"])<0.1\
 
 def cmgMVAEleID(l,mva_cuts):
   aeta = abs(l["eta"])
@@ -56,8 +56,8 @@ def looseEleID(l, ptCut=20, absEtaCut=2.4):
     and l["convVeto"]\
     and l["lostHits"]==0\
     and l["sip3d"] < 4.0\
-    and l["dxy"] < 0.05\
-    and l["dz"] < 0.1\
+    and abs(l["dxy"]) < 0.05\
+    and abs(l["dz"]) < 0.1\
 
 leptonVars=['eta','pt','phi','mass','charge', 'dxy', 'dz', 'relIso03','tightId', 'pdgId', 'mediumMuonId', 'miniRelIso', 'sip3d', 'mvaIdSpring15', 'convVeto', 'lostHits']
 
