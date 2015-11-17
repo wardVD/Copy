@@ -24,12 +24,12 @@ makedraw2D         = False
 makelatextables    = False #Ignore this if you're not Ward
 mt2llcuts          = {'0':0.,'80':80., '100':100., '110':110., '120':120., '130':130., '140':140., '150':150.} #make plots named mt2llwithcutat..... I.E. lines 134-136
 btagcoeff          = 0.89
-metcut             = 100.
-metsignifcut       = 8.
+metcut             = 80.
+metsignifcut       = 5.
 dphicut            = 0.25
 mllcut             = 20
 ngoodleptons       = 2
-luminosity         = 1260
+luminosity         = 10000
 
 presel_met         = 'met_pt>'+str(metcut)
 presel_nbjet       = 'Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id&&Jet_btagCSV>'+str(btagcoeff)+')>=1'
@@ -56,8 +56,8 @@ backgrounds = [TTX,DY_LO,DY_HT_LO,TTJets]
 #backgrounds = []
 #signals = [SMS_T2tt_2J_mStop425_mLSP325, SMS_T2tt_2J_mStop500_mLSP325, SMS_T2tt_2J_mStop650_mLSP325, SMS_T2tt_2J_mStop850_mLSP100]
 signals = []
-data = [DoubleEG_Run2015D,DoubleMuon_Run2015D,MuonEG_Run2015D]
-
+#data = [DoubleEG_Run2015D,DoubleMuon_Run2015D,MuonEG_Run2015D]
+data = []
 #######################################################
 #            get the TChains for each sample          #
 #######################################################
@@ -76,9 +76,9 @@ metbinning = [20,0,800]
 mt2llbinning = [3,0,300]
 mt2bbbinning = [3,70,370]
 mt2blblbinning = [3,0,300]
-mt2llbinninglong = [15,0,300]
-mt2bbbinninglong = [15,70,370]
-mt2blblbinninglong = [15,0,300]
+mt2llbinninglong = [25,0,300]
+mt2bbbinninglong = [25,70,370]
+mt2blblbinninglong = [25,0,300]
 kinMetSigbinning = [25,0,25]
 njetsbinning = [15,0,15]
 nbjetsbinning = [10,0,10]
@@ -401,6 +401,8 @@ for s in backgrounds+signals+data:
     allLeptons = getGoodLeptons(chain)
     muons = getGoodMuons(chain)
     electrons = getGoodElectrons(chain)
+    nGoodMuons = getVarValue(chain,"nGoodMuons")
+    nGoodElectrons = getVarValue(chain,"nGoodElectrons")
 
     isEE = getVarValue(chain, "isEE")
     isMuMu = getVarValue(chain, "isMuMu")
@@ -412,10 +414,14 @@ for s in backgrounds+signals+data:
     triggerMuEle = getVarValue(chain,"HLT_mue")
     
     datatrigger = False
-
+    """
     if "DoubleEG" in s['name'] and triggerEleEle == 1 and isEE and   len(muons)==0 and len(electrons)==2: datatrigger = True
     if "DoubleMuon" in s['name'] and triggerMuMu == 1 and isMuMu and len(muons)==2 and len(electrons)==0: datatrigger = True
     if "MuonEG" in s['name'] and triggerMuEle == 1    and isEMu and  len(muons)==1 and len(electrons)==1: datatrigger = True
+    """
+    if "DoubleEG" in s['name'] and triggerEleEle == 1 and isEE and   nGoodMuons==0 and nGoodElectrons==2: datatrigger = True
+    if "DoubleMuon" in s['name'] and triggerMuMu == 1 and isMuMu and nGoodMuons==2 and nGoodElectrons==0: datatrigger = True
+    if "MuonEG" in s['name'] and triggerMuEle == 1    and isEMu and  nGoodMuons==1 and nGoodElectrons==1: datatrigger = True
     
     if not s['isData']: datatrigger = True
 
@@ -622,17 +628,19 @@ if makedraw1D:
 
       #Plot!
       c1 = ROOT.TCanvas()
-      pad1 = ROOT.TPad("","",histopad[0],histopad[1],histopad[2],histopad[3])
-      pad1.Draw()
-      pad1.cd()
+      if len(data)>0:
+        pad1 = ROOT.TPad("","",histopad[0],histopad[1],histopad[2],histopad[3])
+        pad1.Draw()
+        pad1.cd()
       bkg_stack.SetMaximum(ymaximum*bkg_stack.GetMaximum())
       bkg_stack.SetMinimum(yminimum)
       bkg_stack.Draw()
       bkg_stack.GetXaxis().SetTitle(plots[pk][plot]['title'])
       bkg_stack.GetYaxis().SetTitle("Events / %i GeV"%( (plots[pk][plot]['binning'][2]-plots[pk][plot]['binning'][1])/plots[pk][plot]['binning'][0]) )
-      bkg_stack.GetXaxis().SetLabelSize(0.)
-      #c1.SetLogy()
-      pad1.SetLogy()
+      if len(data)>0: 
+        pad1.SetLogy()
+        bkg_stack.GetXaxis().SetLabelSize(0.)
+      else:           c1.SetLogy()
       if len(signals)>0:
         signalPlot_1 = plots[pk][plot]['histo'][signal['path'][0]].Clone()
         signalPlot_2 = plots[pk][plot]['histo'][signal['path'][2]].Clone()
@@ -664,32 +672,33 @@ if makedraw1D:
       channeltag.SetFillColor(ROOT.kWhite)
       channeltag.SetShadowColor(ROOT.kWhite)
       channeltag.Draw()
-      c1.cd()
-      pad2 = ROOT.TPad("","",datamcpad[0],datamcpad[1],datamcpad[2],datamcpad[3])
-      pad2.SetGrid()
-      pad2.SetBottomMargin(0.4)
-      pad2.Draw()
-      pad2.cd()
-      ratio = datahist.Clone()
-      stuff.append(ratio)
-      ratio.Divide(totalbackground)
-      ratio.SetMarkerStyle(20)
-      ratio.SetMarkerSize(0.5)
-      ratio.GetYaxis().SetTitle("Data/Bkg.")
+      if len(data)>0:
+        c1.cd()
+        pad2 = ROOT.TPad("","",datamcpad[0],datamcpad[1],datamcpad[2],datamcpad[3])
+        pad2.SetGrid()
+        pad2.SetBottomMargin(0.4)
+        pad2.Draw()
+        pad2.cd()
+        ratio = datahist.Clone()
+        stuff.append(ratio)
+        ratio.Divide(totalbackground)
+        ratio.SetMarkerStyle(20)
+        ratio.SetMarkerSize(0.5)
+        ratio.GetYaxis().SetTitle("Data/Bkg.")
       #ratio.GetYaxis().SetNdivisions(502)
-      ratio.GetXaxis().SetTitle(plots[pk][plot]['title'])
-      ratio.GetXaxis().SetTitleSize(0.2)
-      ratio.GetYaxis().SetTitleSize(0.18)
-      ratio.GetYaxis().SetTitleOffset(0.29)
-      ratio.GetXaxis().SetTitleOffset(0.8)
-      ratio.GetYaxis().SetLabelSize(0.1)
-      ratio.GetXaxis().SetLabelSize(0.18)
-      ratio.SetMinimum(0)
-      ratio.SetMaximum(5)
-      ratio.Draw("pe")
-      c1.cd()
+        ratio.GetXaxis().SetTitle(plots[pk][plot]['title'])
+        ratio.GetXaxis().SetTitleSize(0.2)
+        ratio.GetYaxis().SetTitleSize(0.18)
+        ratio.GetYaxis().SetTitleOffset(0.29)
+        ratio.GetXaxis().SetTitleOffset(0.8)
+        ratio.GetYaxis().SetLabelSize(0.1)
+        ratio.GetXaxis().SetLabelSize(0.18)
+        ratio.SetMinimum(0)
+        ratio.SetMaximum(5)
+        ratio.Draw("pe")
+        c1.cd()
       c1.Print(plotDir+"/test/1D/"+plots[pk][plot]['name']+"_"+pk+".png")
-      del ratio
+      if len(data)>0:del ratio
       c1.Clear()
 
   for plot in plotsSF['SF'].keys():
@@ -715,17 +724,19 @@ if makedraw1D:
       datahist.Add(plots['mumu'][plot]['histo'][DoubleMuon_Run2015D["name"]])
       datahist.SetMarkerColor(ROOT.kBlack)
     c1 = ROOT.TCanvas()
-    pad1 = ROOT.TPad("","",histopad[0],histopad[1],histopad[2],histopad[3])
-    pad1.Draw()
-    pad1.cd()
+    if len(data)>0:
+      pad1 = ROOT.TPad("","",histopad[0],histopad[1],histopad[2],histopad[3])
+      pad1.Draw()
+      pad1.cd()
     bkg_stack_SF.SetMaximum(ymaximum*bkg_stack_SF.GetMaximum())
     bkg_stack_SF.SetMinimum(yminimum)
     bkg_stack_SF.Draw()
     bkg_stack_SF.GetXaxis().SetTitle(plotsSF['SF'][plot]['title'])
     bkg_stack_SF.GetYaxis().SetTitle("Events / %i GeV"%( (plotsSF['SF'][plot]['binning'][2]-plotsSF['SF'][plot]['binning'][1])/plotsSF['SF'][plot]['binning'][0]) )
-    bkg_stack_SF.GetXaxis().SetLabelSize(0.)
-    pad1.SetLogy()
-    c1.SetLogy()
+    if len(data)>0: 
+      pad1.SetLogy()
+      bkg_stack_SF.GetXaxis().SetLabelSize(0.)
+    else:           c1.SetLogy()
     if len(signals)>0:
       signalPlot_1 = plots['ee'][plot]['histo'][signal['path'][0]].Clone()
       signalPlot_1.Add(plots['mumu'][plot]['histo'][signal['path'][0]])
@@ -754,34 +765,36 @@ if makedraw1D:
     channeltag.SetFillColor(ROOT.kWhite)
     channeltag.SetShadowColor(ROOT.kWhite)
     channeltag.Draw()
-    c1.cd()
-    pad2 = ROOT.TPad("","",datamcpad[0],datamcpad[1],datamcpad[2],datamcpad[3])
-    pad2.SetGrid()
-    pad2.SetBottomMargin(0.4)
-    pad2.Draw()
-    pad2.cd()
-    ratio = datahist.Clone()
-    stuff.append(ratio)
-    ratio.Divide(totalbackground)
-    ratio.SetMarkerStyle(20)
-    ratio.SetMarkerSize(0.5)
-    ratio.GetYaxis().SetTitle("Data/Bkg.")
+    if len(data)>0:
+      c1.cd()
+      pad2 = ROOT.TPad("","",datamcpad[0],datamcpad[1],datamcpad[2],datamcpad[3])
+      pad2.SetGrid()
+      pad2.SetBottomMargin(0.4)
+      pad2.Draw()
+      pad2.cd()
+      ratio = datahist.Clone()
+      stuff.append(ratio)
+      ratio.Divide(totalbackground)
+      ratio.SetMarkerStyle(20)
+      ratio.SetMarkerSize(0.5)
+      ratio.GetYaxis().SetTitle("Data/Bkg.")
       #ratio.GetYaxis().SetNdivisions(502)
-    ratio.GetXaxis().SetTitle(plots[pk][plot]['title'])
-    ratio.GetXaxis().SetTitleSize(0.2)
-    ratio.GetYaxis().SetTitleSize(0.18)
-    ratio.GetYaxis().SetTitleOffset(0.29)
-    ratio.GetXaxis().SetTitleOffset(0.8)
-    ratio.GetYaxis().SetLabelSize(0.1)
-    ratio.GetXaxis().SetLabelSize(0.18)
-    ratio.SetMinimum(0)
-    ratio.SetMaximum(5)
-    ratio.Draw("pe")
-    c1.cd()
+      ratio.GetXaxis().SetTitle(plots[pk][plot]['title'])
+      ratio.GetXaxis().SetTitleSize(0.2)
+      ratio.GetYaxis().SetTitleSize(0.18)
+      ratio.GetYaxis().SetTitleOffset(0.29)
+      ratio.GetXaxis().SetTitleOffset(0.8)
+      ratio.GetYaxis().SetLabelSize(0.1)
+      ratio.GetXaxis().SetLabelSize(0.18)
+      ratio.SetMinimum(0)
+      ratio.SetMaximum(5)
+      ratio.Draw("pe")
+      c1.cd()
     c1.Print(plotDir+"/test/1D/"+plotsSF['SF'][plot]['name']+"_SF.png")
-    pad1.Delete()
-    pad2.Delete()
-    del ratio
+    if len(data)>0:
+      del ratio
+      pad1.Delete()
+      pad2.Delete()
     c1.Clear()
 
 if makedraw2D:

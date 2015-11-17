@@ -165,7 +165,6 @@ TTZ={\
 TZQ={\
 "name" : "TZQ",
 "bins" : [
-"TTZToQQ",
 "tZq_ll",
 "tZq_nunu",
 ],
