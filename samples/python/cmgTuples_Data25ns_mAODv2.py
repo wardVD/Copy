@@ -29,6 +29,10 @@ for s in samples:
     dataSamples.append(s)
   else:
     print "Did not find %s in %s"%(s.name, path)
+  
+  vetoBaseDir='/afs/hephy.at/data/rschoefbeck01/cmgTuples/vetoLists/Run2015D/'
+  vetoSuffix='_Nov14' 
+  s.vetoList=os.path.join(vetoBaseDir, s.name.split('_')[0]+vetoSuffix+'.tar.gz')
    
 print 
 print "Found %i Run2015D datasets in %s\n%s"% (len(dataSamples), data_path, (", ".join([s.name for s in dataSamples])))

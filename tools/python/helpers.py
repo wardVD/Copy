@@ -37,7 +37,7 @@ def getChain(sampleList, histname='', maxN=-1, treeName="Events"):
   for s in sampleList_:
     if type(s)==type(""):
       for f in getFileList(s, histname, maxN):
-        if testRootFile(f, checkForObjects=[treeName]): 
+        if checkRootFile(f, checkForObjects=[treeName]): 
           i+=1
           c.Add(f)
         else:
@@ -50,7 +50,7 @@ def getChain(sampleList, histname='', maxN=-1, treeName="Events"):
         for b in s['bins']:
           dir = s['dirname'] if s.has_key('dirname') else s['dir']
           for f in getFileList(dir+'/'+b, histname, maxN):
-            if testRootFile(f, checkForObjects=[treeName]): 
+            if checkRootFile(f, checkForObjects=[treeName]): 
               i+=1
               c.Add(f)
             else:
@@ -97,7 +97,7 @@ def getChain(sampleList, histname='', maxN=-1, treeName="Events"):
 #    print "Failed:",s
 #  return goodChunks, sumWeights
 
-def testRootFile(f, checkForObjects=[]):
+def checkRootFile(f, checkForObjects=[]):
   rf = ROOT.TFile.Open(f)
   try: 
     good = (not rf.IsZombie()) and (not rf.TestBit(ROOT.TFile.kRecovered))
@@ -105,7 +105,7 @@ def testRootFile(f, checkForObjects=[]):
     return False
   for o in checkForObjects:
     if not rf.GetListOfKeys().Contains(o):
-      print "[testRootFile] Failed to find object %s in file %s"%(o, f) 
+      print "[checkRootFile] Failed to find object %s in file %s"%(o, f) 
       rf.Close()
       return False
 #    print "Keys recoveredd %i zombie %i tb %i"%(rf.Recover(), rf.IsZombie(), rf.TestBit(ROOT.TFile.kRecovered))
@@ -131,7 +131,7 @@ def getChunks(sample,  maxN=-1):
         sumW = float(line[0].split()[2])
         inputFilename = '/'.join([sample.path, s['name'], sample.rootFileLocation])
 #        print sumW, inputFilename
-        if os.path.isfile(inputFilename) and testRootFile(inputFilename):
+        if os.path.isfile(inputFilename) and checkRootFile(inputFilename):
           sumWeights+=sumW
           s['file']=inputFilename
           goodChunks.append(s)

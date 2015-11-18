@@ -1,8 +1,10 @@
 #!/bin/sh
 python cmgPostProcessing.py --skim=dilep  --samples=DYJetsToLL_M10to50 $1
 python cmgPostProcessing.py --skim=dilep  --samples=DYJetsToLL_M5to50_LO $1
+python cmgPostProcessing.py --skim=dilep  --samples=DYJetsToLL_M5to50_LO --lheHTCut=100 $1
 python cmgPostProcessing.py --skim=dilep  --samples=DYJetsToLL_M50 $1
 python cmgPostProcessing.py --skim=dilep  --samples=DYJetsToLL_M50_LO $1
+python cmgPostProcessing.py --skim=dilep  --samples=DYJetsToLL_M50_LO --lheHTCut=100 $1
 python cmgPostProcessing.py --skim=dilep  --samples=DYJetsToLL_M50_HT100to200 $1
 python cmgPostProcessing.py --skim=dilep  --samples=DYJetsToLL_M50_HT200to400 $1
 python cmgPostProcessing.py --skim=dilep  --samples=DYJetsToLL_M50_HT400to600 $1

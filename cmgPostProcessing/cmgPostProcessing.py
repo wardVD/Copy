@@ -5,6 +5,7 @@ from StopsDilepton.tools.convertHelpers import compileClass, readVar, printHeade
 
 from math import *
 from StopsDilepton.tools.mt2Calculator import mt2Calculator 
+from StopsDilepton.tools.vetoList import vetoList
 mt2Calc = mt2Calculator()
 from StopsDilepton.tools.mtautau import mtautau as mtautau_
 from StopsDilepton.tools.helpers import getChain, getChunks, getObjDict, getEList, getVarValue, checkRootFile
@@ -19,7 +20,7 @@ ROOT.AutoLibraryLoader.enable()
 
 target_lumi = 1000 #pb-1 Which lumi to normalize to
 
-defSampleStr = "MuonEG_Run2015B_PromptReco"  #Which samples to run for by default (will be overritten by --samples option)
+defSampleStr = "DoubleMuon_Run2015D_v4"  #Which samples to run for by default (will be overritten by --samples option)
 
 subDir = "/afs/hephy.at/data/rschoefbeck01/cmgTuples/postProcessed_mAODv2_fix" #Output directory -> The first path should go to localInfo (e.g. 'dataPath' or something)
 
@@ -99,6 +100,11 @@ if options.lheHTCut:
   sample.name+="_lheHT"+options.lheHTCut
   skimCond+="&&lheHTIncoming<"+options.lheHTCut
 
+if "Run2015D" in sample.name and not hasattr(sample, "vetoList"):
+  sys.exit("ERROR. Sample %s seems to be data but no vetoList was provided!!" %sample.name)
+
+vetoList_ = vetoList(sample.vetoList) if hasattr(sample, "vetoList") else None
+
 outDir = os.path.join(options.targetDir, options.skim, sample.name)
 if os.path.exists(outDir):
   existingFiles = [outDir+'/'+f for f in os.listdir(outDir) if f.endswith('.root')]
@@ -109,7 +115,7 @@ else:
   
 #print "Found bad file? %r"%hasBadFile
 if os.path.exists(outDir) and len(existingFiles)>0 and (not hasBadFile) and not options.overwrite:
-  print "Found non-empty directory: %s -> skipping!"%outDir
+  print "Found non-empty directory: %s -> skipping! (found a bad file? %r.)"%(outDir, hasBadFile)
   sys.exit(0)
 else:
   tmpDir = os.path.join(outDir,'tmp')
@@ -191,7 +197,7 @@ else:
   branchKeepStrings = branchKeepStrings_DATAMC + branchKeepStrings_MC
   jetMCInfo = ['mcMatchFlav/I', 'partonId/I']
 
-readVariables = ['met_pt/F', 'met_phi/F', 'run/I', 'lumi/I']
+readVariables = ['met_pt/F', 'met_phi/F', 'run/I', 'lumi/I', 'evt/l']
 newVariables = ['weight/F']
 aliases = [ "met:met_pt", "metPhi:met_phi"]
 readVectors = [\
@@ -283,6 +289,12 @@ for chunk in chunks:
           else:
             if r.lumi not in outputLumiList[r.run]:
               outputLumiList[r.run].append(r.lumi)
+      if vetoList_:
+        if (r.run, r.lumi, r.evt) in vetoList_.events:
+          print "Found %i:%i:%i "%(r.run, r.lumi, r.evt)
+#        print "Found %i:%i:%i in %s"%(r.run, r.lumi, r.evt, vetoList.filename)
+        s.weight=0
+#      else: print [r.run, r.lumi, r.evt], vetoList_.events[0]
 #        print "Found run %i lumi %i in json file %s"%(r.run, r.lumi, sample.json)
       if options.skim.lower().startswith('dilep'):
         leptons = getGoodLeptons(r)
