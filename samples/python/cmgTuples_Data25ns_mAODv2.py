@@ -9,7 +9,7 @@ samples = [DoubleEG_Run2015D_Promptv4, MuonEG_Run2015D_Promptv4, DoubleMuon_Run2
 dataSamples=[]
 for s in samples:
   s.isData = True
-  s.json = "$CMSSW_BASE/src/CMGTools/TTHAnalysis/data/json/Cert_246908-259891_13TeV_PromptReco_Collisions15_25ns_JSON.txt"
+  s.json = "$CMSSW_BASE/src/CMGTools/TTHAnalysis/data/json/Cert_246908-260627_13TeV_PromptReco_Collisions15_25ns_JSON.txt"
   s.treeName = "tree"
 ##for production with heppy_batch
   s.rootFileLocation = "treeProducerSusySingleLepton/tree.root"
@@ -29,6 +29,10 @@ for s in samples:
     dataSamples.append(s)
   else:
     print "Did not find %s in %s"%(s.name, path)
+  
+  vetoBaseDir='/afs/hephy.at/data/rschoefbeck01/cmgTuples/vetoLists/Run2015D/'
+  vetoSuffix='_Nov14' 
+  s.vetoList=os.path.join(vetoBaseDir, s.name.split('_')[0]+vetoSuffix+'.tar.gz')
    
 print 
 print "Found %i Run2015D datasets in %s\n%s"% (len(dataSamples), data_path, (", ".join([s.name for s in dataSamples])))

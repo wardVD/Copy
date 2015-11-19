@@ -5,9 +5,10 @@ from StopsDilepton.tools.convertHelpers import compileClass, readVar, printHeade
 
 from math import *
 from StopsDilepton.tools.mt2Calculator import mt2Calculator 
+from StopsDilepton.tools.vetoList import vetoList
 mt2Calc = mt2Calculator()
 from StopsDilepton.tools.mtautau import mtautau as mtautau_
-from StopsDilepton.tools.helpers import getChain, getChunks, getObjDict, getEList, getVarValue, testRootFile
+from StopsDilepton.tools.helpers import getChain, getChunks, getObjDict, getEList, getVarValue, checkRootFile
 from StopsDilepton.tools.objectSelection import getLeptons, getMuons, getElectrons, getGoodMuons, getGoodElectrons, getGoodLeptons, getJets, getGoodBJets, getGoodJets, isBJet 
 
 from StopsDilepton.tools.localInfo import *
@@ -19,9 +20,9 @@ ROOT.AutoLibraryLoader.enable()
 
 target_lumi = 1000 #pb-1 Which lumi to normalize to
 
-defSampleStr = "MuonEG_Run2015B_PromptReco"  #Which samples to run for by default (will be overritten by --samples option)
+defSampleStr = "DoubleMuon_Run2015D_v4"  #Which samples to run for by default (will be overritten by --samples option)
 
-subDir = "/afs/hephy.at/data/rschoefbeck01/cmgTuples/postProcessed_mAODv2" #Output directory -> The first path should go to localInfo (e.g. 'dataPath' or something)
+subDir = "/afs/hephy.at/data/rschoefbeck01/cmgTuples/postProcessed_mAODv2_fix" #Output directory -> The first path should go to localInfo (e.g. 'dataPath' or something)
 
 from optparse import OptionParser
 parser = OptionParser()
@@ -31,6 +32,7 @@ parser.add_option("--targetDir", dest="targetDir", default=subDir, type="string"
 parser.add_option("--skim", dest="skim", default="dilep", type="string", action="store", help="any skim condition?")
 parser.add_option("--small", dest="small", default = False, action="store_true", help="Just do a small subset.")
 parser.add_option("--overwrite", dest="overwrite", default = False, action="store_true", help="Overwrite?")
+parser.add_option("--lheHTCut", dest="lheHTCut", default="", type="string", action="store", help="upper cut on lheHTIncoming")
 
 (options, args) = parser.parse_args()
 #assert options.skim.lower() in ['inclusive', 'dilep'], "Unknown skim: %s"%options.skim
@@ -90,12 +92,35 @@ sample=allSamples[0]
 if len(allSamples)>1:
   sample.name=sample.name+'_comb'  
 
+if options.lheHTCut:
+  try:
+    float(options.lheHTCut)
+  except:
+    sys.exit("Float conversion of option lheHTCut failed. Got this: %s"%options.lheHTCut)
+  sample.name+="_lheHT"+options.lheHTCut
+  skimCond+="&&lheHTIncoming<"+options.lheHTCut
+
+if "Run2015D" in sample.name and not hasattr(sample, "vetoList"):
+  sys.exit("ERROR. Sample %s seems to be data but no vetoList was provided!!" %sample.name)
+
+vetoList_ = vetoList(sample.vetoList) if hasattr(sample, "vetoList") else None
+
 outDir = os.path.join(options.targetDir, options.skim, sample.name)
-if os.path.exists(outDir) and any([True for f in os.listdir(outDir) if f.endswith('.root')]) and not options.overwrite:
-  print "Found non-empty directory: %s -> skipping!"%outDir
+if os.path.exists(outDir):
+  existingFiles = [outDir+'/'+f for f in os.listdir(outDir) if f.endswith('.root')]
+  hasBadFile = any([not checkRootFile(f) for f in existingFiles])
+else:
+  existingFiles = []
+  hasBadFile = False
+  
+#print "Found bad file? %r"%hasBadFile
+if os.path.exists(outDir) and len(existingFiles)>0 and (not hasBadFile) and not options.overwrite:
+  print "Found non-empty directory: %s -> skipping! (found a bad file? %r.)"%(outDir, hasBadFile)
   sys.exit(0)
 else:
   tmpDir = os.path.join(outDir,'tmp')
+  if hasBadFile:
+    print "Found a corrupted file. Remake sample. Delete %s"%outDir
   if os.path.exists(outDir) and options.overwrite: #not options.update: 
     print "Directory %s exists. Delete it."%outDir
     shutil.rmtree(outDir)
@@ -116,7 +141,7 @@ if options.skim.lower().count('tiny'):
                        ] 
 
   #branches to be kept for MC samples only
-  branchKeepStrings_MC = [ "nTrueInt", "genWeight", "xsec", "puWeight", "met_genPt", "met_genPhi", 
+  branchKeepStrings_MC = [ "nTrueInt", "genWeight", "xsec", "puWeight", "met_genPt", "met_genPhi", "lheHTIncoming", 
   #                     "GenSusyMScan1", "GenSusyMScan2", "GenSusyMScan3", "GenSusyMScan4", "GenSusyMGluino", "GenSusyMGravitino", "GenSusyMStop", "GenSusyMSbottom", "GenSusyMStop2", "GenSusyMSbottom2", "GenSusyMSquark", "GenSusyMNeutralino", "GenSusyMNeutralino2", "GenSusyMNeutralino3", "GenSusyMNeutralino4", "GenSusyMChargino", "GenSusyMChargino2", 
   #                     "ngenLep", "genLep_*", 
   #                     "nGenPart", "GenPart_*",
@@ -146,7 +171,7 @@ else:
                        ] 
 
   #branches to be kept for MC samples only
-  branchKeepStrings_MC = [ "nTrueInt", "genWeight", "xsec", "puWeight", "met_gen*", 
+  branchKeepStrings_MC = [ "nTrueInt", "genWeight", "xsec", "puWeight", "met_gen*", "lheHTIncoming" ,
   #                     "GenSusyMScan1", "GenSusyMScan2", "GenSusyMScan3", "GenSusyMScan4", "GenSusyMGluino", "GenSusyMGravitino", "GenSusyMStop", "GenSusyMSbottom", "GenSusyMStop2", "GenSusyMSbottom2", "GenSusyMSquark", "GenSusyMNeutralino", "GenSusyMNeutralino2", "GenSusyMNeutralino3", "GenSusyMNeutralino4", "GenSusyMChargino", "GenSusyMChargino2", 
   #                     "ngenLep", "genLep_*", 
   #                     "nGenPart", "GenPart_*",
@@ -172,7 +197,7 @@ else:
   branchKeepStrings = branchKeepStrings_DATAMC + branchKeepStrings_MC
   jetMCInfo = ['mcMatchFlav/I', 'partonId/I']
 
-readVariables = ['met_pt/F', 'met_phi/F', 'run/I', 'lumi/I']
+readVariables = ['met_pt/F', 'met_phi/F', 'run/I', 'lumi/I', 'evt/l']
 newVariables = ['weight/F']
 aliases = [ "met:met_pt", "metPhi:met_phi"]
 readVectors = [\
@@ -219,7 +244,7 @@ for chunk in chunks:
     newFileName = sample.name+'_'+chunk['name']+'_'+str(iSplit)+'.root'
     newFile = os.path.join(tmpDir, newFileName)
     if os.path.exists(newFile):
-      good = testRootFile(newFile, checkForObjects=["Events"]) 
+      good = checkRootFile(newFile, checkForObjects=["Events"]) 
       if good:
         print "Found file and looks OK -> skipping %s"%newFile
         continue
@@ -264,6 +289,12 @@ for chunk in chunks:
           else:
             if r.lumi not in outputLumiList[r.run]:
               outputLumiList[r.run].append(r.lumi)
+      if vetoList_:
+        if (r.run, r.lumi, r.evt) in vetoList_.events:
+          print "Found %i:%i:%i "%(r.run, r.lumi, r.evt)
+#        print "Found %i:%i:%i in %s"%(r.run, r.lumi, r.evt, vetoList.filename)
+        s.weight=0
+#      else: print [r.run, r.lumi, r.evt], vetoList_.events[0]
 #        print "Found run %i lumi %i in json file %s"%(r.run, r.lumi, sample.json)
       if options.skim.lower().startswith('dilep'):
         leptons = getGoodLeptons(r)

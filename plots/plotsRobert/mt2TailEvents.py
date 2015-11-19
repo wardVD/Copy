@@ -5,7 +5,7 @@ ROOT.setTDRStyle()
 from math import *
 import array, operator
 from StopsDilepton.tools.localInfo import plotDir
-from StopsDilepton.tools.helpers import getChain, getObjDict, getEList, getVarValue, deltaR
+from StopsDilepton.tools.helpers import getChain, getObjDict, getEList, getVarValue, deltaR, getObjFromFile
 from StopsDilepton.tools.objectSelection import getGenPartsAll, getGoodLeptons, getLeptons, looseMuID, looseEleID, getJets, leptonVars, jetVars 
 from StopsDilepton.tools.mt2Calculator import mt2Calculator
 mt2Calc = mt2Calculator()
@@ -88,6 +88,8 @@ for s in samples:
   counterRecoGen_oneEleMatchedToB={}
   counterRecoGen_oneMuMatchedToTau={}
   counterRecoGen_oneEleMatchedToTau={}
+  badMuonCandidates={}
+  badElectronCandidates={}
   for mode in ["isMuMu", "isEE", "isEMu"]:
     counterReco[mode]=0
     counterRecoGen[mode]={}
@@ -98,6 +100,8 @@ for s in samples:
     counterRecoGen_oneEleMatchedToB[mode]={}
     counterRecoGen_oneMuMatchedToTau[mode]={}
     counterRecoGen_oneEleMatchedToTau[mode]={}
+    badMuonCandidates[mode]=[]
+    badElectronCandidates[mode]=[]
   for ev in range(nEvents):
     ntot+=1
     if ev%10000==0:print "At %i/%i"%(ev,nEvents)
@@ -108,7 +112,8 @@ for s in samples:
     metPhi = getVarValue(chain, "met_phi")
     jets = filter(lambda j:j['pt']>30 and abs(j['eta'])<2.4 and j['id'], getJets(chain))
 
-    leptons = filter(lambda l: looseMuID(l) or looseEleID(l), getLeptons(chain, collVars=leptonVars+['mcMatchId','mcMatchAny','mcMatchTau','mcPt']))
+    leptons = filter(lambda l: looseMuID(l) or looseEleID(l), getLeptons(chain, collVars=leptonVars+['mcMatchId','mcMatchAny','mcMatchTau','mcPt','ip3d', 'relIso03', 'relIso04', 'jetPtRatiov1', 'jetPtRelv1', 'jetPtRelv2', 'jetPtRatiov2', 'jetBTagCSV', 'jetDR']))
+
 #LepGood_mcMatchId Match to source from hard scatter (pdgId of heaviest particle in chain, 25 for H, 6 for t, 23/24 for W/Z), zero if non-prompt or fake for Leptons after the preselection 
 #LepGood_mcMatchAny  Match to any final state leptons: 0 if unmatched, 1 if light flavour (including prompt), 4 if charm, 5 if bottom for Leptons after the preselection
 #LepGood_mcMatchTau True if the leptons comes from a tau for Leptons after the preselection
@@ -168,9 +173,22 @@ for s in samples:
 #      print "  genTau decay:",[p['pdgId'] for p in genParts[gt['daughterIndex1']:gt['daughterIndex2']+1] ]
     for v in ['isMuMu','isEE','isEMu']:
       exec(v+'=getVarValue(chain, "'+v+'")')
+
+    if isMuMu and not len(mu)==2 and len(ele)==0:
+      print "Mode isMuMu but found mu/ele %i/%i"%(len(mu),len(ele))
+      continue
+    if isEE and not len(mu)==0 and len(ele)==2:
+      print "Mode isEE but found mu/ele %i/%i"%(len(mu),len(ele))
+      continue
+    if isEMu and not len(mu)==1 and len(ele)==1:
+      print "Mode isEMu but found mu/ele %i/%i"%(len(mu),len(ele))
+      continue
+
     for mode in ["isMuMu", "isEE", "isEMu"]:
       if eval(mode):
         counterReco[mode]+=1 
+        badMuonCandidates[mode].append(mu)
+        badElectronCandidates[mode].append(ele)
 
         gMode="other"   
 #        print len(genEle),len(genMu),len(genTau),len(genLeptons)
@@ -210,7 +228,6 @@ for s in samples:
         if len(muMatchedToTau)>0:   counterRecoGen_oneMuMatchedToTau[mode][gMode]+=1
         if len(eleMatchedToTau)>0:   counterRecoGen_oneEleMatchedToTau[mode][gMode]+=1
 
-
         print "mode %s genLeps %i genNus %i (%i %i %i) gen/recoLeps/matched Ele:%i/%i/%i Mu:%i/%i/%i Tau:%i"%(mode, len(genLeptons), len(genNeutrinos), len(genNuE), len(genNuMu), len(genNuTau), len(genEle), len(ele), len(eleMatched), len(genMu), len(mu),len(muMatched), len(genTau))
         if len(eleMatchedToB+muMatchedToB)>0:print "  fromB (tot.: %i) Ele:%i Mu:%i"%(len(eleMatchedToB+muMatchedToB), len(eleMatchedToB), len(muMatchedToB))#, eleMatchedToB, muMatchedToB
         if len(eleMatchedToTau+muMatchedToTau)>0:print "  fromTau (tot.: %i) Ele:%i Mu:%i"%(len(eleMatchedToTau+muMatchedToTau), len(eleMatchedToTau), len(muMatchedToTau))#,eleMatchedToTau,muMatchedToTau
@@ -232,3 +249,41 @@ for s in samples:
       print "    >=1 match Mu/Tau: %i"     %counterRecoGen_oneMuMatchedToTau[mode][gMode]
     print 
     print 
+
+for mode in ["isMuMu", "isEE", "isEMu"]:
+  for p in [ 'miniRelIso', 'dxy','dz', 'ip3d', 'jetBTagCSV', 'jetDR', 'jetPtRatiov1', 'jetPtRatiov2', 'jetPtRelv1', 'relIso03', 'relIso04', 'sip3d']: #, 'jetPtRelv2' 
+    if not mode=='isEE':
+      c1 = getObjFromFile('/afs/hephy.at/user/r/rschoefbeck/www/png25ns_2l_mAODv2_mcTrig_draw/njet2-nbtag1-met50/LepGood_'+p+'_mu.root','ROOT.c1')
+      h = c1.FindObject("LepGood_"+p+"_mu_DrawString_TTJets_Clone").Clone()
+      h.Reset()
+      for muons in badMuonCandidates[mode]:
+        if len(muons)>0:
+          val = max([abs(m[p]) for m in muons])
+          h.Fill(val)
+      c1.Draw()
+      h.SetLineColor(ROOT.kBlack)
+      h.SetLineStyle(1)
+      h.SetLineWidth(2)
+      h.SetFillStyle(0)
+      h.Draw('histsame')
+      c1.Print('/afs/hephy.at/user/r/rschoefbeck/www/png25ns_2l_mAODv2_mcTrig_draw/njet2-nbtag1-met50/LepGood_'+p+'_mu_'+mode+'_overlay.root')
+      c1.Print('/afs/hephy.at/user/r/rschoefbeck/www/png25ns_2l_mAODv2_mcTrig_draw/njet2-nbtag1-met50/LepGood_'+p+'_mu_'+mode+'_overlay.png')
+      c1.Print('/afs/hephy.at/user/r/rschoefbeck/www/png25ns_2l_mAODv2_mcTrig_draw/njet2-nbtag1-met50/LepGood_'+p+'_mu_'+mode+'_overlay.pdf')
+  for p in [ 'miniRelIso', 'dxy','dz', 'ip3d', 'jetBTagCSV', 'jetDR', 'jetPtRatiov1', 'jetPtRatiov2', 'jetPtRelv1', 'jetPtRelv2', 'relIso03', 'relIso04', 'sip3d', 'convVeto', 'mvaIdSpring15']: #, 'lostHits' 
+    if not mode=='isMuMu':
+      c1 = getObjFromFile('/afs/hephy.at/user/r/rschoefbeck/www/png25ns_2l_mAODv2_mcTrig_draw/njet2-nbtag1-met50/LepGood_'+p+'_ele.root','ROOT.c1')
+      h = c1.FindObject("LepGood_"+p+"_ele_DrawString_TTJets_Clone").Clone()
+      h.Reset()
+      for electrons in badElectronCandidates[mode]:
+        if len(electrons)>0:
+          val = max([abs(m[p]) for m in electrons])
+          h.Fill(val)
+      c1.Draw()
+      h.SetLineColor(ROOT.kBlack)
+      h.SetLineStyle(1)
+      h.SetLineWidth(2)
+      h.SetFillStyle(0)
+      h.Draw('histsame')
+      c1.Print('/afs/hephy.at/user/r/rschoefbeck/www/png25ns_2l_mAODv2_mcTrig_draw/njet2-nbtag1-met50/LepGood_'+p+'_ele_'+mode+'_overlay.root')
+      c1.Print('/afs/hephy.at/user/r/rschoefbeck/www/png25ns_2l_mAODv2_mcTrig_draw/njet2-nbtag1-met50/LepGood_'+p+'_ele_'+mode+'_overlay.png')
+      c1.Print('/afs/hephy.at/user/r/rschoefbeck/www/png25ns_2l_mAODv2_mcTrig_draw/njet2-nbtag1-met50/LepGood_'+p+'_ele_'+mode+'_overlay.pdf')

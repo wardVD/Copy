@@ -14,7 +14,7 @@ ROOT.TH1D.SetDefaultSumw2()
 #  ROOT.gROOT.ProcessLine('int iPeriod = 3;')
 topMargin = 0.07
 #from Workspace.HEPHYPythonTools.helpers import getFileList, getVarValue
-from StopsDilepton.tools.helpers import getVarValue, getFileList, getPlotFromChain
+from StopsDilepton.tools.helpers import getVarValue, getFileList, getPlotFromChain, getChain, testRootFile
 
 #ROOT_colors = [ROOT.kBlack, ROOT.kRed-7, ROOT.kBlue-2, ROOT.kGreen+3, ROOT.kOrange+1,ROOT.kRed-3, ROOT.kAzure+6, ROOT.kCyan+3, ROOT.kOrange , ROOT.kRed-10]
 #upperrightlines=[[0.62,0.7,"#font[22]{CMS preliminary 2012}"],[0.62,0.65,"#sqrt{s} = 8TeV"]]
@@ -59,6 +59,8 @@ class plot:
     self.sample=sample
     self.weightString=weightString
     self.weightFunc=weightFunc
+    self.normalizeTo   = None
+    self.normalizeRef  = None
     if hasattr(self, 'histo'):
       if type(self.histo)==type(ROOT.TH1D()):
         self.Reset()
@@ -80,15 +82,22 @@ class plot:
     return p
 
 class stack:
-  def __init__(self, stackLists, options):
-    self.stackLists = stackLists
+  def __init__(self, plotLists, options):
+    self.plotLists = plotLists
     self.options = options
     try:
       self.options['yRange'] = list(self.options['yRange'])
     except:
       pass
     self.usedBranches = []
-  def __getitem__(self, p):return self.stackLists[p]
+#  def normalizeTo(self, plot, ref):
+#    for p in self.plotLists:
+#      y=p.Integral()
+#      t=plot.histo.Integral()
+#      if y>0:
+#        p.histo.Scale(t/p)
+    
+  def __getitem__(self, p):return self.plotLists[p]
 
 def switchOnBranches(c, usedBranches):
       c.SetBranchStatus("*", 0)
@@ -115,7 +124,7 @@ def loopAndFill(stacks, mode="loop"):
   usedBranches = []
   for s in stacks:
     usedBranches = list(set(usedBranches+s.usedBranches))
-    for l in s.stackLists:
+    for l in s.plotLists:
       for p in l:
         allPlots.append(p)
         if p.leaf:
@@ -151,15 +160,24 @@ def loopAndFill(stacks, mode="loop"):
     if sampleScaleFac!=1:
       print "Using sampleScaleFac", sampleScaleFac ,"for sample",s["name"]
     for b in s['bins']:
-      c = ROOT.TChain('Events' if not s.has_key('treeName') else s['treeName'])
+      treeName = 'Events' if not s.has_key('treeName') else s['treeName']
+      maxN = -1 if not (s.has_key('small') and s['small']) else 1
+#      c = getChain(b, treeName=treeName, maxN=maxN)
+      c = ROOT.TChain(treeName)
       counter=0
       dir = s['dirname'] if s.has_key('dirname') else s['dir']
-      for f in getFileList(dir+'/'+b, maxN = -1 if not (s.has_key('small') and s['small']) else 1, histname=""):#, minAgeDPM, histname, xrootPrefix, maxN):
+      for f in getFileList(dir+'/'+b, maxN=maxN, histname=""):#, minAgeDPM, histname, xrootPrefix, maxN):
         if not f[-5:]=='.root':continue
-        counter+=1
-        c.Add(f)
+#        counter+=1
+#        c.Add(f)
+        if testRootFile(f, checkForObjects=[treeName]): 
+          counter+=1
+          c.Add(f)
+        else:
+          print "File %s looks broken."%f
       ntot = c.GetEntries()
       print "Added ",counter,'files from sample',s['name'],'dir',dir,'bin',b,'ntot',ntot
+
       switchOnBranches(c, usedBranches)
          
       if ntot==0:
@@ -209,7 +227,7 @@ def loopAndFill(stacks, mode="loop"):
           plotsToFill = s['plotsPerCutForSample'][cutString]
           print "Reading: ", s["name"], b, "with cutString", cutString, 'and will fill', len([p.name for p in plotsToFill]),'vars.'
           for p in plotsToFill:
-#            print c, p.string, p.binning, cutString, p.weightString, p.binningIsExplicit, sampleScaleFac
+            print c, "String", p.string, p.binning, "Cut", cutString, p.weightString, p.binningIsExplicit, sampleScaleFac
             tmp = getPlotFromChain(c, p.string, p.binning, cutString, p.weightString, binningIsExplicit=p.binningIsExplicit)
             tmp.Scale(sampleScaleFac)
             p.histo.Add(tmp)
@@ -230,8 +248,18 @@ def loopAndFill(stacks, mode="loop"):
     if p.overFlow and p.overFlow in [ "lower", "both"]:
       p.histo.SetBinContent(1 , p.histo.GetBinContent(0) + p.histo.GetBinContent(1))
       p.histo.SetBinError(1 , sqrt(p.histo.GetBinError(0)**2 + p.histo.GetBinError(1)**2))
+#sum stacks
   for s in stacks:
     sumStackHistos(s)   
+#normalize
+  for p in allPlots:
+    if p.normalizeTo:
+      t = p.normalizeTo.histo.Integral()
+      y = p.histo.Integral()
+      r = p.normalizeRef.histo.Integral() if p.normalizeRef else y
+      if r>0:
+        p.histo.Scale(t/r)
+      
 #                reweightFac = 1.
 #                if type(var.reweightVar) == types.FunctionType:
 #                    reweightFac = var.reweightVar(c)
@@ -254,7 +282,7 @@ def loopAndFill(stacks, mode="loop"):
 #                  weight = sample["weight"][bin]
 
 def sumStackHistos(stack):
-  for l in stack.stackLists:
+  for l in stack.plotLists:
     n = len(l)
     for i in range(n):
       for j in range(i+1,n):
@@ -279,7 +307,7 @@ def drawStack(stk, maskedArea=None):
 #    print "maskedArea",maskedArea
     ymin = stk.options['yRange'][0]
     logYMaxGlobal = log(ymin,10)
-    for s in stk.stackLists:
+    for s in stk.plotLists:
       for p in s:
         for iBin in range(1, 1 + p.histo.GetNbinsX()):
           xLowAbs, xHighAbs = p.histo.GetBinLowEdge(iBin), p.histo.GetBinLowEdge(iBin)+p.histo.GetBinWidth(iBin)
@@ -295,7 +323,7 @@ def drawStack(stk, maskedArea=None):
   else:
     logYMaxGlobal=None
   if logYMaxGlobal: logYMaxGlobal = None if logYMaxGlobal == log(ymin,10) else logYMaxGlobal
-  for s in stk.stackLists:
+  for s in stk.plotLists:
     for p in s:
       hcopy = p.histo.Clone(p.histo.GetName()+'_Clone')
 #      print p.histo,p.histo.Integral()
@@ -362,17 +390,20 @@ def drawStack(stk, maskedArea=None):
       try:
         hcopy.GetYaxis().SetRangeUser(*(stk.options['yRange']) )
       except:pass
+      drawOpt='eh1'
+      if p.style.has_key('errorBars') and not p.style['errorBars']: 
+        drawOpt='hist'
       if first:
         if p.style['style'] == "e":
           hcopy.Draw("e1")
         if p.style['style'] == "f" or p.style['style'] == "l" or p.style['style'] == "d":
-          hcopy.Draw("eh1")
+          hcopy.Draw(drawOpt)
         first=False
       else:
         if p.style['style'] == "e":
           hcopy.Draw("e1same")
         if p.style['style'] == "f" or p.style['style'] == "l" or p.style['style'] == "d":
-          hcopy.Draw("eh1same")
+          hcopy.Draw(drawOpt+'same')
 #      if p.style.has_key('legendText') and stk.options.has_key('legend') and stk.options['legend']:
       if stk.options.has_key('legend') and  stk.options['legend']:
         l.AddEntry(hcopy, p.style['legendText'])
