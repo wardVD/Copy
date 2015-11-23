@@ -28,10 +28,12 @@ DY_LO={\
 DY_HT_LO={\
 "name" : "DY_HT_LO",
 "bins" : [
+"DYJetsToLL_M50_LO_lheHT100",
 "DYJetsToLL_M50_HT100to200",
 "DYJetsToLL_M50_HT200to400",
 "DYJetsToLL_M50_HT400to600",
 "DYJetsToLL_M50_HT600toInf",
+"DYJetsToLL_M5to50_LO_lheHT100",
 "DYJetsToLL_M5to50_HT100to200",
 "DYJetsToLL_M5to50_HT200to400",
 "DYJetsToLL_M5to50_HT400to600",

@@ -2,7 +2,8 @@ import os
 if os.environ['USER'] in ['wvandrie']:
   plotDir = "/afs/cern.ch/user/w/wvandrie/www/Stops/"
   #dataDir = "/afs/cern.ch/work/w/wvandrie/public/STOPS/ANALYSIS_new2/CMSSW_7_4_12_patch4/src/StopsDilepton/samplesCopyWard_Spring15_new/"
-  dataDir = "/afs/cern.ch/work/w/wvandrie/public/STOPS/ANALYSIS_new2/CMSSW_7_4_12_patch4/src/StopsDilepton/samplesCopyWard_Spring15_mAOD/"
+  #dataDir = "/afs/cern.ch/work/w/wvandrie/public/STOPS/ANALYSIS_new2/CMSSW_7_4_12_patch4/src/StopsDilepton/samplesCopyWard_Spring15_mAOD/"
+  dataDir = "/user/wvandrie/STOPS/ANALYSIS/CMSSW_7_4_12_patch4/src/mAODv2_tiny/"
   #dataDir = "/afs/hephy.at/data/rschoefbeck01/cmgTuples/postProcessed_mAODv2/dilep/"
 if os.environ['USER'] in ['didar']:
   plotDir = "."
