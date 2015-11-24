@@ -1,6 +1,7 @@
 import os
 if os.environ['USER'] in ['wvandrie']:
-  plotDir = "/afs/cern.ch/user/w/wvandrie/www/Stops/"
+  #plotDir = "/afs/cern.ch/user/w/wvandrie/www/Stops/"
+  plotDir = "/user/wvandrie/public_html/"
   #dataDir = "/afs/cern.ch/work/w/wvandrie/public/STOPS/ANALYSIS_new2/CMSSW_7_4_12_patch4/src/StopsDilepton/samplesCopyWard_Spring15_new/"
   #dataDir = "/afs/cern.ch/work/w/wvandrie/public/STOPS/ANALYSIS_new2/CMSSW_7_4_12_patch4/src/StopsDilepton/samplesCopyWard_Spring15_mAOD/"
   dataDir = "/user/wvandrie/STOPS/ANALYSIS/CMSSW_7_4_12_patch4/src/mAODv2_tiny/"

@@ -12,6 +12,7 @@ DY={\
 'dir' : dir,
 'isData':False,
 'color': 8,
+'texName':"DY + Jets"
 }
 
 DY_LO={\
@@ -23,6 +24,7 @@ DY_LO={\
 'dir' : dir,
 'isData':False,
 'color': 8,
+'texName':"DY + Jets (LO)"
 }
 
 DY_HT_LO={\
@@ -42,6 +44,7 @@ DY_HT_LO={\
 'dir' : dir,
 'isData':False,
 'color': 8,
+'texName':"DY + Jets (LO,HT)"
 }
 
 
@@ -53,6 +56,7 @@ TTJets={
 'dir' : dir,
 'isData':False,
 'color': 7,
+'texName':"tt + Jets"
 }
 TTJets_LO={
 "name":"TTJets_LO",
@@ -62,15 +66,17 @@ TTJets_LO={
 'dir' : dir,
 'isData':False,
 'color': 7,
+'texName':"tt + Jets (LO)"
 }
 TTLep_pow={
-"name":"TTLep (pow)",
+"name":"TTLep_pow",
 "bins":[
 "TTLep_pow",
 ],
 'dir' : dir,
 'isData':False,
 'color': 7,
+'texName':"tt (lep,pow)"
 }
 
 
@@ -84,10 +90,11 @@ TTJets_Lep={
 'dir' : dir,
 'isData':False,
 'color': 7,
+'texName':"tt + Jets (lep)"
 }
 
 TTJets_HT_LO={
-"name":"TTJets (Lep)",
+"name":"TTJets_HT_LO",
 "bins":[
 "TTJets_LO_HT600to800",
 "TTJets_LO_HT800to1200",
@@ -97,10 +104,11 @@ TTJets_HT_LO={
 'dir' : dir,
 'isData':False,
 'color': 7,
+'texName':"tt + Jets (HT,LO)"
 }
 
 singleTop={
-"name":"single T",
+"name":"singleT",
 "bins":[
 "TBar_tWch",
 #"TBar_tWch_DS",
@@ -112,6 +120,7 @@ singleTop={
 'dir' : dir,
 'isData':False,
 'color': 40,
+'texName':"single top"
 }
 
 TTX={\
@@ -129,6 +138,7 @@ TTX={\
 'dir' : dir,
 'isData':False,
 'color': ROOT.kPink,
+'texName':"ttX"
 }
 
 TTH={\
@@ -140,6 +150,7 @@ TTH={\
 'dir' : dir,
 'isData':False,
 'color': ROOT.kPink,
+'texName':"ttH"
 }
 
 TTW={\
@@ -151,6 +162,7 @@ TTW={\
 'dir' : dir,
 'isData':False,
 'color': ROOT.kPink,
+'texName':"ttW"
 }
 
 TTZ={\
@@ -162,6 +174,7 @@ TTZ={\
 'dir' : dir,
 'isData':False,
 'color': ROOT.kPink,
+'texName':"ttZ"
 }
 
 TZQ={\
@@ -173,6 +186,7 @@ TZQ={\
 'dir' : dir,
 'isData':False,
 'color': ROOT.kPink,
+'texName':"tZq"
 }
 
 WJetsToLNu={
@@ -183,6 +197,7 @@ WJetsToLNu={
 'dir':dir,
 'isData':False,
 'color': ROOT.kRed-10,
+'texName':"W(l,#nu) + Jets"
 }
 
 WJetsToLNu_LO={
@@ -193,6 +208,7 @@ WJetsToLNu_LO={
 'dir':dir,
 'isData':False,
 'color': ROOT.kRed-10,
+'texName':"W(l,#nu) + Jets (LO)"
 }
 
 WJetsToLNu_HT={
@@ -210,6 +226,7 @@ WJetsToLNu_HT={
 'dir':dir,
 'isData':False,
 'color': ROOT.kRed-10,
+'texName':"W(l,#nu) + Jets (HT)"
 }
 
 diBoson={
@@ -226,6 +243,7 @@ diBoson={
 'dir':dir,
 'isData':False,
 'color': ROOT.kOrange,
+'texName':"WW/ZZ/WZ"
 }
 triBoson={
 "name":"triBoson",
@@ -237,10 +255,11 @@ triBoson={
 'dir':dir,
 'isData':False,
 'color': ROOT.kYellow,
+'texName':"WWZ/WZZ/ZZZ"
 }
 
 QCD_HT={\
-"name" : "QCD (HT binned)",
+"name" : "QCD_HT",
 "bins" : [
 "QCD_HT100to200",
 "QCD_HT200to300",
@@ -254,10 +273,11 @@ QCD_HT={\
 'dir' : dir,
 'isData':False,
 'color': 46,
+'texName':"QCD (HT)"
 }
 
 QCD_Mu5={\
-"name" : "QCD (Mu5)",
+"name" : "QCD_Mu5",
 "bins" : [
 #"QCD_Pt15to20_Mu5",#omit
 "QCD_Pt20to30_Mu5",
@@ -274,10 +294,11 @@ QCD_Mu5={\
 'dir' : dir,
 'isData':False,
 'color': 46,
+'texName':"QCD (Mu5)"
 }
 
 QCD_EMbcToE={\
-"name" : "QCD (EM+bcToE)",
+"name" : "QCD_EM+bcToE",
 "bins" : [
 "QCD_Pt_15to20_bcToE",
 "QCD_Pt_20to30_bcToE",
@@ -296,11 +317,12 @@ QCD_EMbcToE={\
 ],
 'dir' : dir,
 'isData':False,
-'color': 46
+'color': 46,
+'texName':"QCD (EM+bcToE)"
 }
 
 QCD_Mu5EMbcToE={\
-"name" : "QCD (Mu5+EM+bcToE)",
+"name" : "QCD_Mu5+EM+bcToE",
 "bins" : [
 
 "QCD_Pt20to30_Mu5",
@@ -332,6 +354,7 @@ QCD_Mu5EMbcToE={\
 'dir' : dir,
 'isData':False,
 'color': 46,
+'texName':"QCD (Mu5+EM+bcToE)"
 }
 
 
@@ -358,5 +381,6 @@ QCD_Pt={\
 ],
 'dir' : dir,
 'isData':False,
-'color': 46
+'color': 46,
+'texName':"QCD"
 }
