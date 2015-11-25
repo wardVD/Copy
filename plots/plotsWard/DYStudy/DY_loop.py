@@ -10,7 +10,7 @@ from datetime import datetime
 from StopsDilepton.tools.puReweighting import getReweightingFunction
 from StopsDilepton.tools.objectSelection import getLeptons, looseMuID, looseEleID, getJets, getGenParts, getGoodLeptons, getGoodElectrons, getGoodMuons
 
-puReweightingFunc = getReweightingFunction(era="doubleMu_onZ_isOS_1200pb_nVert_reweight_ttbar+DY")
+puReweightingFunc = getReweightingFunction(era="doubleMu_onZ_isOS_1500pb_nVert_reweight")
 puReweighting = lambda c:puReweightingFunc(getVarValue(c, "nVert"))
 
 
@@ -24,12 +24,12 @@ reduceStat = 1 #recude the statistics, i.e. 10 is ten times less samples to look
 makedraw1D = True
 
 btagcoeff          = 0.89
-metcut             = 0.
-metsignifcut       = 0.
+metcut             = 80.
+metsignifcut       = 5.
 dphicut            = 0.25
 mllcut             = 20
 ngoodleptons       = 2
-luminosity         = 10000/1000
+luminosity         = 1549.
 mt2llcut           = 0.
 
 presel_met         = 'met_pt>'+str(metcut)
@@ -37,17 +37,16 @@ presel_met         = 'met_pt>'+str(metcut)
 presel_njet        = 'Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id)>=2'
 presel_metsig      = 'met_pt/sqrt(Sum$(Jet_pt*(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id)))>'+str(metsignifcut)
 presel_mll         = 'dl_mass>'+str(mllcut)
-presel_ngoodlep    = '((nGoodMuons+nGoodElectrons)=='+str(ngoodleptons)+')'
 presel_OS          = 'isOS'
 presel_mt2ll       = 'dl_mt2ll>='+str(mt2llcut)
 presel_dPhi        = 'cos(met_phi-Jet_phi[0])<cos('+str(dphicut)+')&&cos(met_phi-Jet_phi[1])<cos('+str(dphicut)+')'
-presel_flavour     = 'isMuMu&&nGoodElectrons==0&&nGoodMuons==2&&HLT_mumuIso==1&&weight>0'
+presel_flavour     = 'isMuMu==1&&nGoodElectrons==0&&nGoodMuons==2&&HLT_mumuIso'
 
-dataCut = '(Flag_HBHENoiseFilter&&Flag_goodVertices&&Flag_CSCTightHaloFilter&&Flag_eeBadScFilter&&Flag_HBHEIsoNoiseFilterReRun)&&weight>0'
+datacut = "(Flag_HBHENoiseFilter&&Flag_goodVertices&&Flag_CSCTightHaloFilter&&Flag_eeBadScFilter&&weight>0)"
 
 #preselection: MET>40, njets>=2, n_bjets>=1, n_lep>=2
 #For now see here for the Sum$ syntax: https://root.cern.ch/root/html/TTree.html#TTree:Draw@2
-preselection = presel_njet+'&&'+presel_OS+'&&'+presel_ngoodlep+'&&'+presel_mll+'&&'+presel_dPhi+'&&'+presel_met+'&&'+presel_metsig+'&&'+presel_mt2ll+'&&'+presel_flavour
+preselection = presel_njet+'&&'+presel_OS+'&&'+presel_mll+'&&'+presel_dPhi+'&&'+presel_met+'&&'+presel_metsig+'&&'+presel_mt2ll+'&&'+presel_flavour
 
 #######################################################
 #                 load all the samples                #
@@ -55,7 +54,7 @@ preselection = presel_njet+'&&'+presel_OS+'&&'+presel_ngoodlep+'&&'+presel_mll+'
 from StopsDilepton.samples.cmgTuples_Spring15_mAODv2_25ns_1l_postProcessed import *
 from StopsDilepton.samples.cmgTuples_Data25ns_mAODv2_postProcessed import *
 
-backgrounds = [DY_HT_LO]
+backgrounds = [DY,TTJets]
 data = [DoubleMuon_Run2015D]#,DoubleEG_Run2015D,MuonEG_Run2015D]
 
 #######################################################
@@ -64,21 +63,33 @@ data = [DoubleMuon_Run2015D]#,DoubleEG_Run2015D,MuonEG_Run2015D]
 for s in backgrounds+data:
   s['chain'] = getChain(s,histname="")
 
-mt2llbinning = [10,0,300]
+mt2llbinning = [15,0,300]
 mllbinning = [50,0,150]
 
 plots = {\
-  'dl_mt2ll':{\
-    '_onZ_0b': {'title':'M^{2}_{T}(ll) (GeV)', 'name':'MT2ll_onZ_b==0b', 'binning': mt2llbinning, 'histo':{}},
-    '_offZ_0b': {'title':'M^{2}_{T}(ll) (GeV)', 'name':'MT2ll_offZ_b==0b',  'binning': mt2llbinning, 'histo':{}},
-    '_onZ_1mb': {'title':'M^{2}_{T}(ll) (GeV)', 'name':'MT2ll_onZ_b>=1',  'binning': mt2llbinning, 'histo':{}},
-    '_offZ_1mb': {'title':'M^{2}_{T}(ll) (GeV)', 'name':'MT2ll_offZ_b>=1',  'binning': mt2llbinning, 'histo':{}},
+  '0b':{\
+    'dl_mt2ll':{\
+      '_onZ': {'title':'M^{2}_{T}(ll) (GeV)', 'name':'MT2ll_onZ_b==0b', 'binning': mt2llbinning, 'histo':{}},
+      '_offZ': {'title':'M^{2}_{T}(ll) (GeV)', 'name':'MT2ll_offZ_b==0b',  'binning': mt2llbinning, 'histo':{}},
+      '_allZ': {'title':'M^{2}_{T}(ll) (GeV)', 'name':'MT2ll_allZ_b==0b',  'binning': mt2llbinning, 'histo':{}},
+      },
+    'dl_mass':{\
+      '_onZ': {'title':'M_{ll} (GeV)', 'name':'Mll_onZ_b==0b', 'binning': mllbinning, 'histo':{}},
+      '_offZ': {'title':'M_{ll} (GeV)', 'name':'Mll_offZ_b==0b',  'binning': mllbinning, 'histo':{}},
+      '_allZ': {'title':'M_{ll} (GeV)', 'name':'Mll_allZ_b==0b',  'binning': mllbinning, 'histo':{}},\
+      },
     },
-  'dl_mass':{\
-    '_onZ_0b': {'title':'m_{ll} (GeV)', 'name':'Mll_onZ_b==0b', 'binning': mllbinning, 'histo':{}},
-    '_offZ_0b': {'title':'m_{ll} (GeV)', 'name':'Mll_offZ_b==0b',  'binning': mllbinning, 'histo':{}},
-    '_onZ_1mb': {'title':'m_{ll} (GeV)', 'name':'Mll_onZ_b>=1',  'binning': mllbinning, 'histo':{}},
-    '_offZ_1mb': {'title':'m_{ll} (GeV)', 'name':'Mll_offZ_b>=1',  'binning': mllbinning, 'histo':{}},
+  '1mb':{\
+    'dl_mt2ll':{\
+      '_onZ': {'title':'M^{2}_{T}(ll) (GeV)', 'name':'MT2ll_onZ_b>=1',  'binning': mt2llbinning, 'histo':{}},
+      '_offZ': {'title':'M^{2}_{T}(ll) (GeV)', 'name':'MT2ll_offZ_b>=1',  'binning': mt2llbinning, 'histo':{}},
+      '_allZ': {'title':'M^{2}_{T}(ll) (GeV)', 'name':'MT2ll_allZ_b>=1',  'binning': mt2llbinning, 'histo':{}},
+      },
+    'dl_mass':{\
+      '_onZ': {'title':'M_{ll} (GeV)', 'name':'Mll_onZ_b>=1',  'binning': mllbinning, 'histo':{}},
+      '_offZ': {'title':'M_{ll} (GeV)', 'name':'Mll_offZ_b>=1',  'binning': mllbinning, 'histo':{}},
+      '_allZ': {'title':'M_{ll} (GeV)', 'name':'Mll_allZ_b>=1',  'binning': mllbinning, 'histo':{}},
+      },
     },
   }
 
@@ -88,16 +99,16 @@ plots = {\
 #######################################################
 for s in backgrounds+data:
   #construct 1D histograms
-  for pk in plots.keys():
-    for plot in plots[pk].keys():
-      plots[pk][plot]['histo'][s["name"]] = ROOT.TH1D(plots[pk][plot]['name']+"_"+s["name"]+"_"+pk, plots[pk][plot]['name']+"_"+s["name"]+"_"+pk, *plots[pk][plot]['binning'])
-      plots[pk][plot]['histo'][s["name"]].Sumw2()
+  for bjet in plots.keys():
+    for pk in plots[bjet].keys():
+      for plot in plots[bjet][pk].keys():
+        plots[bjet][pk][plot]['histo'][s["name"]] = ROOT.TH1D(plots[bjet][pk][plot]['name']+"_"+s["name"]+"_"+pk, plots[bjet][pk][plot]['name']+"_"+s["name"]+"_"+pk, *plots[bjet][pk][plot]['binning'])
+        plots[bjet][pk][plot]['histo'][s["name"]].Sumw2()
 
   chain = s["chain"]
 
-  if s['isData'] : eList = getEList(chain, preselection+'&&'+dataCut)
-  else:            eList = getEList(chain, preselection)
-
+  eList = getEList(chain, preselection) if not s['isData'] else getEList(chain, preselection+'&&'+datacut)
+  
   nEvents = eList.GetN()/reduceStat
   print "Found %i events in %s after preselection %s, looping over %i" % (eList.GetN(),s["name"],preselection,nEvents)
  
@@ -111,9 +122,9 @@ for s in backgrounds+data:
     chain.GetEntry(eList.GetEntry(ev))
 
     pileupweight = puReweighting(chain) if not s['isData'] else 1.
-
+    
     weight = reduceStat*getVarValue(chain, "weight")*(luminosity/1000.)*pileupweight if not s['isData'] else 1
-
+    
     mll = getVarValue(chain,"dl_mass")
     mt2ll = getVarValue(chain,"dl_mt2ll")
 
@@ -121,34 +132,39 @@ for s in backgrounds+data:
     jets  = filter(lambda j:j['pt']>30 and abs(j['eta'])<2.4 and j['id'], getJets(chain))
     bjets = filter(lambda j:j['btagCSV']>btagcoeff, jets)
 
-    if abs(mll-90.2)<15:
-      if len(bjets)==0:
-        plots['dl_mass']["_onZ_0b"]['histo'][s["name"]].Fill(mll, weight)
-        plots['dl_mt2ll']["_onZ_0b"]['histo'][s["name"]].Fill(mt2ll, weight)
-      elif len(bjets)>=1:
-        plots['dl_mass']["_onZ_1mb"]['histo'][s["name"]].Fill(mll, weight)
-        plots['dl_mt2ll']["_onZ_1mb"]['histo'][s["name"]].Fill(mt2ll, weight)
-    else:
-      if len(bjets)==0:
-        plots['dl_mass']["_offZ_0b"]['histo'][s["name"]].Fill(mll, weight)
-        plots['dl_mt2ll']["_offZ_0b"]['histo'][s["name"]].Fill(mt2ll, weight)
-      elif len(bjets)>=1:
-        plots['dl_mass']["_offZ_1mb"]['histo'][s["name"]].Fill(mll, weight)
-        plots['dl_mt2ll']["_offZ_1mb"]['histo'][s["name"]].Fill(mt2ll, weight)
-    
-  for plot in plots.keys():  
-    for selection in plots[plot].keys():
-      #plots[plot][selection]['histo'][s['name']].Sumw2()
-      nbinsx        = plots[plot][selection]['histo'][s['name']].GetNbinsX()
-      lastbin       = plots[plot][selection]['histo'][s['name']].GetBinContent(nbinsx)
-      error         = plots[plot][selection]['histo'][s['name']].GetBinError(nbinsx)
-      overflowbin   = plots[plot][selection]['histo'][s['name']].GetBinContent(nbinsx+1)
-      overflowerror = plots[plot][selection]['histo'][s['name']].GetBinError(nbinsx+1)
-      plots[plot][selection]['histo'][s['name']].SetBinContent(nbinsx,lastbin+overflowbin)
-      plots[plot][selection]['histo'][s['name']].SetBinError(nbinsx,sqrt(error**2+overflowerror**2))
-      plots[plot][selection]['histo'][s['name']].SetBinContent(nbinsx+1,0.)
-      plots[plot][selection]['histo'][s['name']].SetBinError(nbinsx+1,0.)
+    if len(bjets)==0:
+      plots['0b']['dl_mass']["_allZ"]['histo'][s["name"]].Fill(mll, weight)
+      plots['0b']['dl_mt2ll']["_allZ"]['histo'][s["name"]].Fill(mt2ll, weight)
+      if abs(mll-90.2)<15:
+        plots['0b']['dl_mass']["_onZ"]['histo'][s["name"]].Fill(mll, weight)
+        plots['0b']['dl_mt2ll']["_onZ"]['histo'][s["name"]].Fill(mt2ll, weight)
+      else:
+        plots['0b']['dl_mass']["_offZ"]['histo'][s["name"]].Fill(mll, weight)
+        plots['0b']['dl_mt2ll']["_offZ"]['histo'][s["name"]].Fill(mt2ll, weight)
+    elif len(bjets)>=1:
+      plots['1mb']['dl_mass']["_allZ"]['histo'][s["name"]].Fill(mll, weight)
+      plots['1mb']['dl_mt2ll']["_allZ"]['histo'][s["name"]].Fill(mt2ll, weight)
+      if abs(mll-90.2)<15:
+        plots['1mb']['dl_mass']["_onZ"]['histo'][s["name"]].Fill(mll, weight)
+        plots['1mb']['dl_mt2ll']["_onZ"]['histo'][s["name"]].Fill(mt2ll, weight)
+      else:
+        plots['1mb']['dl_mass']["_offZ"]['histo'][s["name"]].Fill(mll, weight)
+        plots['1mb']['dl_mt2ll']["_offZ"]['histo'][s["name"]].Fill(mt2ll, weight)
 
+  for bjet in plots.keys():
+    for plot in plots[bjet].keys():  
+      for selection in plots[bjet][plot].keys():
+      #plots[plot][selection]['histo'][s['name']].Sumw2()
+        nbinsx        = plots[bjet][plot][selection]['histo'][s['name']].GetNbinsX()
+        lastbin       = plots[bjet][plot][selection]['histo'][s['name']].GetBinContent(nbinsx)
+        error         = plots[bjet][plot][selection]['histo'][s['name']].GetBinError(nbinsx)
+        overflowbin   = plots[bjet][plot][selection]['histo'][s['name']].GetBinContent(nbinsx+1)
+        overflowerror = plots[bjet][plot][selection]['histo'][s['name']].GetBinError(nbinsx+1)
+        plots[bjet][plot][selection]['histo'][s['name']].SetBinContent(nbinsx,lastbin+overflowbin)
+        plots[bjet][plot][selection]['histo'][s['name']].SetBinError(nbinsx,sqrt(error**2+overflowerror**2))
+        plots[bjet][plot][selection]['histo'][s['name']].SetBinContent(nbinsx+1,0.)
+        plots[bjet][plot][selection]['histo'][s['name']].SetBinError(nbinsx+1,0.)
+        
 processtime = datetime.now()
 print "Time to process chains: ", processtime - start
 
@@ -157,12 +173,12 @@ print "Time to process chains: ", processtime - start
 #######################################################
 
 legendtextsize = 0.032
+a=[]
+#ROOT.gStyle.SetErrorX(0.5)
 
-ROOT.gStyle.SetErrorX(0.5)
-
-if makedraw1D: 
-  for i,b in enumerate(backgrounds+data):
-    for plot in plots.keys():
+if makedraw1D:
+  for bjet in plots.keys():
+    for plot in plots[bjet].keys():
 
     #Make a stack for backgrounds
       l=ROOT.TLegend(0.5,0.8,0.95,1.0)
@@ -174,35 +190,40 @@ if makedraw1D:
     #Plot!
       c1 = ROOT.TCanvas()
 
+    #for j,selection in enumerate(sorted(plots[plot].keys(),key=lambda sort:plots[plot][sort]['histo'][b['name']].Integral(),reverse=True)):
+      totalbkg = 0
+      for b in backgrounds:
+        totalbkg += plots[bjet][plot]["_allZ"]['histo'][b["name"]].Integral()
+      dataint = plots[bjet][plot]["_allZ"]['histo'][data[0]["name"]].Integral()
+
+      print "Scaling factor data/MC: ", dataint/totalbkg
+
+      bkg_stack = ROOT.THStack("bkgs","bkgs") 
+      for j,b in enumerate(sorted(backgrounds,key=lambda sort:plots[bjet][plot]["_allZ"]["histo"][sort["name"]].Integral())):
+        plots[bjet][plot]["_allZ"]['histo'][b["name"]].Scale(dataint/totalbkg)
+        plots[bjet][plot]["_allZ"]['histo'][b["name"]].SetMarkerSize(0)
+        plots[bjet][plot]["_allZ"]['histo'][b["name"]].SetFillColor(b["color"])
+        plots[bjet][plot]["_allZ"]['histo'][b["name"]].SetLineWidth(1)
+        bkg_stack.Add(plots[bjet][plot]["_allZ"]['histo'][b["name"]],"h")
+        l.AddEntry(plots[bjet][plot]["_allZ"]['histo'][b["name"]],b['name'])
+        for selection in plots[bjet][plot].keys():
+          print b["texName"], plot, selection , bjet, '\t \t',plots[bjet][plot][selection]['histo'][b["name"]].Integral()
+      for selection in plots[bjet][plot].keys():
+        print data[0]["texName"], plot, selection, bjet, '\t \t', plots[bjet][plot][selection]['histo'][data[0]["name"]].Integral()
       
-      integralON0b = plots[plot]["_onZ_0b"]['histo'][b["name"]].Integral()
-      integralOFF0b = plots[plot]["_offZ_0b"]['histo'][b["name"]].Integral()
-      integralON1b = plots[plot]["_onZ_1mb"]['histo'][b["name"]].Integral()
-      integralOFF1b = plots[plot]["_offZ_1mb"]['histo'][b["name"]].Integral()
+      plots[bjet][plot]["_allZ"]['histo'][data[0]["name"]].GetXaxis().SetTitle(plots[bjet][plot]["_allZ"]['title'])
+      plots[bjet][plot]["_allZ"]['histo'][data[0]["name"]].GetYaxis().SetTitle("Events (A.U.)")
+      plots[bjet][plot]["_allZ"]['histo'][data[0]["name"]].GetYaxis().SetRangeUser(0.01,100000)
+      plots[bjet][plot]["_allZ"]['histo'][data[0]["name"]].Draw("pe1same")
+      bkg_stack.Draw("same")
+      plots[bjet][plot]["_allZ"]['histo'][data[0]["name"]].Draw("pe1same")
 
-      plots[plot]["_onZ_0b"]['histo'][b["name"]].Scale(1./(integralON0b+integralOFF0b))
-      plots[plot]["_offZ_0b"]['histo'][b["name"]].Scale(1./(integralON0b+integralOFF0b))
-      plots[plot]["_onZ_1mb"]['histo'][b["name"]].Scale(1./(integralON1b+integralOFF1b))
-      plots[plot]["_offZ_1mb"]['histo'][b["name"]].Scale(1./(integralON1b+integralOFF1b))
-
-      for j,selection in enumerate(sorted(plots[plot].keys(),key=lambda sort:plots[plot][sort]['histo'][b['name']].Integral(),reverse=True)):
-        #plots[plot][selection]['histo'][b["name"]].Scale(1./integral)
-
-        plots[plot][selection]['histo'][b["name"]].SetLineColor(j+1)
-        plots[plot][selection]['histo'][b["name"]].SetLineWidth(1)
-        plots[plot][selection]['histo'][b["name"]].SetMarkerColor(j+1)
-        plots[plot][selection]['histo'][b["name"]].Draw("pe1same")
-
-        if j == 0: 
-          plots[plot][selection]['histo'][b["name"]].GetXaxis().SetTitle(plots[plot][selection]['title'])
-          plots[plot][selection]['histo'][b["name"]].GetYaxis().SetTitle("Events (A.U.)")
-          plots[plot][selection]['histo'][b["name"]].GetYaxis().SetRangeUser(0.001,20)
-        l.AddEntry(plots[plot][selection]['histo'][b["name"]],plots[plot][selection]['name'])
       c1.SetLogy()
+      ROOT.gPad.RedrawAxis()
       l.Draw()
-      path = plotDir+'/test/DYstudy/njet_2m_isOS'+'_ngoodlep_'+str(ngoodleptons)+'_mt2ll_'+str(int(mt2llcut))+'dPhi_0.25_met_'+str(int(metcut))+'_metsig_'+str(int(metsignifcut))+'_mll_'+str(int(mllcut))+'/'
+      path = plotDir+'/test/DYstudy/njet_2m_isOS'+'_mt2ll_'+str(int(mt2llcut))+'dPhi_0.25_met_'+str(int(metcut))+'_metsig_'+str(int(metsignifcut))+'_mll_'+str(int(mllcut))+'/'
       if not os.path.exists(path): os.makedirs(path)
-      c1.Print(path+plot+"_"+b["name"]+"_"+presel_flavour+".png")
+      c1.Print(path+plot+"_"+bjet+".png")
 
 makeplotstime = datetime.now()
 
