@@ -1,10 +1,11 @@
+
 import copy, os, sys
 from StopsDilepton.tools.localInfo import dataDir
 import ROOT
 dir = dataDir 
 
 DY={\
-"name" : "DY + Jets",
+"name" : "DY",
 "bins" : [
 "DYJetsToLL_M10to50",
 "DYJetsToLL_M50",
@@ -12,10 +13,11 @@ DY={\
 'dir' : dir,
 'isData':False,
 'color': 8,
+'texName':"DY + Jets",
 }
 
 DY_LO={\
-"name" : "DY (LO) + Jets",
+"name" : "DY_LO",
 "bins" : [
 "DYJetsToLL_M5to50_LO",
 "DYJetsToLL_M50_LO",
@@ -23,15 +25,18 @@ DY_LO={\
 'dir' : dir,
 'isData':False,
 'color': 8,
+'texName':"DY + Jets (LO)",
 }
 
 DY_HT_LO={\
-"name" : "DY (LO, HT) + Jets",
+"name" : "DY_HT_LO",
 "bins" : [
+"DYJetsToLL_M50_LO_lheHT100",
 "DYJetsToLL_M50_HT100to200",
 "DYJetsToLL_M50_HT200to400",
 "DYJetsToLL_M50_HT400to600",
 "DYJetsToLL_M50_HT600toInf",
+"DYJetsToLL_M5to50_LO_lheHT100",
 "DYJetsToLL_M5to50_HT100to200",
 "DYJetsToLL_M5to50_HT200to400",
 "DYJetsToLL_M5to50_HT400to600",
@@ -40,6 +45,7 @@ DY_HT_LO={\
 'dir' : dir,
 'isData':False,
 'color': 8,
+'texName':"DY + Jets (LO,HT)",
 }
 
 
@@ -51,29 +57,32 @@ TTJets={
 'dir' : dir,
 'isData':False,
 'color': 7,
+'texName':"t#bar{t} + Jets",
 }
 TTJets_LO={
-"name":"TTJets (LO)",
+"name":"TTJets_LO",
 "bins":[
 "TTJets_LO",
 ],
 'dir' : dir,
 'isData':False,
 'color': 7,
+'texName':"t#bar{t} + Jets (LO)",
 }
 TTLep_pow={
-"name":"TTLep (pow)",
+"name":"TTLep_pow",
 "bins":[
 "TTLep_pow",
 ],
 'dir' : dir,
 'isData':False,
 'color': 7,
+'texName':"t#bar{t} (lep,pow)",
 }
 
 
 TTJets_Lep={
-"name":"TTJets (Lep)",
+"name":"TTJets_Lep",
 "bins":[
 "TTJets_DiLepton_comb",
 "TTJets_SingleLeptonFromTbar_comb",
@@ -82,10 +91,11 @@ TTJets_Lep={
 'dir' : dir,
 'isData':False,
 'color': 7,
+'texName':"t#bar{t} + Jets (lep)",
 }
 
 TTJets_HT_LO={
-"name":"TTJets (Lep)",
+"name":"TTJets_HT_LO",
 "bins":[
 "TTJets_LO_HT600to800",
 "TTJets_LO_HT800to1200",
@@ -95,10 +105,11 @@ TTJets_HT_LO={
 'dir' : dir,
 'isData':False,
 'color': 7,
+'texName':"t#bar{t} + Jets (HT,LO)",
 }
 
 singleTop={
-"name":"single T",
+"name":"singleT",
 "bins":[
 "TBar_tWch",
 #"TBar_tWch_DS",
@@ -110,6 +121,7 @@ singleTop={
 'dir' : dir,
 'isData':False,
 'color': 40,
+'texName':"single top",
 }
 
 TTX={\
@@ -127,6 +139,55 @@ TTX={\
 'dir' : dir,
 'isData':False,
 'color': ROOT.kPink,
+'texName':"t#bar{t}X",
+}
+
+TTH={\
+"name" : "TTH",
+"bins" : [
+"TTHbb_comb",
+"TTHnobb",
+],
+'dir' : dir,
+'isData':False,
+'color': ROOT.kPink,
+'texName':"t#bar{t}H",
+}
+
+TTW={\
+"name" : "TTW",
+"bins" : [
+"TTWToLNu",
+"TTWToQQ",
+],
+'dir' : dir,
+'isData':False,
+'color': ROOT.kPink,
+'texName':"t#bar{t}W",
+}
+
+TTZ={\
+"name" : "TTZ",
+"bins" : [
+"TTZToLLNuNu",
+"TTZToQQ",
+],
+'dir' : dir,
+'isData':False,
+'color': ROOT.kPink,
+'texName':"t#bar{t}Z",
+}
+
+TZQ={\
+"name" : "TZQ",
+"bins" : [
+"tZq_ll",
+"tZq_nunu",
+],
+'dir' : dir,
+'isData':False,
+'color': ROOT.kPink,
+'texName':"tZq",
 }
 
 WJetsToLNu={
@@ -137,6 +198,7 @@ WJetsToLNu={
 'dir':dir,
 'isData':False,
 'color': ROOT.kRed-10,
+'texName':"W(l,#nu) + Jets",
 }
 
 WJetsToLNu_LO={
@@ -147,6 +209,7 @@ WJetsToLNu_LO={
 'dir':dir,
 'isData':False,
 'color': ROOT.kRed-10,
+'texName':"W(l,#nu) + Jets (LO)",
 }
 
 WJetsToLNu_HT={
@@ -164,6 +227,7 @@ WJetsToLNu_HT={
 'dir':dir,
 'isData':False,
 'color': ROOT.kRed-10,
+'texName':"W(l,#nu) + Jets (HT)",
 }
 
 diBoson={
@@ -180,6 +244,7 @@ diBoson={
 'dir':dir,
 'isData':False,
 'color': ROOT.kOrange,
+'texName':"WW/ZZ/WZ",
 }
 triBoson={
 "name":"triBoson",
@@ -191,10 +256,11 @@ triBoson={
 'dir':dir,
 'isData':False,
 'color': ROOT.kYellow,
+'texName':"WWZ/WZZ/ZZZ",
 }
 
 QCD_HT={\
-"name" : "QCD (HT binned)",
+"name" : "QCD_HT",
 "bins" : [
 "QCD_HT100to200",
 "QCD_HT200to300",
@@ -208,10 +274,11 @@ QCD_HT={\
 'dir' : dir,
 'isData':False,
 'color': 46,
+'texName':"QCD (HT)",
 }
 
 QCD_Mu5={\
-"name" : "QCD (Mu5)",
+"name" : "QCD_Mu5",
 "bins" : [
 #"QCD_Pt15to20_Mu5",#omit
 "QCD_Pt20to30_Mu5",
@@ -228,10 +295,11 @@ QCD_Mu5={\
 'dir' : dir,
 'isData':False,
 'color': 46,
+'texName':"QCD (Mu5)",
 }
 
 QCD_EMbcToE={\
-"name" : "QCD (EM+bcToE)",
+"name" : "QCD_EM+bcToE",
 "bins" : [
 "QCD_Pt_15to20_bcToE",
 "QCD_Pt_20to30_bcToE",
@@ -250,11 +318,12 @@ QCD_EMbcToE={\
 ],
 'dir' : dir,
 'isData':False,
-'color': 46
+'color': 46,
+'texName':"QCD (EM+bcToE)",
 }
 
 QCD_Mu5EMbcToE={\
-"name" : "QCD (Mu5+EM+bcToE)",
+"name" : "QCD_Mu5+EM+bcToE",
 "bins" : [
 
 "QCD_Pt20to30_Mu5",
@@ -286,6 +355,7 @@ QCD_Mu5EMbcToE={\
 'dir' : dir,
 'isData':False,
 'color': 46,
+'texName':"QCD (Mu5+EM+bcToE)",
 }
 
 
@@ -312,5 +382,6 @@ QCD_Pt={\
 ],
 'dir' : dir,
 'isData':False,
-'color': 46
+'color': 46,
+'texName':"QCD",
 }

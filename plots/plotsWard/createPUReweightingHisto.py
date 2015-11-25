@@ -21,8 +21,8 @@ prefix="doubleMu_onZ_isOS_1200pb"
 from StopsDilepton.samples.cmgTuples_Spring15_mAODv2_25ns_1l_postProcessed import *
 from StopsDilepton.samples.cmgTuples_Data25ns_mAODv2_postProcessed import *
 
-backgrounds = [DY, TTJets_Lep, TTX, diBoson, singleTop, WJetsToLNu, QCD_Mu5 ] 
-#backgrounds = [TTJets_25ns, DY_25ns, singleTop_25ns, diBoson_25ns, WJetsHTToLNu_25ns]#, QCD]
+backgrounds = [DY, TTJets]
+
 for b in backgrounds:
   b['isData']=False
 
@@ -51,16 +51,6 @@ for pk in plots.keys():
   for b in backgrounds[1:]:
     plots[pk]['sum'].Add(plots[pk]['histo'][b['name']]) 
     
-
-#Some coloring
-TTJets_Lep["color"]=ROOT.kBlack
-WJetsToLNu["color"]=ROOT.kGreen
-#TTVH["color"]=ROOT.kMagenta
-DY["color"]=ROOT.kBlue
-diBoson["color"]=ROOT.kRed
-QCD_Mu5["color"]=ROOT.kCyan
-TTX["color"]=ROOT.kMagenta
-singleTop["color"]=ROOT.kOrange
 
 for pk in plots.keys():
   #Make a stack for backgrounds
@@ -93,7 +83,7 @@ for pk in plots.keys():
 #  signalPlot.Draw("same")
 #  l.AddEntry(signalPlot, signal+" x 100")
   l.Draw()
-  c1.Print(plotDir+"/pngTMP/"+prefix+'_'+plots[pk]["name"]+".png")
+  c1.Print(plotDir+"/pileup/"+prefix+'_'+plots[pk]["name"]+".png")
 
   plots[pk]['sum'].Scale(1./plots[pk]['sum'].Integral())
   plots[pk]['histo'][data['name']].Scale(1./plots[pk]['histo'][data['name']].Integral())
