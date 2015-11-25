@@ -9,7 +9,7 @@ from StopsDilepton.tools.objectSelection import getLeptons, looseMuID, looseEleI
 from StopsDilepton.tools.localInfo import *
 from StopsDilepton.tools.mt2Calculator import mt2Calculator
 from StopsDilepton.tools.puReweighting import getReweightingFunction
-puReweightingFunc = getReweightingFunction(era="doubleMu_onZ_isOS_1200pb_nVert_reweight_ttbar+DY")
+puReweightingFunc = getReweightingFunction(era="doubleMu_onZ_isOS_1500pb_ward_nVert_reweight")
 puReweighting = lambda c:puReweightingFunc(getVarValue(c, "nVert"))
 
 mt2Calc = mt2Calculator()
@@ -29,7 +29,7 @@ metsignifcut       = 5.
 dphicut            = 0.25
 mllcut             = 20
 ngoodleptons       = 2
-luminosity         = 10000
+luminosity         = 1500
 
 presel_met         = 'met_pt>'+str(metcut)
 presel_nbjet       = 'Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id&&Jet_btagCSV>'+str(btagcoeff)+')>=1'
@@ -39,7 +39,7 @@ presel_mll         = 'dl_mass>'+str(mllcut)
 presel_ngoodlep    = '((nGoodMuons+nGoodElectrons)=='+str(ngoodleptons)+')'
 presel_OS          = 'isOS'
 
-dataCut = '(Flag_HBHENoiseFilter&&Flag_goodVertices&&Flag_CSCTightHaloFilter&&Flag_eeBadScFilter&&Flag_HBHEIsoNoiseFilterReRun)&&weight>0'
+dataCut = "weight>0"
 
 #preselection: MET>40, njets>=2, n_bjets>=1, n_lep>=2
 #See here for the Sum$ syntax: https://root.cern.ch/root/html/TTree.html#TTree:Draw@2
@@ -52,12 +52,13 @@ preselection = presel_met+'&&'+presel_nbjet+'&&'+presel_njet+'&&'+presel_metsig+
 from StopsDilepton.samples.cmgTuples_Spring15_mAODv2_25ns_1l_postProcessed import *
 from StopsDilepton.samples.cmgTuples_Data25ns_mAODv2_postProcessed import *
 
-backgrounds = [TTX,DY_LO,DY_HT_LO,TTJets] 
+backgrounds = [QCD_Mu5,WJetsToLNu,DY_HT_LO,singleTop,TTX,TTJets] 
 #backgrounds = []
 #signals = [SMS_T2tt_2J_mStop425_mLSP325, SMS_T2tt_2J_mStop500_mLSP325, SMS_T2tt_2J_mStop650_mLSP325, SMS_T2tt_2J_mStop850_mLSP100]
 signals = []
-#data = [DoubleEG_Run2015D,DoubleMuon_Run2015D,MuonEG_Run2015D]
-data = []
+data = [DoubleEG_Run2015D,DoubleMuon_Run2015D,MuonEG_Run2015D]
+#data = []
+
 #######################################################
 #            get the TChains for each sample          #
 #######################################################
@@ -308,23 +309,23 @@ for s in backgrounds+signals+data:
   chain.SetBranchStatus("Jet_btagCSV",1)
   chain.SetBranchStatus("LepGood_pt",1)
   chain.SetBranchStatus("LepGood_eta",1)
+  #chain.SetBranchStatus("LepGood_charge",1)
   chain.SetBranchStatus("LepGood_phi",1)
-  chain.SetBranchStatus("LepGood_charge",1)
   chain.SetBranchStatus("LepGood_dxy",1)
   chain.SetBranchStatus("LepGood_dz",1)
-  chain.SetBranchStatus("LepGood_relIso03",1)
+  #chain.SetBranchStatus("LepGood_relIso03",1)
   chain.SetBranchStatus("LepGood_tightId",1)
   chain.SetBranchStatus("LepGood_pdgId",1)
   chain.SetBranchStatus("LepGood_mediumMuonId",1)
   chain.SetBranchStatus("LepGood_miniRelIso",1)
   chain.SetBranchStatus("LepGood_sip3d",1)
-  chain.SetBranchStatus("LepGood_mvaIdPhys14",1)
+  #chain.SetBranchStatus("LepGood_mvaIdPhys14",1)
   chain.SetBranchStatus("LepGood_convVeto",1)
   chain.SetBranchStatus("LepGood_lostHits",1)
   chain.SetBranchStatus("Jet_eta",1)
   chain.SetBranchStatus("Jet_pt",1)
   chain.SetBranchStatus("Jet_phi",1)
-  chain.SetBranchStatus("Jet_btagCMVA",1)
+  #chain.SetBranchStatus("Jet_btagCMVA",1)
   chain.SetBranchStatus("Jet_btagCSV",1)
   chain.SetBranchStatus("Jet_id",1)
   chain.SetBranchStatus("weight",1)
@@ -344,17 +345,11 @@ for s in backgrounds+signals+data:
   chain.SetBranchStatus("HLT_mumuIso",1)
   chain.SetBranchStatus("HLT_ee_DZ",1)
   chain.SetBranchStatus("HLT_mue",1)
-  if s in data:
-    chain.SetBranchStatus("Flag_HBHENoiseFilter",1)
-    chain.SetBranchStatus("Flag_goodVertices",1)
-    chain.SetBranchStatus("Flag_CSCTightHaloFilter",1)
-    chain.SetBranchStatus("Flag_eeBadScFilter",1)
-    chain.SetBranchStatus("Flag_HBHEIsoNoiseFilterReRun",1)
   if s not in data: 
     chain.SetBranchStatus("genWeight",1)
-    chain.SetBranchStatus("Jet_mcMatchFlav",1)
+    #chain.SetBranchStatus("Jet_mcMatchFlav",1)
     chain.SetBranchStatus("xsec",1)
-    chain.SetBranchStatus("Jet_partonId",1)
+    #chain.SetBranchStatus("Jet_partonId",1)
     chain.SetBranchStatus("puWeight",1)
 
   #Using Event loop
@@ -398,9 +393,9 @@ for s in backgrounds+signals+data:
     mll = getVarValue(chain,"dl_mass")
           
     #Leptons 
-    allLeptons = getGoodLeptons(chain)
-    muons = getGoodMuons(chain)
-    electrons = getGoodElectrons(chain)
+    #allLeptons = getGoodLeptons(chain)
+    #muons = getGoodMuons(chain)
+    #electrons = getGoodElectrons(chain)
     nGoodMuons = getVarValue(chain,"nGoodMuons")
     nGoodElectrons = getVarValue(chain,"nGoodElectrons")
 
@@ -426,10 +421,15 @@ for s in backgrounds+signals+data:
     if not s['isData']: datatrigger = True
 
     #SF and OF channels
+    # leptons = {\
+    #   'mu':   {'name': 'mumu', 'file': muons},
+    #   'e':   {'name': 'ee', 'file': electrons},
+    #   'emu': {'name': 'emu', 'file': [electrons,muons]},
+    #   }
     leptons = {\
-      'mu':   {'name': 'mumu', 'file': muons},
-      'e':   {'name': 'ee', 'file': electrons},
-      'emu': {'name': 'emu', 'file': [electrons,muons]},
+      'mu':   {'name': 'mumu'},
+      'e':   {'name': 'ee'},
+      'emu': {'name': 'emu'},
       }
 
     for lep in leptons.keys():
