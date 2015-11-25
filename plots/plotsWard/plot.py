@@ -38,12 +38,13 @@ presel_metsig      = 'met_pt/sqrt(Sum$(Jet_pt*(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_
 presel_mll         = 'dl_mass>'+str(mllcut)
 presel_ngoodlep    = '((nGoodMuons+nGoodElectrons)=='+str(ngoodleptons)+')'
 presel_OS          = 'isOS'
+presel_dPhi        = 'cos(met_phi-Jet_phi[0])<cos('+str(dphicut)+')&&cos(met_phi-Jet_phi[1])<cos('+str(dphicut)+')'
 
 dataCut = "weight>0"
 
 #preselection: MET>40, njets>=2, n_bjets>=1, n_lep>=2
 #See here for the Sum$ syntax: https://root.cern.ch/root/html/TTree.html#TTree:Draw@2
-preselection = presel_met+'&&'+presel_nbjet+'&&'+presel_njet+'&&'+presel_metsig+'&&'+presel_mll+'&&'+presel_ngoodlep+'&&'+presel_OS
+preselection = presel_met+'&&'+presel_nbjet+'&&'+presel_njet+'&&'+presel_metsig+'&&'+presel_mll+'&&'+presel_ngoodlep+'&&'+presel_OS+'&&'+presel_dPhi
 
 #######################################################
 #                 load all the samples                #
@@ -358,8 +359,7 @@ for s in backgrounds+signals+data:
 
   
   if s['isData'] : eList = getEList(chain, preselection+'&&'+dataCut)
-  elif s == DY_LO: eList = eList = getEList(chain, preselection+'&&Sum$(Jet_pt)<150')   #stitch DY samples
-  else:            eList = eList = getEList(chain, preselection)
+  else:            eList = getEList(chain, preselection)
   
 
   nEvents = eList.GetN()/reduceStat
@@ -444,22 +444,22 @@ for s in backgrounds+signals+data:
 
         PhiMetJet_small = min(PhiMetJet1,PhiMetJet2)
 
-        if PhiMetJet_small >= dphicut:
+        #if PhiMetJet_small >= dphicut:
     
-          mt2ll = getVarValue(chain,"dl_mt2ll")
+        mt2ll = getVarValue(chain,"dl_mt2ll")
 
-          if mt2ll>mt2llbinning[-1]:  mt2ll = mt2llbinning[-1]-1 #overflow bin
+        if mt2ll>mt2llbinning[-1]:  mt2ll = mt2llbinning[-1]-1 #overflow bin
                     
-          if mt2ll<mt2llbinning[-2]:  mt2ll = mt2llbinning[-2]+1 #underflow bin
+        if mt2ll<mt2llbinning[-2]:  mt2ll = mt2llbinning[-2]+1 #underflow bin
 
-          plots[leptons[lep]['name']]['mt2ll']['histo'][s["name"]].Fill(mt2ll, weight)
-          plots[leptons[lep]['name']]['mt2lllong']['histo'][s["name"]].Fill(mt2ll, weight)
-
-          for mt2llcut in mt2llcuts.keys():
-            if mt2ll >= mt2llcuts[mt2llcut]: plots[leptons[lep]['name']]['mt2llwithcut'+mt2llcut]['histo'][s["name"]].Fill(mt2ll, weight)
-
-          plots[leptons[lep]['name']]['MinDphi']['histo'][s['name']].Fill(PhiMetJet_small,weight)
-          dimensional[leptons[lep]['name']]['metvsmetsig']['histo'][s["name"]].Fill(met/sqrt(ht),met,weight)
+        plots[leptons[lep]['name']]['mt2ll']['histo'][s["name"]].Fill(mt2ll, weight)
+        plots[leptons[lep]['name']]['mt2lllong']['histo'][s["name"]].Fill(mt2ll, weight)
+          
+        for mt2llcut in mt2llcuts.keys():
+          if mt2ll >= mt2llcuts[mt2llcut]: plots[leptons[lep]['name']]['mt2llwithcut'+mt2llcut]['histo'][s["name"]].Fill(mt2ll, weight)
+          
+        plots[leptons[lep]['name']]['MinDphi']['histo'][s['name']].Fill(PhiMetJet_small,weight)
+        dimensional[leptons[lep]['name']]['metvsmetsig']['histo'][s["name"]].Fill(met/sqrt(ht),met,weight)
           #dimensional[leptons[lep]['name']]['metvsmt2ll']['histo'][s["name"]].Fill(mt2ll,met,weight)
           #dimensional[leptons[lep]['name']]['MT2llvsCosdPhi_1']['histo'][s['name']].Fill(cos(PhiMetJet1),mt2ll,weight)
           #dimensional[leptons[lep]['name']]['MT2llvsCosdPhi_2']['histo'][s['name']].Fill(cos(PhiMetJet2),mt2ll,weight)
@@ -475,29 +475,29 @@ for s in backgrounds+signals+data:
           #dimensional[leptons[lep]['name']]['metvsCosMinDphi']['histo'][s['name']].Fill(cos(PhiMetJet_small),met,weight)
           #dimensional[leptons[lep]['name']]['metvsMinDphi']['histo'][s['name']].Fill(PhiMetJet_small,met,weight)
           
-          plots[leptons[lep]['name']]['kinMetSig']['histo'][s["name"]].Fill(met/sqrt(ht), weight)
+        plots[leptons[lep]['name']]['kinMetSig']['histo'][s["name"]].Fill(met/sqrt(ht), weight)
 
-          plots[leptons[lep]['name']]['met']['histo'][s["name"]].Fill(met, weight)
-          bjetspt = filter(lambda j:j['btagCSV']>btagcoeff, jets)
-          nobjets = filter(lambda j:j['btagCSV']<=btagcoeff, jets)
-          plots[leptons[lep]['name']]['njets']['histo'][s["name"]].Fill(len(jets),weight)
-          plots[leptons[lep]['name']]['nbjets']['histo'][s["name"]].Fill(len(bjetspt),weight)
-          plots[leptons[lep]['name']]['ht']['histo'][s["name"]].Fill(ht,weight)
+        plots[leptons[lep]['name']]['met']['histo'][s["name"]].Fill(met, weight)
+        bjetspt = filter(lambda j:j['btagCSV']>btagcoeff, jets)
+        nobjets = filter(lambda j:j['btagCSV']<=btagcoeff, jets)
+        plots[leptons[lep]['name']]['njets']['histo'][s["name"]].Fill(len(jets),weight)
+        plots[leptons[lep]['name']]['nbjets']['histo'][s["name"]].Fill(len(bjetspt),weight)
+        plots[leptons[lep]['name']]['ht']['histo'][s["name"]].Fill(ht,weight)
+        
+        mt2bb = getVarValue(chain, "dl_mt2bb")
+        mt2blbl = getVarValue(chain, "dl_mt2blbl")
 
-          mt2bb = getVarValue(chain, "dl_mt2bb")
-          mt2blbl = getVarValue(chain, "dl_mt2blbl")
-
-          if mt2bb>mt2bbbinning[-1]:  mt2bb = mt2bbbinning[-1] - 1 #overflow bin
-          if mt2bb<mt2bbbinning[-2]:  mt2bb = mt2bbbinning[-2] + 1 #underflow bin
-          if mt2blbl>mt2blblbinning[-1]:  mt2blbl = mt2blblbinning[-1] - 1 #overflow bin
-          if mt2blbl<mt2blblbinning[-2]:  mt2blbl = mt2blblbinning[-2] + 1 #underflow bin
-
-          plots[leptons[lep]['name']]['mt2bb']['histo'][s["name"]].Fill(mt2bb, weight)
-          plots[leptons[lep]['name']]['mt2blbl']['histo'][s["name"]].Fill(mt2blbl, weight)
-          plots[leptons[lep]['name']]['mt2bblong']['histo'][s["name"]].Fill(mt2bb, weight)
-          plots[leptons[lep]['name']]['mt2blbllong']['histo'][s["name"]].Fill(mt2blbl, weight)
-          dimensional[leptons[lep]['name']]['mt2blblvsmt2ll']['histo'][s["name"]].Fill(mt2ll,mt2blbl, weight)
-          threedimensional[leptons[lep]['name']]['mt2bbvsmt2blblvsmt2ll']['histo'][s["name"]].Fill(mt2ll,mt2blbl,mt2bb,weight)
+        if mt2bb>mt2bbbinning[-1]:  mt2bb = mt2bbbinning[-1] - 1 #overflow bin
+        if mt2bb<mt2bbbinning[-2]:  mt2bb = mt2bbbinning[-2] + 1 #underflow bin
+        if mt2blbl>mt2blblbinning[-1]:  mt2blbl = mt2blblbinning[-1] - 1 #overflow bin
+        if mt2blbl<mt2blblbinning[-2]:  mt2blbl = mt2blblbinning[-2] + 1 #underflow bin
+        
+        plots[leptons[lep]['name']]['mt2bb']['histo'][s["name"]].Fill(mt2bb, weight)
+        plots[leptons[lep]['name']]['mt2blbl']['histo'][s["name"]].Fill(mt2blbl, weight)
+        plots[leptons[lep]['name']]['mt2bblong']['histo'][s["name"]].Fill(mt2bb, weight)
+        plots[leptons[lep]['name']]['mt2blbllong']['histo'][s["name"]].Fill(mt2blbl, weight)
+        dimensional[leptons[lep]['name']]['mt2blblvsmt2ll']['histo'][s["name"]].Fill(mt2ll,mt2blbl, weight)
+        threedimensional[leptons[lep]['name']]['mt2bbvsmt2blblvsmt2ll']['histo'][s["name"]].Fill(mt2ll,mt2blbl,mt2bb,weight)
 
 
   #############################################

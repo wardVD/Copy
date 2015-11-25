@@ -21,7 +21,7 @@ mt2Calc = mt2Calculator()
 reduceStat         = 1 #recude the statistics, i.e. 10 is ten times less samples to look at
 btagcoeff          = 0.89
 metcut             = 80.
-metsignifcut       = 8.
+metsignifcut       = 5.
 dphicut            = 0.25
 mllcut             = 20
 ngoodleptons       = 2
@@ -35,12 +35,13 @@ presel_mll         = 'dl_mass>'+str(mllcut)
 presel_ngoodlep    = '((nGoodMuons+nGoodElectrons)=='+str(ngoodleptons)+')'
 presel_OS          = 'isOS'
 presel_dPhi        = 'cos(met_phi-Jet_phi[0])<cos('+str(dphicut)+')&&cos(met_phi-Jet_phi[1])<cos('+str(dphicut)+')'
+presel_flavour     = 'isMuMu'
 
 dataCut = '(Flag_HBHENoiseFilter&&Flag_goodVertices&&Flag_CSCTightHaloFilter&&Flag_eeBadScFilter&&Flag_HBHEIsoNoiseFilterReRun)&&weight>0'
 
 #preselection: MET>40, njets>=2, n_bjets>=1, n_lep>=2
 #See here for the Sum$ syntax: https://root.cern.ch/root/html/TTree.html#TTree:Draw@2
-preselection = presel_met+'&&'+presel_nbjet+'&&'+presel_njet+'&&'+presel_metsig+'&&'+presel_mll+'&&'+presel_ngoodlep+'&&'+presel_OS+'&&'+presel_dPhi
+preselection = presel_met+'&&'+presel_njet+'&&'+presel_metsig+'&&'+presel_mll+'&&'+presel_ngoodlep+'&&'+presel_OS+'&&'+presel_dPhi+'&&'+presel_flavour
 
 #######################################################
 #                 load all the samples                #
