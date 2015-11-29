@@ -23,7 +23,7 @@ def getGenParts(c):
   return [getObjDict(c, 'GenPart_', ['eta','pt','phi','charge', 'pdgId', 'motherId', 'grandmotherId'], i) for i in range(int(getVarValue(c, 'nGenPart')))]
 
 def getGenPartsAll(c):
-  return [getObjDict(c, 'genPartAll_', ['eta','pt','phi','charge', 'pdgId', 'motherId', 'grandmotherId','daughterIndex1','daughterIndex2'], i) for i in range(int(getVarValue(c, 'ngenPartAll')))]
+  return [getObjDict(c, 'genPartAll_', ['eta','pt','phi','charge', 'status', 'pdgId', 'motherId', 'grandmotherId','daughterIndex1','daughterIndex2'], i) for i in range(int(getVarValue(c, 'ngenPartAll')))]
 
 def looseMuID(l, ptCut=20, absEtaCut=2.4):
   return \
@@ -78,3 +78,19 @@ def m_ll(l1,l2):
 def pt_ll(l1,l2):
   return sqrt((l1['pt']*cos(l1['phi']) + l2['pt']*cos(l2['phi']))**2 + (l1['pt']*sin(l1['phi']) + l2['pt']*sin(l2['phi']))**2)
 
+
+tauVars=['eta','pt','phi','pdgId','charge', 'dxy', 'dz', 'idDecayModeNewDMs', 'idCI3hit', 'idAntiMu','idAntiE','mcMatchId']
+
+def getTaus(c, collVars=tauVars):
+  return [getObjDict(c, 'TauGood_', collVars, i) for i in range(int(getVarValue(c, 'nTauGood')))]
+def looseTauID(l, ptCut=20, absEtaCut=2.4):
+  return \
+    l["pt"]>=ptCut\
+    and abs(l["eta"])<absEtaCut\
+    and l["idDecayModeNewDMs"]>=1\
+    and l["idCI3hit"]>=1\
+    and l["idAntiMu"]>=1\
+    and l["idAntiE"]>=1\
+
+def getGoodTaus(c, collVars=tauVars):
+  return [l for l in getTaus(c,collVars=collVars) if looseTauID(l)]

@@ -18,7 +18,7 @@ from StopsDilepton.samples.cmgTuples_Data25ns_mAODv2_postProcessed import *
 from StopsDilepton.tools.objectSelection import getLeptons, getMuons, getElectrons, getGoodMuons, getGoodElectrons, getGoodLeptons, mZ
 from StopsDilepton.tools.helpers import getVarValue, getYieldFromChain#, getChain
 from StopsDilepton.tools.localInfo import plotDir
-from simplePlotHelpers import plot, stack, loopAndFill, drawNMStacks
+from StopsDilepton.plots.simplePlotHelpers import plot, stack, loopAndFill, drawNMStacks
 
 puReweighting = None
 

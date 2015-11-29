@@ -1,10 +1,13 @@
 data_path = "/data/rschoefbeck/cmgTuples/MC25ns_v2_1l/"
+from CMGTools.RootTools.samples.samples_13TeV_RunIISpring15MiniAODv2 import samples as bkgSamples 
 from CMGTools.RootTools.samples.samples_13TeV_RunIISpring15MiniAODv2 import * 
+from CMGTools.RootTools.samples.TTbarDMJets_signals_RunIISpring15MiniAODv2 import samples as TTJetsDMSamples 
+from CMGTools.RootTools.samples.TTbarDMJets_signals_RunIISpring15MiniAODv2 import * 
 from StopsDilepton.samples.helpers import getSubDir 
 import os
 
 mcSamples = []
-for s in samples:
+for s in bkgSamples+TTJetsDMSamples:
   s.isData = False
   s.treeName = "tree"
 ##for production with heppy_batch
