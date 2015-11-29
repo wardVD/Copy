@@ -8,24 +8,28 @@ from StopsDilepton.tools.helpers import getChain, getObjDict, getEList, getVarVa
 from StopsDilepton.tools.objectSelection import getLeptons, looseMuID, looseEleID, getJets, getGenParts, getGoodLeptons, getGoodElectrons, getGoodMuons
 from StopsDilepton.tools.localInfo import *
 from StopsDilepton.tools.mt2Calculator import mt2Calculator
+from StopsDilepton.tools.puReweighting import getReweightingFunction
+puReweightingFunc = getReweightingFunction(era="doubleMu_onZ_isOS_1200pb_nVert_reweight_ttbar+DY")
+puReweighting = lambda c:puReweightingFunc(getVarValue(c, "nVert"))
+
 mt2Calc = mt2Calculator()
 
 
 #######################################################
 #        SELECT WHAT YOU WANT TO DO HERE              #
 #######################################################
-reduceStat         = 100 #recude the statistics, i.e. 10 is ten times less samples to look at
+reduceStat         = 1 #recude the statistics, i.e. 10 is ten times less samples to look at
 makedraw1D         = True
 makedraw2D         = False
 makelatextables    = False #Ignore this if you're not Ward
 mt2llcuts          = {'0':0.,'80':80., '100':100., '110':110., '120':120., '130':130., '140':140., '150':150.} #make plots named mt2llwithcutat..... I.E. lines 134-136
 btagcoeff          = 0.89
-metcut             = 200.
-metsignifcut       = 10.
-dphicut            = 0.
+metcut             = 80.
+metsignifcut       = 5.
+dphicut            = 0.25
 mllcut             = 20
 ngoodleptons       = 2
-luminosity         = 1200
+luminosity         = 10000
 
 presel_met         = 'met_pt>'+str(metcut)
 presel_nbjet       = 'Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id&&Jet_btagCSV>'+str(btagcoeff)+')>=1'
@@ -35,7 +39,7 @@ presel_mll         = 'dl_mass>'+str(mllcut)
 presel_ngoodlep    = '((nGoodMuons+nGoodElectrons)=='+str(ngoodleptons)+')'
 presel_OS          = 'isOS'
 
-dataCut = '(HLT_mumuIso&&Flag_HBHENoiseFilter&&Flag_goodVertices&&Flag_CSCTightHaloFilter&&Flag_eeBadScFilter&&Flag_HBHEIsoNoiseFilterReRun)&&weight>0'
+dataCut = '(Flag_HBHENoiseFilter&&Flag_goodVertices&&Flag_CSCTightHaloFilter&&Flag_eeBadScFilter&&Flag_HBHEIsoNoiseFilterReRun)&&weight>0'
 
 #preselection: MET>40, njets>=2, n_bjets>=1, n_lep>=2
 #See here for the Sum$ syntax: https://root.cern.ch/root/html/TTree.html#TTree:Draw@2
@@ -45,19 +49,24 @@ preselection = presel_met+'&&'+presel_nbjet+'&&'+presel_njet+'&&'+presel_metsig+
 #                 load all the samples                #
 #######################################################
 #from StopsDilepton.samples.cmgTuples_Spring15_25ns_postProcessed import *
-from StopsDilepton.samples.cmgTuples_Spring15_mAODv2_25ns_postProcessed import *
+from StopsDilepton.samples.cmgTuples_Spring15_mAODv2_25ns_1l_postProcessed import *
 from StopsDilepton.samples.cmgTuples_Data25ns_mAODv2_postProcessed import *
 
-backgrounds = [DY, TTJets] 
+backgrounds = [TTX,DY_LO,DY_HT_LO,TTJets] 
+#backgrounds = []
 #signals = [SMS_T2tt_2J_mStop425_mLSP325, SMS_T2tt_2J_mStop500_mLSP325, SMS_T2tt_2J_mStop650_mLSP325, SMS_T2tt_2J_mStop850_mLSP100]
 signals = []
-data = [DoubleEG_Run2015D,DoubleMuon_Run2015D,MuonEG_Run2015D]
-
+#data = [DoubleEG_Run2015D,DoubleMuon_Run2015D,MuonEG_Run2015D]
+data = []
 #######################################################
 #            get the TChains for each sample          #
 #######################################################
 for s in backgrounds+signals+data:
   s['chain'] = getChain(s,histname="")
+  s['name'] = s["name"].replace(" ","")
+  s['name'] = s["name"].replace("(","_")
+  s['name'] = s["name"].replace(",","_")
+  s['name'] = s["name"].replace(")","_")
 
 #######################################################
 #           define binning of 1D histograms           #
@@ -67,9 +76,9 @@ metbinning = [20,0,800]
 mt2llbinning = [3,0,300]
 mt2bbbinning = [3,70,370]
 mt2blblbinning = [3,0,300]
-mt2llbinninglong = [15,0,300]
-mt2bbbinninglong = [15,70,370]
-mt2blblbinninglong = [15,0,300]
+mt2llbinninglong = [25,0,300]
+mt2bbbinninglong = [25,70,370]
+mt2blblbinninglong = [25,0,300]
 kinMetSigbinning = [25,0,25]
 njetsbinning = [15,0,15]
 nbjetsbinning = [10,0,10]
@@ -264,9 +273,10 @@ threedimensionalSF={\
 ######################################################
 #	   Remove old trees_met histograms           #
 ######################################################
-treefiles = glob.glob('./trees_metcut'+str(int(metcut))+'/*')
-for f in treefiles:
-  os.remove(f)
+path = "./trees_metcut_"+str(int(metcut))+"_metsig_"+str(int(metsignifcut))+"/"
+if not os.path.exists(path): os.makedirs(path)
+treefiles = glob.glob(path+'/*')
+for f in treefiles: os.remove(f)
 
 #######################################################
 #            Start filling in the histograms          #
@@ -289,6 +299,7 @@ for s in backgrounds+signals+data:
   chain = s["chain"]
    
   chain.SetBranchStatus("*",0)
+  chain.SetBranchStatus("nVert",1)
   chain.SetBranchStatus("met_pt",1)
   chain.SetBranchStatus("met_phi",1)
   chain.SetBranchStatus("Jet_pt",1)
@@ -330,10 +341,15 @@ for s in backgrounds+signals+data:
   chain.SetBranchStatus("isEE",1)
   chain.SetBranchStatus("isEMu",1)
   chain.SetBranchStatus("isMuMu",1)
+  chain.SetBranchStatus("HLT_mumuIso",1)
+  chain.SetBranchStatus("HLT_ee_DZ",1)
+  chain.SetBranchStatus("HLT_mue",1)
   if s in data:
-    chain.SetBranchStatus("HLT_mumuIso",1)
-    chain.SetBranchStatus("HLT_ee_DZ",1)
-    chain.SetBranchStatus("HLT_mue",1)
+    chain.SetBranchStatus("Flag_HBHENoiseFilter",1)
+    chain.SetBranchStatus("Flag_goodVertices",1)
+    chain.SetBranchStatus("Flag_CSCTightHaloFilter",1)
+    chain.SetBranchStatus("Flag_eeBadScFilter",1)
+    chain.SetBranchStatus("Flag_HBHEIsoNoiseFilterReRun",1)
   if s not in data: 
     chain.SetBranchStatus("genWeight",1)
     chain.SetBranchStatus("Jet_mcMatchFlav",1)
@@ -345,8 +361,11 @@ for s in backgrounds+signals+data:
   #get EList after preselection
   print '\n', "Looping over %s" % s["name"]
 
+  
   if s['isData'] : eList = getEList(chain, preselection+'&&'+dataCut)
+  elif s == DY_LO: eList = eList = getEList(chain, preselection+'&&Sum$(Jet_pt)<150')   #stitch DY samples
   else:            eList = eList = getEList(chain, preselection)
+  
 
   nEvents = eList.GetN()/reduceStat
   print "Found %i events in %s after preselection %s, looping over %i" % (eList.GetN(),s["name"],preselection,nEvents)
@@ -362,7 +381,10 @@ for s in backgrounds+signals+data:
     mt2Calc.reset()
     #event weight (L= 4fb^-1)
     #weight = reduceStat*getVarValue(chain, "weight")*getVarValue(chain, "puWeight")*(luminosity/1000.) if not s['isData'] else 1
-    weight = reduceStat*getVarValue(chain, "weight")*(luminosity/1000.) if not s['isData'] else 1
+
+    pileupweight = puReweighting(chain) if not s['isData'] else 1.
+
+    weight = reduceStat*getVarValue(chain, "weight")*(luminosity/1000.)*pileupweight if not s['isData'] else 1
 
     #MET
     met = getVarValue(chain, "met_pt")
@@ -379,22 +401,29 @@ for s in backgrounds+signals+data:
     allLeptons = getGoodLeptons(chain)
     muons = getGoodMuons(chain)
     electrons = getGoodElectrons(chain)
+    nGoodMuons = getVarValue(chain,"nGoodMuons")
+    nGoodElectrons = getVarValue(chain,"nGoodElectrons")
 
     isEE = getVarValue(chain, "isEE")
     isMuMu = getVarValue(chain, "isMuMu")
     isEMu = getVarValue(chain, "isEMu")
 
     #triggers
-    if s in data:
-      triggerMuMu = getVarValue(chain,"HLT_mumuIso")
-      triggerEleEle = getVarValue(chain,"HLT_ee_DZ")
-      triggerMuEle = getVarValue(chain,"HLT_mue")
-    trigger = False
-
-    if "DoubleEG" in s and triggerEleEle == 1 and isEE and   len(muons)==0 and len(electrons)==2: trigger = True
-    if "DoubleMuon" in s and triggerMuMu == 1 and isMuMu and len(muons)==2 and len(electrons)==0: trigger = True
-    if "MuonEG" in s and triggerMuEle == 1    and isEMu and  len(muons)==1 and len(electrons)==1: trigger = True
-    if s not in data: trigger = True
+    triggerMuMu = getVarValue(chain,"HLT_mumuIso")
+    triggerEleEle = getVarValue(chain,"HLT_ee_DZ")
+    triggerMuEle = getVarValue(chain,"HLT_mue")
+    
+    datatrigger = False
+    """
+    if "DoubleEG" in s['name'] and triggerEleEle == 1 and isEE and   len(muons)==0 and len(electrons)==2: datatrigger = True
+    if "DoubleMuon" in s['name'] and triggerMuMu == 1 and isMuMu and len(muons)==2 and len(electrons)==0: datatrigger = True
+    if "MuonEG" in s['name'] and triggerMuEle == 1    and isEMu and  len(muons)==1 and len(electrons)==1: datatrigger = True
+    """
+    if "DoubleEG" in s['name'] and triggerEleEle == 1 and isEE and   nGoodMuons==0 and nGoodElectrons==2: datatrigger = True
+    if "DoubleMuon" in s['name'] and triggerMuMu == 1 and isMuMu and nGoodMuons==2 and nGoodElectrons==0: datatrigger = True
+    if "MuonEG" in s['name'] and triggerMuEle == 1    and isEMu and  nGoodMuons==1 and nGoodElectrons==1: datatrigger = True
+    
+    if not s['isData']: datatrigger = True
 
     #SF and OF channels
     leptons = {\
@@ -404,9 +433,9 @@ for s in backgrounds+signals+data:
       }
 
     for lep in leptons.keys():
-      if ((lep == "emu" and isEMu) or (((lep == "e" and isEE) or (lep == "mu" and isMuMu))))  and trigger:
+      if ((lep == "emu" and isEMu) or (((lep == "e" and isEE) or (lep == "mu" and isMuMu))))  and datatrigger:
         plots[leptons[lep]['name']]['mll']['histo'][s["name"]].Fill(mll,weight) #mll as n-1 plot without Z-mass cut
-      if ((lep == "emu" and isEMu) or (((lep == "e" and isEE) or (lep == "mu" and isMuMu)) and abs(mll-90.2)>15)) and trigger:
+      if ((lep == "emu" and isEMu and triggerMuEle) or (((lep == "e" and isEE and triggerEleEle) or (lep == "mu" and isMuMu and triggerMuMu)) and abs(mll-90.2)>15)) and datatrigger:
 
         jets = filter(lambda j:j['pt']>30 and abs(j['eta'])<2.4 and j['id'], getJets(chain))
         ht = sum([j['pt'] for j in jets])
@@ -516,8 +545,6 @@ for s in backgrounds+signals+data:
   
   for pk in plots.keys():
     #ROOT output file
-    path = "./trees_metcut_"+str(int(metcut))+"_metsig_"+str(int(metsignifcut))+"/"
-    if not os.path.exists(path): os.makedirs(path)
     TreeFile = ROOT.TFile(path+s["name"]+"_"+pk+".root","recreate")
 
     mt2llwithcutsoutput = {}
@@ -546,7 +573,11 @@ for s in backgrounds+signals+data:
 
 #print plots['emu']['mt2ll']['histo'][DY_25ns['name']].Integral()
 #print plots['ee']['mt2ll']['histo'][DY_25ns['name']].Integral()
-#print plots['mumu']['mt2ll']['histo'][DY_25ns['name']].Integral()
+
+for s in backgrounds+data:
+  print s['name'], ", ee: ", plots['ee']['mt2ll']['histo'][s['name']].Integral()
+  print s['name'], ", mumu: ", plots['mumu']['mt2ll']['histo'][s['name']].Integral()
+  print s['name'], ", emu: ", plots['emu']['mt2ll']['histo'][s['name']].Integral()
 
 #######################################################
 #           provide tables from histograms            #
@@ -563,7 +594,7 @@ if makelatextables:
 
 #Plotvariables
 signal = {'path': ["SMS_T2tt_2J_mStop425_mLSP325","SMS_T2tt_2J_mStop500_mLSP325","SMS_T2tt_2J_mStop650_mLSP325","SMS_T2tt_2J_mStop850_mLSP100"], 'name': ["T2tt(425,325)","T2tt(500,325)","T2tt(650,325)","T2tt(850,100)"]}
-yminimum = 0.1
+yminimum = 0.01
 ymaximum = 100
 legendtextsize = 0.028
 signalscaling = 100
@@ -590,24 +621,26 @@ if makedraw1D:
         l.AddEntry(plots[pk][plot]['histo'][b["name"]], b["name"])
         if b != backgrounds[0]: totalbackground.Add(plots[pk][plot]['histo'][b["name"]])
       if len(data)!= 0: 
-        if pk == 'emu' : datahist = plots[pk][plot]['histo'][MuonEG_25ns["name"]].Clone()
-        elif pk == 'ee' : datahist = plots[pk][plot]['histo'][DoubleEG_25ns["name"]].Clone()
-        elif pk == 'mumu' : datahist = plots[pk][plot]['histo'][DoubleMuon_25ns["name"]].Clone()
+        if pk == 'emu' : datahist = plots[pk][plot]['histo'][MuonEG_Run2015D["name"]].Clone()
+        elif pk == 'ee' : datahist = plots[pk][plot]['histo'][DoubleEG_Run2015D["name"]].Clone()
+        elif pk == 'mumu' : datahist = plots[pk][plot]['histo'][DoubleMuon_Run2015D["name"]].Clone()
+        datahist.SetMarkerColor(ROOT.kBlack)
 
-      if len(data)!= 0: datahist.SetMarkerColor(ROOT.kBlack)
       #Plot!
       c1 = ROOT.TCanvas()
-      pad1 = ROOT.TPad("","",histopad[0],histopad[1],histopad[2],histopad[3])
-      pad1.Draw()
-      pad1.cd()
+      if len(data)>0:
+        pad1 = ROOT.TPad("","",histopad[0],histopad[1],histopad[2],histopad[3])
+        pad1.Draw()
+        pad1.cd()
       bkg_stack.SetMaximum(ymaximum*bkg_stack.GetMaximum())
       bkg_stack.SetMinimum(yminimum)
       bkg_stack.Draw()
       bkg_stack.GetXaxis().SetTitle(plots[pk][plot]['title'])
       bkg_stack.GetYaxis().SetTitle("Events / %i GeV"%( (plots[pk][plot]['binning'][2]-plots[pk][plot]['binning'][1])/plots[pk][plot]['binning'][0]) )
-      bkg_stack.GetXaxis().SetLabelSize(0.)
-      #c1.SetLogy()
-      pad1.SetLogy()
+      if len(data)>0: 
+        pad1.SetLogy()
+        bkg_stack.GetXaxis().SetLabelSize(0.)
+      else:           c1.SetLogy()
       if len(signals)>0:
         signalPlot_1 = plots[pk][plot]['histo'][signal['path'][0]].Clone()
         signalPlot_2 = plots[pk][plot]['histo'][signal['path'][2]].Clone()
@@ -639,35 +672,39 @@ if makedraw1D:
       channeltag.SetFillColor(ROOT.kWhite)
       channeltag.SetShadowColor(ROOT.kWhite)
       channeltag.Draw()
-      c1.cd()
-      pad2 = ROOT.TPad("","",datamcpad[0],datamcpad[1],datamcpad[2],datamcpad[3])
-      pad2.SetGrid()
-      pad2.SetBottomMargin(0.4)
-      pad2.Draw()
-      pad2.cd()
-      ratio = datahist.Clone()
-      stuff.append(ratio)
-      ratio.Divide(totalbackground)
-      ratio.SetMarkerStyle(20)
-      ratio.SetMarkerSize(0.5)
-      ratio.GetYaxis().SetTitle("Data/Bkg.")
+      if len(data)>0:
+        c1.cd()
+        pad2 = ROOT.TPad("","",datamcpad[0],datamcpad[1],datamcpad[2],datamcpad[3])
+        pad2.SetGrid()
+        pad2.SetBottomMargin(0.4)
+        pad2.Draw()
+        pad2.cd()
+        ratio = datahist.Clone()
+        stuff.append(ratio)
+        ratio.Divide(totalbackground)
+        ratio.SetMarkerStyle(20)
+        ratio.SetMarkerSize(0.5)
+        ratio.GetYaxis().SetTitle("Data/Bkg.")
       #ratio.GetYaxis().SetNdivisions(502)
-      ratio.GetXaxis().SetTitle(plots[pk][plot]['title'])
-      ratio.GetXaxis().SetTitleSize(0.2)
-      ratio.GetYaxis().SetTitleSize(0.18)
-      ratio.GetYaxis().SetTitleOffset(0.29)
-      ratio.GetXaxis().SetTitleOffset(0.8)
-      ratio.GetYaxis().SetLabelSize(0.1)
-      ratio.GetXaxis().SetLabelSize(0.18)
-      ratio.Draw("pe")
-      c1.cd()
+        ratio.GetXaxis().SetTitle(plots[pk][plot]['title'])
+        ratio.GetXaxis().SetTitleSize(0.2)
+        ratio.GetYaxis().SetTitleSize(0.18)
+        ratio.GetYaxis().SetTitleOffset(0.29)
+        ratio.GetXaxis().SetTitleOffset(0.8)
+        ratio.GetYaxis().SetLabelSize(0.1)
+        ratio.GetXaxis().SetLabelSize(0.18)
+        ratio.SetMinimum(0)
+        ratio.SetMaximum(5)
+        ratio.Draw("pe")
+        c1.cd()
       c1.Print(plotDir+"/test/1D/"+plots[pk][plot]['name']+"_"+pk+".png")
-      del ratio
+      if len(data)>0:del ratio
       c1.Clear()
 
   for plot in plotsSF['SF'].keys():
     bkg_stack_SF = ROOT.THStack("bkgs_SF","bkgs_SF")
     l=ROOT.TLegend(0.6,0.6,0.99,1.0)
+    stuff.append(l)
     l.SetFillColor(0)
     l.SetShadowColor(ROOT.kWhite)
     l.SetBorderSize(1)
@@ -683,22 +720,24 @@ if makedraw1D:
         totalbackground.Add(plots['ee'][plot]['histo'][b["name"]])
         totalbackground.Add(plots['mumu'][plot]['histo'][b["name"]])
     if len(data)!= 0: 
-      datahist = plots['ee'][plot]['histo'][DoubleEG_25ns["name"]].Clone()
-      datahist.Add(plots['mumu'][plot]['histo'][DoubleMuon_25ns["name"]])
+      datahist = plots['ee'][plot]['histo'][DoubleEG_Run2015D["name"]].Clone()
+      datahist.Add(plots['mumu'][plot]['histo'][DoubleMuon_Run2015D["name"]])
       datahist.SetMarkerColor(ROOT.kBlack)
     c1 = ROOT.TCanvas()
-    pad1 = ROOT.TPad("","",histopad[0],histopad[1],histopad[2],histopad[3])
-    pad1.Draw()
-    pad1.cd()
+    if len(data)>0:
+      pad1 = ROOT.TPad("","",histopad[0],histopad[1],histopad[2],histopad[3])
+      pad1.Draw()
+      pad1.cd()
     bkg_stack_SF.SetMaximum(ymaximum*bkg_stack_SF.GetMaximum())
     bkg_stack_SF.SetMinimum(yminimum)
     bkg_stack_SF.Draw()
     bkg_stack_SF.GetXaxis().SetTitle(plotsSF['SF'][plot]['title'])
     bkg_stack_SF.GetYaxis().SetTitle("Events / %i GeV"%( (plotsSF['SF'][plot]['binning'][2]-plotsSF['SF'][plot]['binning'][1])/plotsSF['SF'][plot]['binning'][0]) )
-    bkg_stack_SF.GetXaxis().SetLabelSize(0.)
-    pad1.SetLogy()
-    c1.SetLogy()
-    if len(signal)>0:
+    if len(data)>0: 
+      pad1.SetLogy()
+      bkg_stack_SF.GetXaxis().SetLabelSize(0.)
+    else:           c1.SetLogy()
+    if len(signals)>0:
       signalPlot_1 = plots['ee'][plot]['histo'][signal['path'][0]].Clone()
       signalPlot_1.Add(plots['mumu'][plot]['histo'][signal['path'][0]])
       signalPlot_2 = plots['ee'][plot]['histo'][signal['path'][2]].Clone()
@@ -726,31 +765,37 @@ if makedraw1D:
     channeltag.SetFillColor(ROOT.kWhite)
     channeltag.SetShadowColor(ROOT.kWhite)
     channeltag.Draw()
-    c1.cd()
-    pad2 = ROOT.TPad("","",datamcpad[0],datamcpad[1],datamcpad[2],datamcpad[3])
-    pad2.SetGrid()
-    pad2.SetBottomMargin(0.4)
-    pad2.Draw()
-    pad2.cd()
-    ratio = datahist.Clone()
-    ratio.Divide(totalbackground)
-    ratio.SetMarkerStyle(20)
-    ratio.SetMarkerSize(0.5)
-    ratio.GetYaxis().SetTitle("Data/Bkg.")
+    if len(data)>0:
+      c1.cd()
+      pad2 = ROOT.TPad("","",datamcpad[0],datamcpad[1],datamcpad[2],datamcpad[3])
+      pad2.SetGrid()
+      pad2.SetBottomMargin(0.4)
+      pad2.Draw()
+      pad2.cd()
+      ratio = datahist.Clone()
+      stuff.append(ratio)
+      ratio.Divide(totalbackground)
+      ratio.SetMarkerStyle(20)
+      ratio.SetMarkerSize(0.5)
+      ratio.GetYaxis().SetTitle("Data/Bkg.")
       #ratio.GetYaxis().SetNdivisions(502)
-    ratio.GetXaxis().SetTitle(plots[pk][plot]['title'])
-    ratio.GetXaxis().SetTitleSize(0.2)
-    ratio.GetYaxis().SetTitleSize(0.18)
-    ratio.GetYaxis().SetTitleOffset(0.29)
-    ratio.GetXaxis().SetTitleOffset(0.8)
-    ratio.GetYaxis().SetLabelSize(0.1)
-    ratio.GetXaxis().SetLabelSize(0.18)
-    ratio.Draw("pe")
-    c1.cd()
+      ratio.GetXaxis().SetTitle(plots[pk][plot]['title'])
+      ratio.GetXaxis().SetTitleSize(0.2)
+      ratio.GetYaxis().SetTitleSize(0.18)
+      ratio.GetYaxis().SetTitleOffset(0.29)
+      ratio.GetXaxis().SetTitleOffset(0.8)
+      ratio.GetYaxis().SetLabelSize(0.1)
+      ratio.GetXaxis().SetLabelSize(0.18)
+      ratio.SetMinimum(0)
+      ratio.SetMaximum(5)
+      ratio.Draw("pe")
+      c1.cd()
     c1.Print(plotDir+"/test/1D/"+plotsSF['SF'][plot]['name']+"_SF.png")
-    pad1.Delete()
-    pad2.Delete()
-    
+    if len(data)>0:
+      del ratio
+      pad1.Delete()
+      pad2.Delete()
+    c1.Clear()
 
 if makedraw2D:
 

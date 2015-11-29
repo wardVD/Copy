@@ -3,7 +3,7 @@ from math import *
 
 mZ=90.2
 
-jetVars = ['eta','pt','phi','btagCMVA','btagCSV', 'id']   
+jetVars = ['eta','pt','phi','btagCSV', 'id']
 def getJets(c, jetVars=jetVars):
   return [getObjDict(c, 'Jet_', jetVars, i) for i in range(int(getVarValue(c, 'nJet')))]
 
