@@ -30,7 +30,8 @@ from StopsDilepton.samples.cmgTuples_Data25ns_mAODv2_postProcessed import *
 reduceStat = 1 #recude the statistics, i.e. 10 is ten times less samples to look at
 makedraw1D = True
 makeTexFile = True
-mt2llcutscaling = False
+mt2llcutscaling = True
+noscaling = True
 
 btagcoeff          = 0.89
 metcut             = 80.
@@ -40,7 +41,7 @@ mllcut             = 20
 ngoodleptons       = 2
 #luminosity         = 1549.
 mt2llcut           = 100.
-flavour            = "EE"
+flavour            = "MuMu"
 
 presel_met         = 'met_pt>'+str(metcut)
 #presel_nbjet       = 'Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id&&Jet_btagCSV>'+str(btagcoeff)+')==0'
@@ -246,10 +247,14 @@ for bjet in plots.keys():
 
       print "Scaling factor data/MC for " +bjet+" and Z-region " + zregion + ": ", dataint/totalbkg
       for b in backgrounds:
-        plots[bjet][plot][zregion]['histo'][b["name"]].Scale(dataint/totalbkg)
-        plots_cut[bjet][plot][zregion]['histo'][b["name"]].Scale(dataint/totalbkg)
-        plots[bjet][plot][zregion]['SF'] = dataint/totalbkg
-        plots_cut[bjet][plot][zregion]['SF'] = dataint/totalbkg
+        if noscaling:
+          plots[bjet][plot][zregion]['SF'] = 1.
+          plots_cut[bjet][plot][zregion]['SF'] = 1.
+        else:
+          plots[bjet][plot][zregion]['histo'][b["name"]].Scale(dataint/totalbkg)
+          plots_cut[bjet][plot][zregion]['histo'][b["name"]].Scale(dataint/totalbkg)
+          plots[bjet][plot][zregion]['SF'] = dataint/totalbkg
+          plots_cut[bjet][plot][zregion]['SF'] = dataint/totalbkg
 
 #######################################################
 #             Drawing done here                       #
