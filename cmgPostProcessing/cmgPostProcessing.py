@@ -2,7 +2,7 @@ import ROOT
 import sys, os, copy, random, subprocess, datetime, shutil
 from array import array
 from StopsDilepton.tools.convertHelpers import compileClass, readVar, printHeader, typeStr, createClassString
-
+from StopsDilepton.tools.puReweighting import getReweightingFunction 
 from math import *
 from StopsDilepton.tools.mt2Calculator import mt2Calculator 
 from StopsDilepton.tools.vetoList import vetoList
@@ -81,6 +81,11 @@ allMC   =  True not in [s.isData for s in allSamples]
 assert allData or len(set([s.xSection for s in allSamples]))==1, "Not all samples have the same xSection: %s !"%(",".join([s.name for s in allSamples]))
 assert allMC or len(allSamples)==1, "Don't concatenate data samples"
 
+if allMC:
+  puRW = getReweightingFunction(data="PU_1500_XSecCentral", mc="Spring15")
+  puRWDown = getReweightingFunction(data="PU_1500_XSecDown", mc="Spring15")
+  puRWUp   = getReweightingFunction(data="PU_1500_XSecUp", mc="Spring15")
+
 assert False not in [hasattr(s, 'path') for s in allSamples], "Not all samples have a path: "+", ".join([s.name for s in allSamples])
 
 for i, s in enumerate(allSamples):
@@ -133,7 +138,7 @@ if options.skim.lower().count('tiny'):
                        "met_pt", "met_phi",
                        "puppiMet_pt","puppiMet_phi",  
                        "Flag_HBHENoiseFilter", "Flag_HBHENoiseIsoFilter", "Flag_goodVertices", "Flag_CSCTightHaloFilter", "Flag_eeBadScFilter",
-                       "HLT_mumuIso", "HLT_ee_DZ", "HLT_mue"
+                       "HLT_mumuIso", "HLT_ee_DZ", "HLT_mue",
                        'LepGood_eta','LepGood_pt','LepGood_phi', 'LepGood_dxy', 'LepGood_dz','LepGood_tightId', 'LepGood_pdgId', 'LepGood_mediumMuonId', 'LepGood_miniRelIso', 'LepGood_sip3d', 'LepGood_mvaIdSpring15', 'LepGood_convVeto', 'LepGood_lostHits',
                        'Jet_eta','Jet_pt','Jet_phi','Jet_btagCSV', 'Jet_id' ,
 #                       "nLepGood", "LepGood_*", 
@@ -141,7 +146,7 @@ if options.skim.lower().count('tiny'):
                        ] 
 
   #branches to be kept for MC samples only
-  branchKeepStrings_MC = [ "nTrueInt", "genWeight", "xsec", "puWeight", "met_genPt", "met_genPhi", "lheHTIncoming", 
+  branchKeepStrings_MC = [ "nTrueInt", "genWeight", "xsec", "met_genPt", "met_genPhi", "lheHTIncoming", 
   #                     "GenSusyMScan1", "GenSusyMScan2", "GenSusyMScan3", "GenSusyMScan4", "GenSusyMGluino", "GenSusyMGravitino", "GenSusyMStop", "GenSusyMSbottom", "GenSusyMStop2", "GenSusyMSbottom2", "GenSusyMSquark", "GenSusyMNeutralino", "GenSusyMNeutralino2", "GenSusyMNeutralino3", "GenSusyMNeutralino4", "GenSusyMChargino", "GenSusyMChargino2", 
   #                     "ngenLep", "genLep_*", 
   #                     "nGenPart", "GenPart_*",
@@ -159,7 +164,7 @@ else:
   branchKeepStrings_DATAMC = ["run", "lumi", "evt", "isData", "rho", "nVert", 
   #                     "nJet25", "nBJetLoose25", "nBJetMedium25", "nBJetTight25", "nJet40", "nJet40a", "nBJetLoose40", "nBJetMedium40", "nBJetTight40", 
   #                     "nLepGood20", "nLepGood15", "nLepGood10", "htJet25", "mhtJet25", "htJet40j", "htJet40", "mhtJet40", "nSoftBJetLoose25", "nSoftBJetMedium25", "nSoftBJetTight25", 
-                       "met_pt", "met_phi","met_Jet*", "met_Unclustered*", "met_sumEt", "met_rawPt", "met_rawSumEt",
+                       "met_pt", "met_phi","met_Jet*", "met_Unclustered*", "met_sumEt", "met_rawPt","met_rawPhi", "met_rawSumEt",
                        "metNoHF_pt", "metNoHF_phi",
                        "puppiMet_pt","puppiMet_phi","puppiMet_sumEt","puppiMet_rawPt","puppiMet_rawPhi","puppiMet_rawSumEt",
                        "Flag_*","HLT_*",
@@ -171,7 +176,7 @@ else:
                        ] 
 
   #branches to be kept for MC samples only
-  branchKeepStrings_MC = [ "nTrueInt", "genWeight", "xsec", "puWeight", "met_gen*", "lheHTIncoming" ,
+  branchKeepStrings_MC = [ "nTrueInt", "genWeight", "xsec", "met_gen*", "lheHTIncoming" ,
   #                     "GenSusyMScan1", "GenSusyMScan2", "GenSusyMScan3", "GenSusyMScan4", "GenSusyMGluino", "GenSusyMGravitino", "GenSusyMStop", "GenSusyMSbottom", "GenSusyMStop2", "GenSusyMSbottom2", "GenSusyMSquark", "GenSusyMNeutralino", "GenSusyMNeutralino2", "GenSusyMNeutralino3", "GenSusyMNeutralino4", "GenSusyMChargino", "GenSusyMChargino2", 
   #                     "ngenLep", "genLep_*", 
   #                     "nGenPart", "GenPart_*",
@@ -197,8 +202,8 @@ else:
   branchKeepStrings = branchKeepStrings_DATAMC + branchKeepStrings_MC
   jetMCInfo = ['mcMatchFlav/I', 'partonId/I']
 
-readVariables = ['met_pt/F', 'met_phi/F', 'run/I', 'lumi/I', 'evt/l']
-newVariables = ['weight/F']
+readVariables = ['met_pt/F', 'met_phi/F', 'run/I', 'lumi/I', 'evt/l','nTrueInt/I']
+newVariables = ['weight/F','weightPU/F','weightPUUp/F','weightPUDown/F']
 aliases = [ "met:met_pt", "metPhi:met_phi"]
 readVectors = [\
   {'prefix':'LepGood',  'nMax':8, 'vars':['pt/F', 'eta/F', 'phi/F', 'pdgId/I', 'charge/I', 'relIso03/F', 'tightId/I', 'miniRelIso/F','mass/F','sip3d/F','mediumMuonId/I', 'mvaIdSpring15/F','lostHits/I', 'convVeto/I', 'dxy/F', 'dz/F']},
@@ -279,10 +284,17 @@ for chunk in chunks:
 
       genWeight = 1 if sample.isData else t.GetLeaf('genWeight').GetValue()
       s.weight = lumiScaleFactor*genWeight if not sample.isData else 1
+      if not sample.isData:
+        s.weightPU     = s.weight*puRW(r.nTrueInt)
+        s.weightPUDown = s.weight*puRWDown(r.nTrueInt) 
+        s.weightPUUp   = s.weight*puRWUp(r.nTrueInt)
       if sample.isData: 
         if not sample.lumiList.contains(r.run, r.lumi):
   #        print "Did not find run %i lumi %i in json file %s"%(r.run, r.lumi, sample.json)
           s.weight=0
+          s.weightPU=0
+          s.weightPUUp=0
+          s.weightPUDown=0
         else:
           if r.run not in outputLumiList.keys():
             outputLumiList[r.run] = [r.lumi]
@@ -291,9 +303,12 @@ for chunk in chunks:
               outputLumiList[r.run].append(r.lumi)
       if vetoList_:
         if (r.run, r.lumi, r.evt) in vetoList_.events:
-          print "Found %i:%i:%i "%(r.run, r.lumi, r.evt)
+          print "Veto %i:%i:%i "%(r.run, r.lumi, r.evt)
+          s.weight=0
+          s.weightPU=0
+          s.weightPUUp=0
+          s.weightPUDown=0
 #        print "Found %i:%i:%i in %s"%(r.run, r.lumi, r.evt, vetoList.filename)
-        s.weight=0
 #      else: print [r.run, r.lumi, r.evt], vetoList_.events[0]
 #        print "Found run %i lumi %i in json file %s"%(r.run, r.lumi, sample.json)
       if options.skim.lower().startswith('dilep'):

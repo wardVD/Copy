@@ -14,7 +14,7 @@ ROOT.TH1D.SetDefaultSumw2()
 #  ROOT.gROOT.ProcessLine('int iPeriod = 3;')
 topMargin = 0.07
 #from Workspace.HEPHYPythonTools.helpers import getFileList, getVarValue
-from StopsDilepton.tools.helpers import getVarValue, getFileList, getPlotFromChain, getChain, testRootFile
+from StopsDilepton.tools.helpers import getVarValue, getFileList, getPlotFromChain, getChain, checkRootFile
 
 #ROOT_colors = [ROOT.kBlack, ROOT.kRed-7, ROOT.kBlue-2, ROOT.kGreen+3, ROOT.kOrange+1,ROOT.kRed-3, ROOT.kAzure+6, ROOT.kCyan+3, ROOT.kOrange , ROOT.kRed-10]
 #upperrightlines=[[0.62,0.7,"#font[22]{CMS preliminary 2012}"],[0.62,0.65,"#sqrt{s} = 8TeV"]]
@@ -170,7 +170,7 @@ def loopAndFill(stacks, mode="loop"):
         if not f[-5:]=='.root':continue
 #        counter+=1
 #        c.Add(f)
-        if testRootFile(f, checkForObjects=[treeName]): 
+        if checkRootFile(f, checkForObjects=[treeName]): 
           counter+=1
           c.Add(f)
         else:

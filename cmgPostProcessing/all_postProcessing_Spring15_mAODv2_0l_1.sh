@@ -1,14 +1,14 @@
 #!/bin/sh
 
-#python cmgPostProcessing.py --skim=inclusive $1  --samples=GJets_HT40to100 &
-#python cmgPostProcessing.py --skim=inclusive $1  --samples=GJets_HT100to200 &
-#python cmgPostProcessing.py --skim=inclusive $1  --samples=GJets_HT200to400 &
-#python cmgPostProcessing.py --skim=inclusive $1  --samples=GJets_HT400to600 &
-#python cmgPostProcessing.py --skim=inclusive $1  --samples=GJets_HT600toInf &
+#python cmgPostProcessing.py --skim=inclusive $1  --samples=GJets_HT40to100 
+#python cmgPostProcessing.py --skim=inclusive $1  --samples=GJets_HT100to200 
+#python cmgPostProcessing.py --skim=inclusive $1  --samples=GJets_HT200to400 
+#python cmgPostProcessing.py --skim=inclusive $1  --samples=GJets_HT400to600 
+#python cmgPostProcessing.py --skim=inclusive $1  --samples=GJets_HT600toInf 
 
-#python cmgPostProcessing.py --skim=inclusive $1  --samples=QCD_Pt15to20_Mu5 &
-#python cmgPostProcessing.py --skim=inclusive $1  --samples=QCD_Pt20to30_Mu5 &
-#python cmgPostProcessing.py --skim=inclusive $1  --samples=QCD_Pt30to50_Mu5 &
+#python cmgPostProcessing.py --skim=inclusive $1  --samples=QCD_Pt15to20_Mu5 
+#python cmgPostProcessing.py --skim=inclusive $1  --samples=QCD_Pt20to30_Mu5 
+#python cmgPostProcessing.py --skim=inclusive $1  --samples=QCD_Pt30to50_Mu5 
 
 python cmgPostProcessing.py --skim=inclusive  $1 --samples=QCD_Pt50to80_Mu5 
 python cmgPostProcessing.py --skim=inclusive  $1 --samples=QCD_Pt80to120_Mu5 

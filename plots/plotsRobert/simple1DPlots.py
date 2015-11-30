@@ -19,12 +19,12 @@ from StopsDilepton.samples.cmgTuples_Data25ns_mAODv2_postProcessed import *
 from StopsDilepton.tools.objectSelection import getLeptons, getMuons, getElectrons, getGoodMuons, getGoodElectrons, getGoodLeptons, mZ
 from StopsDilepton.tools.helpers import getVarValue, getYieldFromChain, getChain
 from StopsDilepton.tools.localInfo import plotDir
-from simplePlotHelpers import plot, stack, loopAndFill, drawNMStacks
+from StopsDilepton.plots.simplePlotHelpers import plot, stack, loopAndFill, drawNMStacks
 from StopsDilepton.tools.puReweighting import getReweightingFunction
 
 puReweightingFunc = getReweightingFunction(era="doubleMu_onZ_isOS_1500pb_nVert_reweight")
 puReweighting = lambda c:puReweightingFunc(getVarValue(c, "nVert"))
-#puReweighting = None
+puReweighting = None
 
 cutBranches = ["weight", "leptonPt", "met*", "nVert",'run',\
                'Jet_pt', "Jet_id", "Jet_eta", "Jet_phi", "Jet_btagCSV",
@@ -34,7 +34,7 @@ cutBranches = ["weight", "leptonPt", "met*", "nVert",'run',\
                "is*","dl_*","l1_*","l2_*", "nGoodMuons", "nGoodElectrons"
                 ]
 #subdir = "png25ns_2l_mAODv2_PUrw_mcTrig"
-subdir = "png25ns_2l_mAODv2_1500_mcTrig"
+subdir = "png25ns_2l_mAODv2_1500_mcTrig_test_noPU"
 #preprefixes = ["PUDoubleMuOnZIsOS"]
 preprefixes = [] if not opts.small else ['small']
 maxN = 1 if opts.small else -1
@@ -57,18 +57,19 @@ triggerMuEle = "HLT_mue"
 
 cuts=[
  ("njet2", "(Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id))>=2"),
- ("nbtag1", "Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id&&Jet_btagCSV>0.890)>=1"),
+# ("nbtag1", "Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id&&Jet_btagCSV>0.890)>=1"),
+ ("nbtag0", "Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id&&Jet_btagCSV>0.890)==0"),
  ("mll20", "dl_mass>20"),
 # ("met80", "met_pt>80"),
-# ("metSig5", "met_pt/sqrt(Sum$(Jet_pt*(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id)))>5"),
-# ("dPhiJet0-dPhiJet1", "cos(met_phi-Jet_phi[0])<cos(0.25)&&cos(met_phi-Jet_phi[1])<cos(0.25)"),
+ ("metSig5", "met_pt/sqrt(Sum$(Jet_pt*(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id)))>5"),
+ ("dPhiJet0-dPhiJet1", "cos(met_phi-Jet_phi[0])<cos(0.25)&&cos(met_phi-Jet_phi[1])<cos(0.25)"),
   ]
-for i in range(len(cuts)+1):
+#for i in range(len(cuts)+1):
 #for i in reversed(range(len(cuts)+1)):
-#for i in [len(cuts)]:
+for i in [len(cuts)]:
   for comb in itertools.combinations(cuts,i):
-#    presel = [("isOS","isOS"), ("mRelIso01", "LepGood_miniRelIso[l1_index]<0.1&&LepGood_miniRelIso[l2_index]<0.1")]
-    presel = [("isOS","isOS")]
+    presel = [("isOS","isOS"), ("mRelIso01", "LepGood_miniRelIso[l1_index]<0.1&&LepGood_miniRelIso[l2_index]<0.1")]
+#    presel = [("isOS","isOS")]
     presel.extend( comb )
 
     prefix = '_'.join(preprefixes+[opts.mode, opts.zMode, '-'.join([p[0] for p in presel])]) 
@@ -92,7 +93,7 @@ for i in range(len(cuts)+1):
 
     cutFunc = None
     lumiScaleFac = dataSample["lumi"]/1000.
-    backgrounds = [TTJets, WJetsToLNu, DY, singleTop, QCDSample, TTX, diBoson] 
+    backgrounds = [TTJets, WJetsToLNu, DY_HT_LO, singleTop, QCDSample, TTX, diBoson] 
     data = getYieldFromChain(getChain(dataSample,histname="",maxN=maxN), cutString = "&&".join([cutString, dataCut]), weight='weight') 
     bkg  = 0. 
     for s in backgrounds:
@@ -119,7 +120,7 @@ for i in range(len(cuts)+1):
       data               = plot(var, binning, cut, sample=dataSample,       style=style_Data)
       MC_TTJets          = plot(var, binning, cut, sample=TTJets,       style=style_TTJets,    weightString="weight", weightFunc=puReweighting)
       MC_WJetsToLNu      = plot(var, binning, cut, sample=WJetsToLNu,   style=style_WJets,     weightString="weight", weightFunc=puReweighting)
-      MC_DY              = plot(var, binning, cut, sample=DY,           style=style_DY,        weightString="weight", weightFunc=puReweighting)
+      MC_DY              = plot(var, binning, cut, sample=DY_HT_LO,           style=style_DY,        weightString="weight", weightFunc=puReweighting)
       MC_singleTop       = plot(var, binning, cut, sample=singleTop,    style=style_singleTop, weightString="weight", weightFunc=puReweighting)
       MC_QCD             = plot(var, binning, cut, sample=QCDSample,        style=style_QCD,       weightString="weight", weightFunc=puReweighting)
       MC_TTX             = plot(var, binning, cut, sample=TTX,          style=style_TTX, weightString="weight", weightFunc=puReweighting)
@@ -300,6 +301,13 @@ for i in range(len(cuts)+1):
         cut={'string':cutString,'func':cutFunc,'dataCut':dataCut},
         )
     allStacks.append(met_stack)
+
+    JZB_stack  = getStack(
+        labels={'x':'JZB (GeV})','y':'Number of Events / 32 GeV'},
+        var={'name':'JZB','TTreeFormula':'sqrt((met_pt*cos(met_phi)+dl_pt*cos(dl_phi))**2 + (met_pt*sin(met_phi)+dl_pt*sin(dl_phi))**2) - dl_pt', 'overFlow':'both'},
+        binning={'binning':[25,-200,600]},
+        cut={'string':cutString,'func':cutFunc, 'dataCut':dataCut})
+    allStacks.append(JZB_stack)
 
     metSig_stack  = getStack(
         labels={'x':'#slash{E}_{T}/#sqrt(H_{T}) (GeV^{1/2})','y':'Number of Events / 100 GeV'},
