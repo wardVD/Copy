@@ -22,7 +22,7 @@ target_lumi = 1000 #pb-1 Which lumi to normalize to
 
 defSampleStr = "DoubleMuon_Run2015D_v4"  #Which samples to run for by default (will be overritten by --samples option)
 
-subDir = "/afs/hephy.at/data/rschoefbeck01/cmgTuples/postProcessed_mAODv2_fix" #Output directory -> The first path should go to localInfo (e.g. 'dataPath' or something)
+subDir = "/afs/hephy.at/data/rschoefbeck01/cmgTuples/postProcessed_mAODv2" #Output directory -> The first path should go to localInfo (e.g. 'dataPath' or something)
 
 from optparse import OptionParser
 parser = OptionParser()
@@ -31,6 +31,7 @@ parser.add_option("--inputTreeName", dest="inputTreeName", default="treeProducer
 parser.add_option("--targetDir", dest="targetDir", default=subDir, type="string", action="store", help="target directory.")
 parser.add_option("--skim", dest="skim", default="dilep", type="string", action="store", help="any skim condition?")
 parser.add_option("--small", dest="small", default = False, action="store_true", help="Just do a small subset.")
+parser.add_option("--keepPhotons", dest="keepPhotons", default = False, action="store_true", help="keep photons?")
 parser.add_option("--overwrite", dest="overwrite", default = False, action="store_true", help="Overwrite?")
 parser.add_option("--lheHTCut", dest="lheHTCut", default="", type="string", action="store", help="upper cut on lheHTIncoming")
 
@@ -113,7 +114,7 @@ vetoList_ = vetoList(sample.vetoList) if hasattr(sample, "vetoList") else None
 outDir = os.path.join(options.targetDir, options.skim, sample.name)
 if os.path.exists(outDir):
   existingFiles = [outDir+'/'+f for f in os.listdir(outDir) if f.endswith('.root')]
-  hasBadFile = any([not checkRootFile(f) for f in existingFiles])
+  hasBadFile = any([not checkRootFile(f, checkForObjects=["Events"]) for f in existingFiles])
 else:
   existingFiles = []
   hasBadFile = False
@@ -126,6 +127,7 @@ else:
   tmpDir = os.path.join(outDir,'tmp')
   if hasBadFile:
     print "Found a corrupted file. Remake sample. Delete %s"%outDir
+    shutil.rmtree(outDir)
   if os.path.exists(outDir) and options.overwrite: #not options.update: 
     print "Directory %s exists. Delete it."%outDir
     shutil.rmtree(outDir)
@@ -188,6 +190,9 @@ else:
   #branches to be kept for data only
   branchKeepStrings_DATA = [
               ]
+
+if options.keepPhotons:
+  branchKeepStrings_DATAMC+=["ngamma", "gamma_idCutBased", "gamma_hOverE", "gamma_r9", "gamma_sigmaIetaIeta", "gamma_chHadIso04", "gamma_chHadIso", "gamma_phIso", "gamma_neuHadIso", "gamma_relIso", "gamma_mcMatchId", "gamma_mcPt", "gamma_pdgId", "gamma_pt", "gamma_eta", "gamma_phi", "gamma_mass", "gamma_genIso04", "gamma_genIso03", "gamma_chHadIsoRC04", "gamma_chHadIsoRC", "gamma_drMinParton"]
 
 if sample.isData: 
   lumiScaleFactor=1
