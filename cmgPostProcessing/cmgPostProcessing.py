@@ -4,11 +4,12 @@ from array import array
 from StopsDilepton.tools.convertHelpers import compileClass, readVar, printHeader, typeStr, createClassString
 from StopsDilepton.tools.puReweighting import getReweightingFunction 
 from math import *
-from StopsDilepton.tools.mt2Calculator import mt2Calculator 
+from StopsDilepton.tools.mt2Calculator import mt2Calculator
+from StopsDilepton.tools.topPtReweighting import getUnscaledTopPairPtReweightungFunction, getTopPtDrawString, getTopPtsForReweighting 
 from StopsDilepton.tools.vetoList import vetoList
 mt2Calc = mt2Calculator()
 from StopsDilepton.tools.mtautau import mtautau as mtautau_
-from StopsDilepton.tools.helpers import getChain, getChunks, getObjDict, getEList, getVarValue, checkRootFile
+from StopsDilepton.tools.helpers import getChain, getChunks, getObjDict, getEList, getVarValue, checkRootFile, getYieldFromChain
 from StopsDilepton.tools.objectSelection import getLeptons, getMuons, getElectrons, getGoodMuons, getGoodElectrons, getGoodLeptons, getJets, getGoodBJets, getGoodJets, isBJet 
 
 from StopsDilepton.tools.localInfo import *
@@ -22,7 +23,7 @@ target_lumi = 1000 #pb-1 Which lumi to normalize to
 
 defSampleStr = "DoubleMuon_Run2015D_v4"  #Which samples to run for by default (will be overritten by --samples option)
 
-subDir = "/afs/hephy.at/data/rschoefbeck01/cmgTuples/postProcessed_mAODv2" #Output directory -> The first path should go to localInfo (e.g. 'dataPath' or something)
+subDir = "/afs/hephy.at/data/rschoefbeck01/cmgTuples/postProcessed_mAODv2_fix" #Output directory -> The first path should go to localInfo (e.g. 'dataPath' or something)
 
 from optparse import OptionParser
 parser = OptionParser()
@@ -97,6 +98,11 @@ for i, s in enumerate(allSamples):
 sample=allSamples[0]
 if len(allSamples)>1:
   sample.name=sample.name+'_comb'  
+
+doTopPtReweighting = sample.name.startswith("TTJets") or sample.name.startswith("TTLep")
+if doTopPtReweighting:
+  print "Sample %s will have top pt reweights!"% sample.name
+topPtReweightingFunc = getUnscaledTopPairPtReweightungFunction() if doTopPtReweighting else None
 
 if options.lheHTCut:
   try:
@@ -208,11 +214,12 @@ else:
   jetMCInfo = ['mcMatchFlav/I', 'partonId/I']
 
 readVariables = ['met_pt/F', 'met_phi/F', 'run/I', 'lumi/I', 'evt/l','nTrueInt/I']
-newVariables = ['weight/F','weightPU/F','weightPUUp/F','weightPUDown/F']
+newVariables = ['weight/F','weightPU/F','weightPUUp/F','weightPUDown/F', 'reweightTopPt/F']
 aliases = [ "met:met_pt", "metPhi:met_phi"]
 readVectors = [\
   {'prefix':'LepGood',  'nMax':8, 'vars':['pt/F', 'eta/F', 'phi/F', 'pdgId/I', 'charge/I', 'relIso03/F', 'tightId/I', 'miniRelIso/F','mass/F','sip3d/F','mediumMuonId/I', 'mvaIdSpring15/F','lostHits/I', 'convVeto/I', 'dxy/F', 'dz/F']},
   {'prefix':'Jet',  'nMax':100, 'vars':['pt/F', 'eta/F', 'phi/F', 'id/I','btagCSV/F', 'btagCMVA/F'] + jetMCInfo},
+  {'prefix':'genPartAll',  'nMax':2000, 'vars':['pt/F', 'pdgId/I', 'status/I','nDaughters/I']},
 ]
 if not sample.isData: 
   aliases.extend(['genMet:met_genPt', 'genMetPhi:met_genPhi'])
@@ -243,9 +250,22 @@ printHeader("Class to Read")
 #  print readClassString
 r = compileClass(className=readClassName, classString=readClassString, tmpDir='/tmp/')
 
+
 filesForHadd=[]
 if options.small: chunks=chunks[:1]
-#print "CHUNKS:" , chunks
+
+if doTopPtReweighting:
+  c = ROOT.TChain("tree")
+  for chunk in chunks:
+    c.Add(chunk['file'])
+  print "Computing top pt average weight"
+#  print getTopPtDrawString()
+  topScaleF = getYieldFromChain(c, cutString = "(1)", weight=getTopPtDrawString())
+  topScaleF/=c.GetEntries()
+  c.IsA().Destructor(c)
+  del c
+  print "Found a top pt average correction factor of %f"%topScaleF
+
 for chunk in chunks:
   sourceFileSize = os.path.getsize(chunk['file'])
   nSplit = 1+int(sourceFileSize/(200*10**6)) #split into 200MB
@@ -289,6 +309,13 @@ for chunk in chunks:
 
       genWeight = 1 if sample.isData else t.GetLeaf('genWeight').GetValue()
       s.weight = lumiScaleFactor*genWeight if not sample.isData else 1
+      s.reweightTopPt = topPtReweightingFunc(getTopPtsForReweighting(r))/topScaleF if doTopPtReweighting else 1.
+#      if doTopPtReweighting:
+#        topPts = getTopPtsForReweighting(r)
+#        print topPts, topPtReweightingFunc(topPts), topScaleF
+#        s.reweightTopPt = topPtReweightingFunc(topPts)/topScaleF 
+#      else:
+#        s.reweightTopPt = 1. 
       if not sample.isData:
         s.weightPU     = s.weight*puRW(r.nTrueInt)
         s.weightPUDown = s.weight*puRWDown(r.nTrueInt) 
