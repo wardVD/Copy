@@ -25,8 +25,8 @@ makedraw1D = True
 #######################################################
 #                 load all the samples                #
 #######################################################
-from StopsDilepton.samples.cmgTuples_Spring15_25ns_postProcessed import *
-backgrounds = [diBosons_25ns,WJetsToLNu_25ns,TTX_25ns,singleTop_25ns,QCDMu_25ns,DY_25ns,DYHT_25ns,TTLep_25ns]
+from StopsDilepton.samples.cmgTuples_Spring15_mAODv2_25ns_1l_postProcessed import *
+backgrounds = [DY_HT_LO]
 #backgrounds = []
 #signals = [SMS_T2tt_2J_mStop425_mLSP325, SMS_T2tt_2J_mStop500_mLSP325, SMS_T2tt_2J_mStop650_mLSP325, SMS_T2tt_2J_mStop850_mLSP100]
 signals = []
@@ -41,7 +41,7 @@ for s in backgrounds+signals:
   s['chain'] = getChain(s,histname="")
 
 plots = {\
-  'met': {'title':'E^{miss}_{T} (GeV)', 'name':'MET', 'histo':{}},
+  'lheHTIncoming': {'title':'lheHTIncoming (GeV)', 'name':'lheHTIncoming', 'histo':{}},
   }
 
 
@@ -51,8 +51,8 @@ plots = {\
 for i,s in enumerate(backgrounds+signals):
   chain = s["chain"]
 
-  chain.Draw("met_pt>>met"+str(i)+"(25,20,1020)",preselection)
-  plots['met']['histo'][s["name"]] = ROOT.gDirectory.Get("met"+str(i))
+  chain.Draw("lheHTIncoming>>lheHTIncoming"+str(i)+"(25,0,1000)","(weight)*("+preselection+")")
+  plots['lheHTIncoming']['histo'][s["name"]] = ROOT.gDirectory.Get("lheHTIncoming"+str(i))
 
 processtime = datetime.now()
 print "Time to process chains: ", processtime - start
@@ -60,23 +60,13 @@ print "Time to process chains: ", processtime - start
 #######################################################
 #             Drawing done here                       #
 #######################################################
-#Some coloring
-TTLep_25ns["color"]=7
-DY_25ns["color"]=8
-DYHT_25ns["color"]=9
-QCDMu_25ns["color"]=46
-singleTop_25ns["color"]=40
-diBosons_25ns["color"]=ROOT.kOrange
-TTX_25ns['color']=ROOT.kPink
-WJetsToLNu_25ns['color']=ROOT.kRed-10
-
 legendtextsize = 0.032
 
 if makedraw1D:
   for plot in plots.keys():
     for s in backgrounds+signals:
       integral = plots[plot]['histo'][s['name']].Integral()
-      plots[plot]['histo'][s['name']].Scale(1./integral)
+      #plots[plot]['histo'][s['name']].Scale(1./integral)
      
       #Make a stack for backgrounds
     l=ROOT.TLegend(0.6,0.8,1.0,1.0)
@@ -91,13 +81,11 @@ if makedraw1D:
       plots[plot]['histo'][b["name"]].SetLineColor(b["color"])
       plots[plot]['histo'][b["name"]].SetLineWidth(3)
       plots[plot]['histo'][b["name"]].SetMarkerSize(0)
-      plots[plot]['histo'][b["name"]].Draw("same")
+      plots[plot]['histo'][b["name"]].Draw("HISTsame")
       l.AddEntry(plots[plot]['histo'][b["name"]],b['name'])
       if i == 0: 
         plots[plot]['histo'][b["name"]].GetXaxis().SetTitle(plots[plot]['title'])
         plots[plot]['histo'][b["name"]].GetYaxis().SetTitle("Events (A.U.)")
-        if plot!="met": plots[plot]['histo'][b["name"]].GetYaxis().SetRangeUser(0.001,2)
-        else:           plots[plot]['histo'][b["name"]].GetYaxis().SetRangeUser(0.00001,2)
     c1.SetLogy()
     l.Draw()
     c1.Print("./"+plots[plot]['name']+".png")

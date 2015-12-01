@@ -14,14 +14,14 @@ from StopsDilepton.tools.localInfo import *
 
 #preselection = 'met_pt>40&&Sum$((Jet_pt)*(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id))>100&&Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id&&Jet_btagCSV>0.814)==2&&Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id)>=2&&Sum$(LepGood_pt>20)>=2'
 preselection = 'isOS&&abs(dl_mass-90.2)<=15.&&isMuMu==1&&nGoodMuons==2&&nGoodElectrons==0'
-dataCut = "(HLT_mumuIso&&Flag_HBHENoiseFilter&&Flag_goodVertices&&Flag_CSCTightHaloFilter&&Flag_eeBadScFilter&&Flag_HBHEIsoNoiseFilterReRun)&&weight>0"
-prefix="doubleMu_onZ_isOS_1200pb"
+dataCut = "(HLT_mumuIso&&Flag_HBHENoiseFilter&&Flag_goodVertices&&Flag_CSCTightHaloFilter&&Flag_eeBadScFilter)&&weight>0"
+prefix="doubleMu_onZ_isOS_1500pb_ward"
 
 #load all the samples
 from StopsDilepton.samples.cmgTuples_Spring15_mAODv2_25ns_1l_postProcessed import *
 from StopsDilepton.samples.cmgTuples_Data25ns_mAODv2_postProcessed import *
 
-backgrounds = [DY, TTJets]
+backgrounds = [QCD_Mu5,WJetsToLNu,singleTop,DY_HT_LO,singleTop,TTX,TTJets] 
 
 for b in backgrounds:
   b['isData']=False
