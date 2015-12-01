@@ -22,11 +22,11 @@ from StopsDilepton.tools.localInfo import plotDir
 from StopsDilepton.plots.simplePlotHelpers import plot, stack, loopAndFill, drawNMStacks
 from StopsDilepton.tools.puReweighting import getReweightingFunction
 
-puReweightingFunc = getReweightingFunction(era="doubleMu_onZ_isOS_1500pb_nVert_reweight")
-puReweighting = lambda c:puReweightingFunc(getVarValue(c, "nVert"))
+#puReweightingFunc = getReweightingFunction(era="doubleMu_onZ_isOS_1500pb_nVert_reweight")
+#puReweighting = lambda c:puReweightingFunc(getVarValue(c, "nVert"))
 puReweighting = None
 
-cutBranches = ["weight", "leptonPt", "met*", "nVert",'run',\
+cutBranches = ["weight*", "leptonPt", "met*", "nVert",'run',\
                'Jet_pt', "Jet_id", "Jet_eta", "Jet_phi", "Jet_btagCSV",
                "LepGood_pdgId", "LepGood_mediumMuonId", "LepGood_miniRelIso", "LepGood_sip3d", "LepGood_dxy", "LepGood_dz", "LepGood_convVeto", "LepGood_lostHits",
                "Flag_HBHENoiseFilter", "Flag_HBHENoiseIsoFilter", "Flag_goodVertices", "Flag_CSCTightHaloFilter", "Flag_eeBadScFilter",
@@ -34,7 +34,8 @@ cutBranches = ["weight", "leptonPt", "met*", "nVert",'run',\
                "is*","dl_*","l1_*","l2_*", "nGoodMuons", "nGoodElectrons"
                 ]
 #subdir = "png25ns_2l_mAODv2_PUrw_mcTrig"
-subdir = "png25ns_2l_mAODv2_1500_mcTrig_test_noPU"
+#subdir = "png25ns_2l_mAODv2_1500_mcTrig_test_noPU"
+subdir = "png25ns_2l_mAODv2_1500_officialPU"
 #preprefixes = ["PUDoubleMuOnZIsOS"]
 preprefixes = [] if not opts.small else ['small']
 maxN = 1 if opts.small else -1
@@ -57,16 +58,16 @@ triggerMuEle = "HLT_mue"
 
 cuts=[
  ("njet2", "(Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id))>=2"),
-# ("nbtag1", "Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id&&Jet_btagCSV>0.890)>=1"),
- ("nbtag0", "Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id&&Jet_btagCSV>0.890)==0"),
+ ("nbtag1", "Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id&&Jet_btagCSV>0.890)>=1"),
+# ("nbtag0", "Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id&&Jet_btagCSV>0.890)==0"),
  ("mll20", "dl_mass>20"),
-# ("met80", "met_pt>80"),
+ ("met80", "met_pt>80"),
  ("metSig5", "met_pt/sqrt(Sum$(Jet_pt*(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id)))>5"),
  ("dPhiJet0-dPhiJet1", "cos(met_phi-Jet_phi[0])<cos(0.25)&&cos(met_phi-Jet_phi[1])<cos(0.25)"),
   ]
 #for i in range(len(cuts)+1):
-#for i in reversed(range(len(cuts)+1)):
-for i in [len(cuts)]:
+for i in reversed(range(len(cuts)+1)):
+#for i in [len(cuts)]:
   for comb in itertools.combinations(cuts,i):
     presel = [("isOS","isOS"), ("mRelIso01", "LepGood_miniRelIso[l1_index]<0.1&&LepGood_miniRelIso[l2_index]<0.1")]
 #    presel = [("isOS","isOS")]
@@ -97,7 +98,7 @@ for i in [len(cuts)]:
     data = getYieldFromChain(getChain(dataSample,histname="",maxN=maxN), cutString = "&&".join([cutString, dataCut]), weight='weight') 
     bkg  = 0. 
     for s in backgrounds:
-      bkg+= getYieldFromChain(getChain(s,histname="", maxN=maxN), cutString, weight='weight')
+      bkg+= getYieldFromChain(getChain(s,histname="", maxN=maxN), cutString, weight='weightPU')
 
     scaleFac = data/(bkg*lumiScaleFac)
 
@@ -118,13 +119,13 @@ for i in [len(cuts)]:
       style_singleTop    = {'legendText':'single top',  'style':"f", 'linethickNess':0, 'errorBars':False,      'color':40, 'markerStyle':None, 'markerSize':None}
       
       data               = plot(var, binning, cut, sample=dataSample,       style=style_Data)
-      MC_TTJets          = plot(var, binning, cut, sample=TTJets,       style=style_TTJets,    weightString="weight", weightFunc=puReweighting)
-      MC_WJetsToLNu      = plot(var, binning, cut, sample=WJetsToLNu,   style=style_WJets,     weightString="weight", weightFunc=puReweighting)
-      MC_DY              = plot(var, binning, cut, sample=DY_HT_LO,           style=style_DY,        weightString="weight", weightFunc=puReweighting)
-      MC_singleTop       = plot(var, binning, cut, sample=singleTop,    style=style_singleTop, weightString="weight", weightFunc=puReweighting)
-      MC_QCD             = plot(var, binning, cut, sample=QCDSample,        style=style_QCD,       weightString="weight", weightFunc=puReweighting)
-      MC_TTX             = plot(var, binning, cut, sample=TTX,          style=style_TTX, weightString="weight", weightFunc=puReweighting)
-      MC_diBoson         = plot(var, binning, cut, sample=diBoson,     style=style_diBoson, weightString="weight", weightFunc=puReweighting)
+      MC_TTJets          = plot(var, binning, cut, sample=TTJets,       style=style_TTJets,    weightString="weightPU", weightFunc=puReweighting)
+      MC_WJetsToLNu      = plot(var, binning, cut, sample=WJetsToLNu,   style=style_WJets,     weightString="weightPU", weightFunc=puReweighting)
+      MC_DY              = plot(var, binning, cut, sample=DY_HT_LO,           style=style_DY,  weightString="weightPU", weightFunc=puReweighting)
+      MC_singleTop       = plot(var, binning, cut, sample=singleTop,    style=style_singleTop, weightString="weightPU", weightFunc=puReweighting)
+      MC_QCD             = plot(var, binning, cut, sample=QCDSample,        style=style_QCD,   weightString="weightPU", weightFunc=puReweighting)
+      MC_TTX             = plot(var, binning, cut, sample=TTX,          style=style_TTX,       weightString="weightPU", weightFunc=puReweighting)
+      MC_diBoson         = plot(var, binning, cut, sample=diBoson,     style=style_diBoson,    weightString="weightPU", weightFunc=puReweighting)
       #FIXME triBoson
       mcStack = [MC_TTJets, MC_DY,  MC_QCD, MC_singleTop, MC_WJetsToLNu, MC_diBoson, MC_TTX]
       for s in mcStack:
