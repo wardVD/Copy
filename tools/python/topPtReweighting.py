@@ -12,7 +12,7 @@ def getUnscaledTopPairPtReweightungFunction(a,b):
 
 def getTopPtDrawString(a,b):
 #  assert b < 0, "b is not a negative number"
-  return "sqrt(exp(Sum$(("+str(a)+"+("+str(b)+")*genPartAll_pt)*(abs(genPartAll_pdgId)==6&&genPartAll_nDaughters==2&&genPartAll_status==62))))"
+  return "sqrt(exp(Sum$(("+str(a)+"+("+str(b)+")*genPartAll_pt)*(abs(genPartAll_pdgId)==6&&genPartAll_nDaughters==2&&genPartAll_status==62&&genPartAll_pt<=400))))"
 ##### c.Draw(getTopPtDrawString(a,b)+">>h")
 ##### average=ROOT.h.GetMean()
 ##### topPairPtWeight = getUnscaledTopPairPtReweightungFunction(a,b)(pt1,pt2)/average
