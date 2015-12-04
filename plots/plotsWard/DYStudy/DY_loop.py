@@ -10,8 +10,8 @@ from datetime import datetime
 from StopsDilepton.tools.puReweighting import getReweightingFunction
 from StopsDilepton.tools.objectSelection import getLeptons, looseMuID, looseEleID, getJets, getGenParts, getGoodLeptons, getGoodElectrons, getGoodMuons
 
-puReweightingFunc = getReweightingFunction(era="doubleMu_onZ_isOS_1500pb_nVert_reweight")
-puReweighting = lambda c:puReweightingFunc(getVarValue(c, "nVert"))
+#puReweightingFunc = getReweightingFunction(era="doubleMu_onZ_isOS_1500pb_nVert_reweight")
+#puReweighting = lambda c:puReweightingFunc(getVarValue(c, "nVert"))
 
 
 start = datetime.now()
@@ -30,8 +30,8 @@ from StopsDilepton.samples.cmgTuples_Data25ns_mAODv2_postProcessed import *
 reduceStat = 1 #recude the statistics, i.e. 10 is ten times less samples to look at
 makedraw1D = True
 makeTexFile = True
-mt2llcutscaling = True
-noscaling = True
+mt2llcutscaling = False
+noscaling = False
 
 btagcoeff          = 0.89
 metcut             = 80.
@@ -41,7 +41,7 @@ mllcut             = 20
 ngoodleptons       = 2
 #luminosity         = 1549.
 mt2llcut           = 100.
-flavour            = "MuMu"
+flavour            = "EE"
 
 presel_met         = 'met_pt>'+str(metcut)
 #presel_nbjet       = 'Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id&&Jet_btagCSV>'+str(btagcoeff)+')==0'
@@ -166,9 +166,9 @@ for s in backgrounds+data:
       sys.stdout.write('\r')
     chain.GetEntry(eList.GetEntry(ev))
 
-    pileupweight = puReweighting(chain) if not s['isData'] else 1.
+    #pileupweight = puReweighting(chain) if not s['isData'] else 1.
     
-    weight = reduceStat*getVarValue(chain, "weight")*(luminosity/1000.)*pileupweight if not s['isData'] else 1
+    weight = reduceStat*getVarValue(chain, "weight")*(luminosity/1000.) if not s['isData'] else 1
     
     mll = getVarValue(chain,"dl_mass")
     mt2ll = getVarValue(chain,"dl_mt2ll")
