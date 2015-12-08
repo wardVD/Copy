@@ -270,8 +270,7 @@ def genmatching(lepton,genparticles):
 
 def latexmaker_1(channel,plots,mt2cut):
 
-  for cut in mt2cut:
-
+  for cut in mt2cut.keys():
     mt2ll = plots[channel]['mt2llwithcut'+cut]
 
     output = open("./tables/table_"+channel+"_mt2cutat"+cut+".tex","w")

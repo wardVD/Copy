@@ -62,16 +62,16 @@ mllbinning = "(50,0,150)"
 
 plots = {\
   'dl_mt2ll':{\
-    '_onZ_0b': {'title':'M^{2}_{T}(ll) (GeV)', 'name':'MT2ll_onZ_b==0b', 'binning': mt2llbinning, 'histo':{}},
-    '_offZ_0b': {'title':'M^{2}_{T}(ll) (GeV)', 'name':'MT2ll_offZ_b==0b',  'binning': mt2llbinning, 'histo':{}},
-    '_onZ_1mb': {'title':'M^{2}_{T}(ll) (GeV)', 'name':'MT2ll_onZ_b>=1',  'binning': mt2llbinning, 'histo':{}},
-    '_offZ_1mb': {'title':'M^{2}_{T}(ll) (GeV)', 'name':'MT2ll_offZ_b>=1',  'binning': mt2llbinning, 'histo':{}},
+    '_onZ_0b': {'title':'MT2ll (GeV)', 'name':'MT2ll_onZ_b==0b',"legend":"(onZ,0 b-tag)", 'binning': mt2llbinning, 'histo':{}},
+    '_offZ_0b': {'title':'MT2ll (GeV)', 'name':'MT2ll_offZ_b==0b',"legend":"(offZ,0 b-tag)",'binning': mt2llbinning, 'histo':{}},
+    '_onZ_1mb': {'title':'MT2ll (GeV)', 'name':'MT2ll_onZ_b>=1', "legend":"(onZ,>0 b-tag)", 'binning': mt2llbinning, 'histo':{}},
+    '_offZ_1mb': {'title':'MT2ll (GeV)', 'name':'MT2ll_offZ_b>=1', "legend":"(offZ,>0 b-tag)", 'binning': mt2llbinning, 'histo':{}},
     },
   'dl_mass':{\
-    '_onZ_0b': {'title':'m_{ll} (GeV)', 'name':'Mll_onZ_b==0b', 'binning': mllbinning, 'histo':{}},
-    '_offZ_0b': {'title':'m_{ll} (GeV)', 'name':'Mll_offZ_b==0b',  'binning': mllbinning, 'histo':{}},
-    '_onZ_1mb': {'title':'m_{ll} (GeV)', 'name':'Mll_onZ_b>=1',  'binning': mllbinning, 'histo':{}},
-    '_offZ_1mb': {'title':'m_{ll} (GeV)', 'name':'Mll_offZ_b>=1',  'binning': mllbinning, 'histo':{}},
+    '_onZ_0b': {'title':'m_{ll} (GeV)', 'name':'Mll_onZ_b==0b', "legend":"(onZ,0 b-tag)",'binning': mllbinning, 'histo':{}},
+    '_offZ_0b': {'title':'m_{ll} (GeV)', 'name':'Mll_offZ_b==0b', "legend":"(offZ,0 b-tag)", 'binning': mllbinning, 'histo':{}},
+    '_onZ_1mb': {'title':'m_{ll} (GeV)', 'name':'Mll_onZ_b>=1', "legend":"(onZ,>0 b-tag)", 'binning': mllbinning, 'histo':{}},
+    '_offZ_1mb': {'title':'m_{ll} (GeV)', 'name':'Mll_offZ_b>=1', "legend":"(offZ,>0 b-tag)", 'binning': mllbinning, 'histo':{}},
     },
   }
 
@@ -139,10 +139,15 @@ if makedraw1D:
       integralON1b = plots[plot]["_onZ_1mb"]['histo'][b["name"]].Integral()
       integralOFF1b = plots[plot]["_offZ_1mb"]['histo'][b["name"]].Integral()
 
-      plots[plot]["_onZ_0b"]['histo'][b["name"]].Scale(1./(integralON0b+integralOFF0b))
-      plots[plot]["_offZ_0b"]['histo'][b["name"]].Scale(1./(integralON0b+integralOFF0b))
-      plots[plot]["_onZ_1mb"]['histo'][b["name"]].Scale(1./(integralON1b+integralOFF1b))
-      plots[plot]["_offZ_1mb"]['histo'][b["name"]].Scale(1./(integralON1b+integralOFF1b))
+      #plots[plot]["_onZ_0b"]['histo'][b["name"]].Scale(1./(integralON0b+integralOFF0b))
+      #plots[plot]["_offZ_0b"]['histo'][b["name"]].Scale(1./(integralON0b+integralOFF0b))
+      #plots[plot]["_onZ_1mb"]['histo'][b["name"]].Scale(1./(integralON1b+integralOFF1b))
+      #plots[plot]["_offZ_1mb"]['histo'][b["name"]].Scale(1./(integralON1b+integralOFF1b))
+
+      plots[plot]["_onZ_0b"]['histo'][b["name"]].Scale(1./integralON0b)
+      plots[plot]["_offZ_0b"]['histo'][b["name"]].Scale(1./integralOFF0b)
+      plots[plot]["_onZ_1mb"]['histo'][b["name"]].Scale(1./integralON1b)
+      plots[plot]["_offZ_1mb"]['histo'][b["name"]].Scale(1./integralOFF1b)
 
       for j,selection in enumerate(sorted(plots[plot].keys(),key=lambda sort:plots[plot][sort]['histo'][b['name']].Integral(),reverse=True)):
         #plots[plot][selection]['histo'][b["name"]].Scale(1./integral)
@@ -155,8 +160,8 @@ if makedraw1D:
         if j == 0: 
           plots[plot][selection]['histo'][b["name"]].GetXaxis().SetTitle(plots[plot][selection]['title'])
           plots[plot][selection]['histo'][b["name"]].GetYaxis().SetTitle("Events (A.U.)")
-          plots[plot][selection]['histo'][b["name"]].GetYaxis().SetRangeUser(0.001,20)
-        l.AddEntry(plots[plot][selection]['histo'][b["name"]],plots[plot][selection]['name'])
+          plots[plot][selection]['histo'][b["name"]].GetYaxis().SetRangeUser(0.00001,3)
+        l.AddEntry(plots[plot][selection]['histo'][b["name"]],plots[plot][selection]['legend'])
       c1.SetLogy()
       l.Draw()
       path = plotDir+'/test/DYstudy/njet_2m_isOS'+'_ngoodlep_'+str(ngoodleptons)+'_mt2ll_'+str(int(mt2llcut))+'dPhi_0.25_met_'+str(int(metcut))+'_metsig_'+str(int(metsignifcut))+'_mll_'+str(int(mllcut))+'/'

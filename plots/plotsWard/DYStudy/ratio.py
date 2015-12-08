@@ -44,9 +44,9 @@ preselection = presel_ngoodlep+'&&'+presel_OS+'&&'+presel_njet+'&&'+presel_nbjet
 #######################################################
 #                 load all the samples                #
 #######################################################
-from StopsDilepton.samples.cmgTuples_Spring15_25ns_postProcessed import *
+from StopsDilepton.samples.cmgTuples_Spring15_mAODv2_25ns_1l_postProcessed import *
 #backgrounds = [DY_25ns,DYHT_25ns]
-backgrounds = [DY_25ns]
+backgrounds = [DY_HT_LO]
 
 #######################################################
 #            get the TChains for each sample          #

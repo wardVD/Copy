@@ -44,13 +44,13 @@ mt2llcut           = 100.
 flavour            = "EE"
 
 presel_met         = 'met_pt>'+str(metcut)
-#presel_nbjet       = 'Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id&&Jet_btagCSV>'+str(btagcoeff)+')==0'
 presel_njet        = 'Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id)>=2'
 presel_metsig      = 'met_pt/sqrt(Sum$(Jet_pt*(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id)))>'+str(metsignifcut)
 presel_mll         = 'dl_mass>'+str(mllcut)
 presel_OS          = 'isOS'
 presel_mt2ll       = 'dl_mt2ll>='+str(mt2llcut)
 presel_dPhi        = 'cos(met_phi-Jet_phi[0])<cos('+str(dphicut)+')&&cos(met_phi-Jet_phi[1])<cos('+str(dphicut)+')'
+
 if flavour=="MuMu": 
   presel_flavour     = 'isMuMu==1&&nGoodElectrons==0&&nGoodMuons==2&&HLT_mumuIso'
   data = [DoubleMuon_Run2015D]
@@ -78,30 +78,41 @@ for s in backgrounds+data:
 
 mt2llbinning = [15,0,300]
 mllbinning = [50,0,150]
+metbinning = [30,0,300]
 
 plots = {\
   '0b':{\
     'dl_mt2ll':{\
-      'onZ': {'title':'M^{2}_{T}(ll) (GeV)', 'name':'MT2ll_onZ_b==0b', 'binning': mt2llbinning, 'histo':{}},
-      'offZ': {'title':'M^{2}_{T}(ll) (GeV)', 'name':'MT2ll_offZ_b==0b',  'binning': mt2llbinning, 'histo':{}},
-      'allZ': {'title':'M^{2}_{T}(ll) (GeV)', 'name':'MT2ll_allZ_b==0b',  'binning': mt2llbinning, 'histo':{}},
+      'onZ': {'title':'MT2ll (GeV)', 'name':'MT2ll_onZ_b==0b', 'binning': mt2llbinning, 'histo':{'totalbkg':0.,}},
+      'offZ': {'title':'MT2ll (GeV)', 'name':'MT2ll_offZ_b==0b',  'binning': mt2llbinning, 'histo':{'totalbkg':0.,}},
+      'allZ': {'title':'MT2ll (GeV)', 'name':'MT2ll_allZ_b==0b',  'binning': mt2llbinning, 'histo':{'totalbkg':0.,}},
       },
     'dl_mass':{\
-      'onZ': {'title':'M_{ll} (GeV)', 'name':'Mll_onZ_b==0b', 'binning': mllbinning, 'histo':{}},
-      'offZ': {'title':'M_{ll} (GeV)', 'name':'Mll_offZ_b==0b',  'binning': mllbinning, 'histo':{}},
-      'allZ': {'title':'M_{ll} (GeV)', 'name':'Mll_allZ_b==0b',  'binning': mllbinning, 'histo':{}},
+      'onZ': {'title':'M_{ll} (GeV)', 'name':'Mll_onZ_b==0b', 'binning': mllbinning, 'histo':{'totalbkg':0.,}},
+      'offZ': {'title':'M_{ll} (GeV)', 'name':'Mll_offZ_b==0b',  'binning': mllbinning, 'histo':{'totalbkg':0.,}},
+      'allZ': {'title':'M_{ll} (GeV)', 'name':'Mll_allZ_b==0b',  'binning': mllbinning, 'histo':{'totalbkg':0.,}},
+      },
+    'met_pt':{\
+      'onZ': {'title':'MET (GeV)', 'name':'MET_onZ_b==0b', 'binning': metbinning, 'histo':{'totalbkg':0.,}},
+      'offZ': {'title':'MET (GeV)', 'name':'MET_offZ_b==0b',  'binning': metbinning, 'histo':{'totalbkg':0.,}},
+      'allZ': {'title':'MET (GeV)', 'name':'MET_allZ_b==0b',  'binning': metbinning, 'histo':{'totalbkg':0.,}},
       },
     },
   '1mb':{\
     'dl_mt2ll':{\
-      'onZ': {'title':'M^{2}_{T}(ll) (GeV)', 'name':'MT2ll_onZ_b>=1',  'binning': mt2llbinning, 'histo':{}},
-      'offZ': {'title':'M^{2}_{T}(ll) (GeV)', 'name':'MT2ll_offZ_b>=1',  'binning': mt2llbinning, 'histo':{}},
-      'allZ': {'title':'M^{2}_{T}(ll) (GeV)', 'name':'MT2ll_allZ_b>=1',  'binning': mt2llbinning, 'histo':{}},
+      'onZ': {'title':'MT2ll (GeV)', 'name':'MT2ll_onZ_b>=1',  'binning': mt2llbinning, 'histo':{'totalbkg':0.,}},
+      'offZ': {'title':'MT2ll (GeV)', 'name':'MT2ll_offZ_b>=1',  'binning': mt2llbinning, 'histo':{'totalbkg':0.,}},
+      'allZ': {'title':'MT2ll (GeV)', 'name':'MT2ll_allZ_b>=1',  'binning': mt2llbinning, 'histo':{'totalbkg':0.,}},
       },
     'dl_mass':{\
-      'onZ': {'title':'M_{ll} (GeV)', 'name':'Mll_onZ_b>=1',  'binning': mllbinning, 'histo':{}},
-      'offZ': {'title':'M_{ll} (GeV)', 'name':'Mll_offZ_b>=1',  'binning': mllbinning, 'histo':{}},
-      'allZ': {'title':'M_{ll} (GeV)', 'name':'Mll_allZ_b>=1',  'binning': mllbinning, 'histo':{}},
+      'onZ': {'title':'M_{ll} (GeV)', 'name':'Mll_onZ_b>=1',  'binning': mllbinning, 'histo':{'totalbkg':0.,}},
+      'offZ': {'title':'M_{ll} (GeV)', 'name':'Mll_offZ_b>=1',  'binning': mllbinning, 'histo':{'totalbkg':0.,}},
+      'allZ': {'title':'M_{ll} (GeV)', 'name':'Mll_allZ_b>=1',  'binning': mllbinning, 'histo':{'totalbkg':0.,}},
+      },
+    'met_pt':{\
+      'onZ': {'title':'MET (GeV)', 'name':'MET_onZ_b>=1',  'binning': metbinning, 'histo':{'totalbkg':0.,}},
+      'offZ': {'title':'MET (GeV)', 'name':'MET_offZ_b>=1',  'binning': metbinning, 'histo':{'totalbkg':0.,}},
+      'allZ': {'title':'MET (GeV)', 'name':'MET_allZ_b>=1',  'binning': metbinning, 'histo':{'totalbkg':0.,}},
       },
     },
   }
@@ -109,26 +120,36 @@ plots = {\
 plots_cut = {\
   '0b':{\
     'dl_mt2ll':{\
-      'onZ': {'title':'M^{2}_{T}(ll) (GeV)', 'name':'MT2llcut_onZ_b==0b', 'binning': mt2llbinning, 'histo':{}},
-      'offZ': {'title':'M^{2}_{T}(ll) (GeV)', 'name':'MT2llcut_offZ_b==0b',  'binning': mt2llbinning, 'histo':{}},
-      'allZ': {'title':'M^{2}_{T}(ll) (GeV)', 'name':'MT2llcut_allZ_b==0b',  'binning': mt2llbinning, 'histo':{}},
+      'onZ': {'title':'MT2ll (GeV)', 'name':'MT2llcut_onZ_b==0b', 'binning': mt2llbinning, 'histo':{'totalbkg':0.,}},
+      'offZ': {'title':'MT2ll (GeV)', 'name':'MT2llcut_offZ_b==0b',  'binning': mt2llbinning, 'histo':{'totalbkg':0.,}},
+      'allZ': {'title':'MT2ll (GeV)', 'name':'MT2llcut_allZ_b==0b',  'binning': mt2llbinning, 'histo':{'totalbkg':0.,}},
       },
     'dl_mass':{\
-      'onZ': {'title':'M_{ll} (GeV)', 'name':'Mllcut_onZ_b==0b', 'binning': mllbinning, 'histo':{}},
-      'offZ': {'title':'M_{ll} (GeV)', 'name':'Mllcut_offZ_b==0b',  'binning': mllbinning, 'histo':{}},
-      'allZ': {'title':'M_{ll} (GeV)', 'name':'Mllcut_allZ_b==0b',  'binning': mllbinning, 'histo':{}},
+      'onZ': {'title':'M_{ll} (GeV)', 'name':'Mllcut_onZ_b==0b', 'binning': mllbinning, 'histo':{'totalbkg':0.,}},
+      'offZ': {'title':'M_{ll} (GeV)', 'name':'Mllcut_offZ_b==0b',  'binning': mllbinning, 'histo':{'totalbkg':0.,}},
+      'allZ': {'title':'M_{ll} (GeV)', 'name':'Mllcut_allZ_b==0b',  'binning': mllbinning, 'histo':{'totalbkg':0.,}},
+      },
+    'met_pt':{\
+      'onZ': {'title':'MET (GeV)', 'name':'METcut_onZ_b==0b', 'binning': metbinning, 'histo':{'totalbkg':0.,}},
+      'offZ': {'title':'MET (GeV)', 'name':'METcut_offZ_b==0b',  'binning': metbinning, 'histo':{'totalbkg':0.,}},
+      'allZ': {'title':'MET (GeV)', 'name':'METcut_allZ_b==0b',  'binning': metbinning, 'histo':{'totalbkg':0.,}},
       },
     },
   '1mb':{\
     'dl_mt2ll':{\
-      'onZ': {'title':'M^{2}_{T}(ll) (GeV)', 'name':'MT2llcut_onZ_b>=1',  'binning': mt2llbinning, 'histo':{}},
-      'offZ': {'title':'M^{2}_{T}(ll) (GeV)', 'name':'MT2llcut_offZ_b>=1',  'binning': mt2llbinning, 'histo':{}},
-      'allZ': {'title':'M^{2}_{T}(ll) (GeV)', 'name':'MT2llcut_allZ_b>=1',  'binning': mt2llbinning, 'histo':{}},
+      'onZ': {'title':'MT2ll (GeV)', 'name':'MT2llcut_onZ_b>=1',  'binning': mt2llbinning, 'histo':{'totalbkg':0.,}},
+      'offZ': {'title':'MT2ll (GeV)', 'name':'MT2llcut_offZ_b>=1',  'binning': mt2llbinning, 'histo':{'totalbkg':0.,}},
+      'allZ': {'title':'MT2ll (GeV)', 'name':'MT2llcut_allZ_b>=1',  'binning': mt2llbinning, 'histo':{'totalbkg':0.,}},
       },
     'dl_mass':{\
-      'onZ': {'title':'M_{ll} (GeV)', 'name':'Mllcut_onZ_b>=1',  'binning': mllbinning, 'histo':{}},
-      'offZ': {'title':'M_{ll} (GeV)', 'name':'Mllcut_offZ_b>=1',  'binning': mllbinning, 'histo':{}},
-      'allZ': {'title':'M_{ll} (GeV)', 'name':'Mllcut_allZ_b>=1',  'binning': mllbinning, 'histo':{}},
+      'onZ': {'title':'M_{ll} (GeV)', 'name':'Mllcut_onZ_b>=1',  'binning': mllbinning, 'histo':{'totalbkg':0.,}},
+      'offZ': {'title':'M_{ll} (GeV)', 'name':'Mllcut_offZ_b>=1',  'binning': mllbinning, 'histo':{'totalbkg':0.,}},
+      'allZ': {'title':'M_{ll} (GeV)', 'name':'Mllcut_allZ_b>=1',  'binning': mllbinning, 'histo':{'totalbkg':0.,}},
+      },
+    'met_pt':{\
+      'onZ': {'title':'MET (GeV)', 'name':'METcut_onZ_b>=1',  'binning': metbinning, 'histo':{'totalbkg':0.,}},
+      'offZ': {'title':'MET (GeV)', 'name':'METcut_offZ_b>=1',  'binning': metbinning, 'histo':{'totalbkg':0.,}},
+      'allZ': {'title':'MET (GeV)', 'name':'METcut_allZ_b>=1',  'binning': metbinning, 'histo':{'totalbkg':0.,}},
       },
     },
   }
@@ -172,6 +193,7 @@ for s in backgrounds+data:
     
     mll = getVarValue(chain,"dl_mass")
     mt2ll = getVarValue(chain,"dl_mt2ll")
+    met = getVarValue(chain,"met_pt")
 
     #bjet requirement
     jets  = filter(lambda j:j['pt']>30 and abs(j['eta'])<2.4 and j['id'], getJets(chain))
@@ -180,39 +202,51 @@ for s in backgrounds+data:
     if len(bjets)==0:
       plots['0b']['dl_mass']["allZ"]['histo'][s["name"]].Fill(mll, weight)
       plots['0b']['dl_mt2ll']["allZ"]['histo'][s["name"]].Fill(mt2ll, weight)
+      plots['0b']['met_pt']["allZ"]['histo'][s["name"]].Fill(met, weight)
       if mt2ll>=mt2llcut:
         plots_cut['0b']['dl_mass']["allZ"]['histo'][s["name"]].Fill(mll, weight)
         plots_cut['0b']['dl_mt2ll']["allZ"]['histo'][s["name"]].Fill(mt2ll, weight)
+        plots_cut['0b']['met_pt']["allZ"]['histo'][s["name"]].Fill(met, weight)
       if abs(mll-90.2)<15:
         plots['0b']['dl_mass']["onZ"]['histo'][s["name"]].Fill(mll, weight)
         plots['0b']['dl_mt2ll']["onZ"]['histo'][s["name"]].Fill(mt2ll, weight)
+        plots['0b']['met_pt']["onZ"]['histo'][s["name"]].Fill(met, weight)
         if mt2ll>=mt2llcut:
           plots_cut['0b']['dl_mass']["onZ"]['histo'][s["name"]].Fill(mll, weight)
           plots_cut['0b']['dl_mt2ll']["onZ"]['histo'][s["name"]].Fill(mt2ll, weight)
+          plots_cut['0b']['met_pt']["onZ"]['histo'][s["name"]].Fill(met, weight)
       else:
         plots['0b']['dl_mass']["offZ"]['histo'][s["name"]].Fill(mll, weight)
         plots['0b']['dl_mt2ll']["offZ"]['histo'][s["name"]].Fill(mt2ll, weight)
+        plots['0b']['met_pt']["offZ"]['histo'][s["name"]].Fill(met, weight)
         if mt2ll>=mt2llcut:
           plots_cut['0b']['dl_mass']["offZ"]['histo'][s["name"]].Fill(mll, weight)
           plots_cut['0b']['dl_mt2ll']["offZ"]['histo'][s["name"]].Fill(mt2ll, weight)
+          plots_cut['0b']['met_pt']["offZ"]['histo'][s["name"]].Fill(met, weight)
     elif len(bjets)>=1:
       plots['1mb']['dl_mass']["allZ"]['histo'][s["name"]].Fill(mll, weight)
       plots['1mb']['dl_mt2ll']["allZ"]['histo'][s["name"]].Fill(mt2ll, weight)
+      plots['1mb']['met_pt']["allZ"]['histo'][s["name"]].Fill(met, weight)
       if mt2ll>=mt2llcut:
         plots_cut['1mb']['dl_mass']["allZ"]['histo'][s["name"]].Fill(mll, weight)
         plots_cut['1mb']['dl_mt2ll']["allZ"]['histo'][s["name"]].Fill(mt2ll, weight)
+        plots_cut['1mb']['met_pt']["allZ"]['histo'][s["name"]].Fill(met, weight)
       if abs(mll-90.2)<15:
         plots['1mb']['dl_mass']["onZ"]['histo'][s["name"]].Fill(mll, weight)
         plots['1mb']['dl_mt2ll']["onZ"]['histo'][s["name"]].Fill(mt2ll, weight)
+        plots['1mb']['met_pt']["onZ"]['histo'][s["name"]].Fill(met, weight)
         if mt2ll>=mt2llcut:
           plots_cut['1mb']['dl_mass']["onZ"]['histo'][s["name"]].Fill(mll, weight)
           plots_cut['1mb']['dl_mt2ll']["onZ"]['histo'][s["name"]].Fill(mt2ll, weight)
+          plots_cut['1mb']['met_pt']["onZ"]['histo'][s["name"]].Fill(met, weight)
       else:
         plots['1mb']['dl_mass']["offZ"]['histo'][s["name"]].Fill(mll, weight)
         plots['1mb']['dl_mt2ll']["offZ"]['histo'][s["name"]].Fill(mt2ll, weight)
+        plots['1mb']['met_pt']["offZ"]['histo'][s["name"]].Fill(met, weight)
         if mt2ll>=mt2llcut:
           plots_cut['1mb']['dl_mass']["offZ"]['histo'][s["name"]].Fill(mll, weight)
           plots_cut['1mb']['dl_mt2ll']["offZ"]['histo'][s["name"]].Fill(mt2ll, weight)
+          plots_cut['1mb']['met_pt']["offZ"]['histo'][s["name"]].Fill(met, weight)
 
   for bjet in plots.keys():
     for plot in plots[bjet].keys():  
@@ -264,39 +298,99 @@ legendtextsize = 0.032
 a=[]
 double = n.zeros(1, dtype=float)
 #ROOT.gStyle.SetErrorX(0.5)
+histopad =  [0.0, 0.2, 1.0, .95]
+datamcpad = [0.0, 0.0, 1.0, 0.2]
+lumitagpos = [0.4,0.95,0.6,1.0]
+channeltagpos = [0.45,0.8,0.6,0.85]
+legendpos = [0.6,0.6,1.0,1.0]
+scalepos = [0.8,0.95,1.0,1.0]
 
 if makedraw1D:
   for bjet in plots.keys():
     for plot in plots[bjet].keys():
       for zregion in plots[bjet][plot].keys():
-        l=ROOT.TLegend(0.5,0.8,0.95,1.0)
+        l=ROOT.TLegend(legendpos[0],legendpos[1],legendpos[2],legendpos[3])
+        a.append(l)
         l.SetFillColor(0)
         l.SetShadowColor(ROOT.kWhite)
         l.SetBorderSize(1)
         l.SetTextSize(legendtextsize)
-        c1 = ROOT.TCanvas()
 
         bkg_stack = ROOT.THStack("bkgs","bkgs") 
-        for j,b in enumerate(sorted(backgrounds,key=lambda sort:plots[bjet][plot]["allZ"]["histo"][sort["name"]].Integral())):
+        totalbackground = plots[bjet][plot][zregion]['histo'][backgrounds[0]['name']].Clone()
+        for b in backgrounds:
+          if b!= backgrounds[0]:totalbackground.Add(plots[bjet][plot][zregion]['histo'][b['name']])
+
+        for j,b in enumerate(sorted(backgrounds,key=lambda sort:plots[bjet][plot][zregion]["histo"][sort["name"]].Integral())):
           plots[bjet][plot][zregion]['histo'][b["name"]].SetMarkerSize(0)
           plots[bjet][plot][zregion]['histo'][b["name"]].SetFillColor(b["color"])
           plots[bjet][plot][zregion]['histo'][b["name"]].SetLineWidth(1)
           bkg_stack.Add(plots[bjet][plot][zregion]['histo'][b["name"]],"h")
-          l.AddEntry(plots[bjet][plot][zregion]['histo'][b["name"]],b['name'])
-        #   print b["texName"], plot, zregion , bjet, '\t \t',plots[bjet][plot][zregion]['histo'][b["name"]].Integral()
-        # print data[0]["texName"], plot, zregion, bjet, '\t \t', plots[bjet][plot][zregion]['histo'][data[0]["name"]].Integral()
-      
-        plots[bjet][plot][zregion]['histo'][data[0]["name"]].GetXaxis().SetTitle(plots[bjet][plot]["allZ"]['title'])
-        plots[bjet][plot][zregion]['histo'][data[0]["name"]].GetYaxis().SetTitle("Events (A.U.)")
-        plots[bjet][plot][zregion]['histo'][data[0]["name"]].GetYaxis().SetRangeUser(0.01,100000)
+          l.AddEntry(plots[bjet][plot][zregion]['histo'][b["name"]],b['texName'],"f")
+
+        c1 = ROOT.TCanvas("c1","c1",800,800)
+        pad1 = ROOT.TPad("","",histopad[0],histopad[1],histopad[2],histopad[3])
+        pad1.SetBottomMargin(0)
+        pad1.SetTopMargin(0)
+        pad1.SetRightMargin(0)
+        pad1.Draw()
+        pad1.cd()
+        pad1.SetLogy()
         plots[bjet][plot][zregion]['histo'][data[0]["name"]].Draw("pe1same")
         bkg_stack.Draw("same")
         plots[bjet][plot][zregion]['histo'][data[0]["name"]].Draw("pe1same")
-        l.AddEntry(plots[bjet][plot][zregion]['histo'][data[0]["name"]],data[0]['name'])
-
-        c1.SetLogy()
-        ROOT.gPad.RedrawAxis()
+        bkg_stack.GetXaxis().SetLabelSize(0.)
         l.Draw()
+        ROOT.gPad.RedrawAxis()
+
+        plots[bjet][plot][zregion]['histo'][data[0]["name"]].GetXaxis().SetTitle(plots[bjet][plot]["allZ"]['title'])
+        plots[bjet][plot][zregion]['histo'][data[0]["name"]].GetYaxis().SetTitle("Events (A.U.)")
+        plots[bjet][plot][zregion]['histo'][data[0]["name"]].GetYaxis().SetRangeUser(0.01,100000)
+        l.AddEntry(plots[bjet][plot][zregion]['histo'][data[0]["name"]],data[0]['texName'])
+
+        channeltag = ROOT.TPaveText(channeltagpos[0],channeltagpos[1],channeltagpos[2],channeltagpos[3],"NDC")
+        lumitag = ROOT.TPaveText(lumitagpos[0],lumitagpos[1],lumitagpos[2],lumitagpos[3],"NDC")
+        scaletag = ROOT.TPaveText(scalepos[0],scalepos[1],scalepos[2],scalepos[3],"NDC")
+        channeltag.AddText(flavour)
+        lumitag.AddText("lumi: "+str(data[0]['lumi'])+' pb^{-1}')
+        scaletag.AddText("Scale Factor: " +str(round(plots[bjet][plot][zregion]['SF'],2)))
+        channeltag.SetFillColor(ROOT.kWhite)
+        channeltag.SetShadowColor(ROOT.kWhite)
+        channeltag.SetBorderSize(0)
+        lumitag.SetFillColor(ROOT.kWhite)
+        lumitag.SetShadowColor(ROOT.kWhite)
+        lumitag.SetBorderSize(0)
+        scaletag.SetShadowColor(ROOT.kWhite)
+        scaletag.SetFillColor(ROOT.kWhite)
+        scaletag.SetBorderSize(0)
+        channeltag.Draw()
+        c1.cd()
+        pad2 = ROOT.TPad("","",datamcpad[0],datamcpad[1],datamcpad[2],datamcpad[3])
+        pad2.SetGrid()
+        pad2.SetBottomMargin(0.4)
+        pad2.SetTopMargin(0)
+        pad2.SetRightMargin(0)
+        pad2.Draw()
+        pad2.cd()
+        ratio = plots[bjet][plot][zregion]['histo'][data[0]["name"]].Clone()
+        a.append(ratio)
+        ratio.Divide(totalbackground)
+        ratio.SetMarkerStyle(20)
+        ratio.GetYaxis().SetTitle("Data/Bkg.")
+      #ratio.GetYaxis().SetNdivisions(502)
+        ratio.GetXaxis().SetTitle(plots[bjet][plot][zregion]['title'])
+        ratio.GetXaxis().SetTitleSize(0.2)
+        ratio.GetYaxis().SetTitleSize(0.18)
+        ratio.GetYaxis().SetTitleOffset(0.29)
+        ratio.GetXaxis().SetTitleOffset(0.8)
+        ratio.GetYaxis().SetLabelSize(0.1)
+        ratio.GetXaxis().SetLabelSize(0.18)
+        ratio.SetMinimum(0)
+        ratio.SetMaximum(3)
+        ratio.Draw("pe")
+        c1.cd()
+        lumitag.Draw()
+        scaletag.Draw()
         if not mt2llcutscaling: path = plotDir+'/test/DYstudy/'+flavour+'_'+zregion+'_njet_2m_isOS_dPhi_0.25_met_'+str(int(metcut))+'_metsig_'+str(int(metsignifcut))+'_mll_'+str(int(mllcut))+'/'
         else:            path = plotDir+'/test/DYstudy/'+flavour+'_'+zregion+'_njet_2m_isOS_dPhi_0.25_met_'+str(int(metcut))+'_metsig_'+str(int(metsignifcut))+'_mll_'+str(int(mllcut))+'_mt2llscaling/'
         if not os.path.exists(path): os.makedirs(path)
@@ -305,7 +399,8 @@ if makedraw1D:
   for bjet in plots_cut.keys():
     for plot in plots_cut[bjet].keys():
       for zregion in plots_cut[bjet][plot].keys():
-        l=ROOT.TLegend(0.5,0.8,0.95,1.0)
+        l=ROOT.TLegend(legendpos[0],legendpos[1],legendpos[2],legendpos[3])
+        a.append(l)
         l.SetFillColor(0)
         l.SetShadowColor(ROOT.kWhite)
         l.SetBorderSize(1)
@@ -313,26 +408,81 @@ if makedraw1D:
         c1 = ROOT.TCanvas()
 
         bkg_stack = ROOT.THStack("bkgs","bkgs") 
-        for j,b in enumerate(sorted(backgrounds,key=lambda sort:plots_cut[bjet][plot]["allZ"]["histo"][sort["name"]].Integral())):
+        totalbackground = plots_cut[bjet][plot][zregion]['histo'][backgrounds[0]['name']].Clone()
+        for b in backgrounds:
+          if b!= backgrounds[0]:totalbackground.Add(plots_cut[bjet][plot][zregion]['histo'][b['name']])
+
+        for j,b in enumerate(sorted(backgrounds,key=lambda sort:plots_cut[bjet][plot][zregion]["histo"][sort["name"]].Integral())):
           plots_cut[bjet][plot][zregion]['histo'][b["name"]].SetMarkerSize(0)
           plots_cut[bjet][plot][zregion]['histo'][b["name"]].SetFillColor(b["color"])
           plots_cut[bjet][plot][zregion]['histo'][b["name"]].SetLineWidth(1)
           bkg_stack.Add(plots_cut[bjet][plot][zregion]['histo'][b["name"]],"h")
-          l.AddEntry(plots_cut[bjet][plot][zregion]['histo'][b["name"]],b['name'])
-        #   print b["texName"], plot, zregion , bjet, '\t \t',plots_cut[bjet][plot][zregion]['histo'][b["name"]].Integral()
-        # print data[0]["texName"], plot, zregion, bjet, '\t \t', plots_cut[bjet][plot][zregion]['histo'][data[0]["name"]].Integral()
-      
+          l.AddEntry(plots_cut[bjet][plot][zregion]['histo'][b["name"]],b['name'],"f")
+
+        c1 = ROOT.TCanvas("c1","c1",800,800)
+        pad1 = ROOT.TPad("","",histopad[0],histopad[1],histopad[2],histopad[3])
+        pad1.SetBottomMargin(0)
+        pad1.SetTopMargin(0)
+        pad1.SetRightMargin(0)
+        pad1.Draw()
+        pad1.cd()
+        pad1.SetLogy()
+        plots_cut[bjet][plot][zregion]['histo'][data[0]["name"]].Draw("pe1same")
+        bkg_stack.Draw("same")
+        plots_cut[bjet][plot][zregion]['histo'][data[0]["name"]].Draw("pe1same")
+        bkg_stack.GetXaxis().SetLabelSize(0.)
+        l.Draw()
+        ROOT.gPad.RedrawAxis()
+
         plots_cut[bjet][plot][zregion]['histo'][data[0]["name"]].GetXaxis().SetTitle(plots_cut[bjet][plot]["allZ"]['title'])
         plots_cut[bjet][plot][zregion]['histo'][data[0]["name"]].GetYaxis().SetTitle("Events (A.U.)")
         plots_cut[bjet][plot][zregion]['histo'][data[0]["name"]].GetYaxis().SetRangeUser(0.01,100000)
         plots_cut[bjet][plot][zregion]['histo'][data[0]["name"]].Draw("pe1same")
-        bkg_stack.Draw("same")
-        plots_cut[bjet][plot][zregion]['histo'][data[0]["name"]].Draw("pe1same")
         l.AddEntry(plots_cut[bjet][plot][zregion]['histo'][data[0]["name"]],data[0]['name'])
 
-        c1.SetLogy()
-        ROOT.gPad.RedrawAxis()
-        l.Draw()
+        channeltag = ROOT.TPaveText(channeltagpos[0],channeltagpos[1],channeltagpos[2],channeltagpos[3],"NDC")
+        lumitag = ROOT.TPaveText(lumitagpos[0],lumitagpos[1],lumitagpos[2],lumitagpos[3],"NDC")
+        scaletag = ROOT.TPaveText(scalepos[0],scalepos[1],scalepos[2],scalepos[3],"NDC")
+        channeltag.AddText(flavour)
+        lumitag.AddText("lumi: "+str(data[0]['lumi'])+' pb^{-1}')
+        scaletag.AddText("Scale Factor: " +str(round(plots_cut[bjet][plot][zregion]['SF'],2)))
+        channeltag.SetFillColor(ROOT.kWhite)
+        channeltag.SetShadowColor(ROOT.kWhite)
+        channeltag.SetBorderSize(0)
+        lumitag.SetFillColor(ROOT.kWhite)
+        lumitag.SetShadowColor(ROOT.kWhite)
+        lumitag.SetBorderSize(0)
+        scaletag.SetShadowColor(ROOT.kWhite)
+        scaletag.SetFillColor(ROOT.kWhite)
+        scaletag.SetBorderSize(0)
+        channeltag.Draw()
+        c1.cd()
+        pad2 = ROOT.TPad("","",datamcpad[0],datamcpad[1],datamcpad[2],datamcpad[3])
+        pad2.SetGrid()
+        pad2.SetBottomMargin(0.4)
+        pad2.SetTopMargin(0)
+        pad2.SetRightMargin(0)
+        pad2.Draw()
+        pad2.cd()
+        ratio = plots_cut[bjet][plot][zregion]['histo'][data[0]["name"]].Clone()
+        a.append(ratio)
+        ratio.Divide(totalbackground)
+        ratio.SetMarkerStyle(20)
+        ratio.GetYaxis().SetTitle("Data/Bkg.")
+      #ratio.GetYaxis().SetNdivisions(502)
+        ratio.GetXaxis().SetTitle(plots_cut[bjet][plot][zregion]['title'])
+        ratio.GetXaxis().SetTitleSize(0.2)
+        ratio.GetYaxis().SetTitleSize(0.18)
+        ratio.GetYaxis().SetTitleOffset(0.29)
+        ratio.GetXaxis().SetTitleOffset(0.8)
+        ratio.GetYaxis().SetLabelSize(0.1)
+        ratio.GetXaxis().SetLabelSize(0.18)
+        ratio.SetMinimum(0)
+        ratio.SetMaximum(3)
+        ratio.Draw("pe")
+        c1.cd()
+        lumitag.Draw()
+        scaletag.Draw()
         if not mt2llcutscaling: path = plotDir+'/test/DYstudy/'+flavour+'_'+zregion+'_njet_2m_isOS_dPhi_0.25_met_'+str(int(metcut))+'_metsig_'+str(int(metsignifcut))+'_mll_'+str(int(mllcut))+'_mt2llcut_'+str(mt2llcut)+'/'
         else:            path = plotDir+'/test/DYstudy/'+flavour+'_'+zregion+'_njet_2m_isOS_dPhi_0.25_met_'+str(int(metcut))+'_metsig_'+str(int(metsignifcut))+'_mll_'+str(int(mllcut))+'_mt2llcut_'+str(mt2llcut)+'_mt2llscaling/'
         if not os.path.exists(path): os.makedirs(path)
@@ -372,8 +522,10 @@ if makeTexFile:
   string2 = ''
   string3 = ''
   string4 = ''
+  string4_5 = 'Total Bkg'
   string5 = 'Scale Factor'
   output.write("\\hline" + "\n")
+
   for bjet in sorted(plots.keys()):
     string += "& \\multicolumn{3}{|c||}{" +bjet+"}" if (bjet != sorted(plots.keys())[-1]) else "& \\multicolumn{3}{|c|}{" +bjet+"}"
     for selection in sorted(plots[bjet]["dl_mass"].keys()):
@@ -384,6 +536,7 @@ if makeTexFile:
       for selection in sorted(plots[bjet]["dl_mass"].keys()):
         nbins    = plots[bjet][plot][selection]['histo'][s["name"]].GetNbinsX()
         integral = round(plots[bjet][plot][selection]['histo'][s["name"]].IntegralAndError(1,nbins,double),2)
+        plots[bjet][plot][selection]['histo']['totalbkg'] += integral
         error    = round(double[0],2)
         string3 += str(integral) + " $\\pm$ " +str(error) if ((selection == sorted(plots[bjet]["dl_mass"].keys())[-1]) and (bjet == sorted(plots.keys())[-1])) else str(integral) + " $\\pm$ " +str(error) + " & "
     string3 += '\\\\ \\hline \n'
@@ -398,11 +551,13 @@ if makeTexFile:
     string4 += '\\\\ \\hline \n'
   for bjet in sorted(plots.keys()):
     for selection in sorted(plots[bjet]["dl_mass"].keys()):
+      string4_5 += " & " + str(round(plots[bjet][plot][selection]['histo']['totalbkg'],2))
       string5 += " & " + str(round(plots[bjet][plot][selection]['SF'],2))
   output.write(string + '\\\\ \\cline{2-7} \n')
   output.write(string2 + '\\\\ \\hline \\hline \n')
   output.write(string3)
   output.write(string4 + "\\hline" + '\n')
+  output.write(string4_5 + " \\\\ \\hline" + '\n')
   output.write(string5 + " \\\\ \\hline" + '\n')
 
   output.write("\\end{tabular}" + '\n')
@@ -437,6 +592,7 @@ if makeTexFile:
   string2 = ''
   string3 = ''
   string4 = ''
+  string4_5 = 'Total Bkg'
   string5 = 'Scale Factor'
   output.write("\\hline" + "\n")
   for bjet in sorted(plots_cut.keys()):
@@ -449,6 +605,7 @@ if makeTexFile:
       for selection in sorted(plots_cut[bjet]["dl_mass"].keys()):
         nbins    = plots_cut[bjet][plot][selection]['histo'][s["name"]].GetNbinsX()
         integral = round(plots_cut[bjet][plot][selection]['histo'][s["name"]].IntegralAndError(1,nbins,double),2)
+        plots_cut[bjet][plot][selection]['histo']['totalbkg'] += integral
         error    = round(double[0],2)
         string3 += str(integral) + " $\\pm$ " +str(error) if ((selection == sorted(plots_cut[bjet]["dl_mass"].keys())[-1]) and (bjet == sorted(plots_cut.keys())[-1])) else str(integral) + " $\\pm$ " +str(error) + " & "
     string3 += '\\\\ \\hline \n'
@@ -463,11 +620,13 @@ if makeTexFile:
     string4 += '\\\\ \\hline \n'
   for bjet in sorted(plots.keys()):
     for selection in sorted(plots[bjet]["dl_mass"].keys()):
-      string5 += " & " + str(round(plots[bjet][plot][selection]['SF'],2))
+      string4_5 += " & " + str(round(plots_cut[bjet][plot][selection]['histo']['totalbkg'],2))
+      string5 += " & " + str(round(plots_cut[bjet][plot][selection]['SF'],2))
   output.write(string + '\\\\ \\cline{2-7} \n')
   output.write(string2 + '\\\\ \\hline \\hline \n')
   output.write(string3)
   output.write(string4 + "\\hline" + '\n')
+  output.write(string4_5 + " \\\\ \\hline" + '\n')
   output.write(string5 + " \\\\ \\hline" + '\n')
 
   output.write("\\end{tabular}" + '\n')
