@@ -41,7 +41,7 @@ mllcut             = 20
 ngoodleptons       = 2
 #luminosity         = 1549.
 mt2llcut           = 100.
-flavour            = "EE"
+flavour            = "MuMu"
 
 presel_met         = 'met_pt>'+str(metcut)
 presel_njet        = 'Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id)>=2'
@@ -247,11 +247,10 @@ for s in backgrounds+data:
           plots_cut['1mb']['dl_mass']["offZ"]['histo'][s["name"]].Fill(mll, weight)
           plots_cut['1mb']['dl_mt2ll']["offZ"]['histo'][s["name"]].Fill(mt2ll, weight)
           plots_cut['1mb']['met_pt']["offZ"]['histo'][s["name"]].Fill(met, weight)
-
+  #overflow
   for bjet in plots.keys():
     for plot in plots[bjet].keys():  
       for selection in plots[bjet][plot].keys():
-      #plots[plot][selection]['histo'][s['name']].Sumw2()
         nbinsx        = plots[bjet][plot][selection]['histo'][s['name']].GetNbinsX()
         lastbin       = plots[bjet][plot][selection]['histo'][s['name']].GetBinContent(nbinsx)
         error         = plots[bjet][plot][selection]['histo'][s['name']].GetBinError(nbinsx)
@@ -261,6 +260,9 @@ for s in backgrounds+data:
         plots[bjet][plot][selection]['histo'][s['name']].SetBinError(nbinsx,sqrt(error**2+overflowerror**2))
         plots[bjet][plot][selection]['histo'][s['name']].SetBinContent(nbinsx+1,0.)
         plots[bjet][plot][selection]['histo'][s['name']].SetBinError(nbinsx+1,0.)
+        #Remove bins with negative events
+        for i in range(nbinsx):
+          if plots[bjet][plot][selection]['histo'][s['name']].GetBinContent(i+1) < 0: plots[bjet][plot][selection]['histo'][s['name']].SetBinContent(i+1,0.)
         
 processtime = datetime.now()
 print "Time to process chains: ", processtime - start
@@ -330,6 +332,7 @@ if makedraw1D:
 
         c1 = ROOT.TCanvas("c1","c1",800,800)
         pad1 = ROOT.TPad("","",histopad[0],histopad[1],histopad[2],histopad[3])
+        a.append(pad1)
         pad1.SetBottomMargin(0)
         pad1.SetTopMargin(0)
         pad1.SetRightMargin(0)
@@ -366,6 +369,7 @@ if makedraw1D:
         channeltag.Draw()
         c1.cd()
         pad2 = ROOT.TPad("","",datamcpad[0],datamcpad[1],datamcpad[2],datamcpad[3])
+        a.append(pad2)
         pad2.SetGrid()
         pad2.SetBottomMargin(0.4)
         pad2.SetTopMargin(0)
@@ -395,6 +399,10 @@ if makedraw1D:
         else:            path = plotDir+'/test/DYstudy/'+flavour+'_'+zregion+'_njet_2m_isOS_dPhi_0.25_met_'+str(int(metcut))+'_metsig_'+str(int(metsignifcut))+'_mll_'+str(int(mllcut))+'_mt2llscaling/'
         if not os.path.exists(path): os.makedirs(path)
         c1.Print(path+plot+"_"+bjet+".png")
+        del ratio
+        del pad1
+        del pad2
+        c1.Clear()
 
   for bjet in plots_cut.keys():
     for plot in plots_cut[bjet].keys():
@@ -421,6 +429,7 @@ if makedraw1D:
 
         c1 = ROOT.TCanvas("c1","c1",800,800)
         pad1 = ROOT.TPad("","",histopad[0],histopad[1],histopad[2],histopad[3])
+        a.append(pad1)
         pad1.SetBottomMargin(0)
         pad1.SetTopMargin(0)
         pad1.SetRightMargin(0)
@@ -458,6 +467,7 @@ if makedraw1D:
         channeltag.Draw()
         c1.cd()
         pad2 = ROOT.TPad("","",datamcpad[0],datamcpad[1],datamcpad[2],datamcpad[3])
+        a.append(pad2)
         pad2.SetGrid()
         pad2.SetBottomMargin(0.4)
         pad2.SetTopMargin(0)
@@ -487,6 +497,9 @@ if makedraw1D:
         else:            path = plotDir+'/test/DYstudy/'+flavour+'_'+zregion+'_njet_2m_isOS_dPhi_0.25_met_'+str(int(metcut))+'_metsig_'+str(int(metsignifcut))+'_mll_'+str(int(mllcut))+'_mt2llcut_'+str(mt2llcut)+'_mt2llscaling/'
         if not os.path.exists(path): os.makedirs(path)
         c1.Print(path+plot+"_"+bjet+".png")
+        del ratio
+        del pad1
+        del pad2
 
 makeplotstime = datetime.now()
 
@@ -565,8 +578,8 @@ if makeTexFile:
 
 
   #WITH MT2LLCUT
-  if not mt2llcutscaling: output = open("./texfiles/DYnumbers"+flavour+"_MT2llcut.tex",'w')
-  else:            output = open("./texfiles/DYnumbers"+flavour+"_MT2llcut_mt2llscaling.tex",'w')
+  if not mt2llcutscaling: output = open("./texfiles/DYnumbers"+flavour+"_MT2llcut_"+str(mt2llcut)+".tex",'w')
+  else:            output = open("./texfiles/DYnumbers"+flavour+"_MT2llcut_"+str(mt2llcut)+"_mt2llscaling.tex",'w')
 
 
   output.write("\\documentclass[8pt,landscape]{article}" + '\n')

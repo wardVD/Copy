@@ -35,7 +35,7 @@ presel_ngoodlep    = '((nGoodMuons+nGoodElectrons)=='+str(ngoodleptons)+')'
 presel_OS          = 'isOS'
 presel_mt2ll       = 'dl_mt2ll>='+str(mt2llcut)
 presel_dPhi        = 'cos(met_phi-Jet_phi[0])<cos('+str(dphicut)+')&&cos(met_phi-Jet_phi[1])<cos('+str(dphicut)+')'
-presel_flavour     = 'isMuMu&&nGoodElectrons==0&&nGoodMuons==2&&HLT_mumuIso==1&&weight>0'
+presel_flavour     = 'isMuMu==1&&nGoodElectrons==0&&nGoodMuons==2&&HLT_mumuIso==1&&weight>0'
 
 
 #preselection: MET>40, njets>=2, n_bjets>=1, n_lep>=2
