@@ -36,6 +36,8 @@ parser.add_option("--keepPhotons", dest="keepPhotons", default = False, action="
 parser.add_option("--overwrite", dest="overwrite", default = False, action="store_true", help="Overwrite?")
 parser.add_option("--lheHTCut", dest="lheHTCut", default="", type="string", action="store", help="upper cut on lheHTIncoming")
 
+parser.skip_option("--skipVariations", dest="skipVariations", default = False, action="store_true", help="skipVariations: Don't calulcate JES and JER variations")
+
 (options, args) = parser.parse_args()
 #assert options.skim.lower() in ['inclusive', 'dilep'], "Unknown skim: %s"%options.skim
 skimCond = "(1)"
@@ -213,14 +215,15 @@ else:
   branchKeepStrings = branchKeepStrings_DATAMC + branchKeepStrings_MC
   jetMCInfo = ['mcMatchFlav/I', 'partonId/I']
 
-readVariables = ['met_pt/F', 'met_phi/F', 'run/I', 'lumi/I', 'evt/l','nTrueInt/I']
+readVariables = ['met_pt/F', 'met_phi/F', 'run/I', 'lumi/I', 'evt/l']
+if allMC: readVariables+= ['nTrueInt/I']
 newVariables = ['weight/F','weightPU/F','weightPUUp/F','weightPUDown/F', 'reweightTopPt/F']
 aliases = [ "met:met_pt", "metPhi:met_phi"]
 readVectors = [\
   {'prefix':'LepGood',  'nMax':8, 'vars':['pt/F', 'eta/F', 'phi/F', 'pdgId/I', 'charge/I', 'relIso03/F', 'tightId/I', 'miniRelIso/F','mass/F','sip3d/F','mediumMuonId/I', 'mvaIdSpring15/F','lostHits/I', 'convVeto/I', 'dxy/F', 'dz/F']},
-  {'prefix':'Jet',  'nMax':100, 'vars':['pt/F', 'eta/F', 'phi/F', 'id/I','btagCSV/F', 'btagCMVA/F'] + jetMCInfo},
-  {'prefix':'genPartAll',  'nMax':2000, 'vars':['pt/F', 'pdgId/I', 'status/I','nDaughters/I']},
-]
+  {'prefix':'Jet',  'nMax':100, 'vars':['pt/F', 'eta/F', 'phi/F', 'id/I','btagCSV/F', 'btagCMVA/F'] + jetMCInfo}]
+if allMC: readVectors+=[ {'prefix':'genPartAll',  'nMax':2000, 'vars':['pt/F', 'pdgId/I', 'status/I','nDaughters/I']} ]
+
 if not sample.isData: 
   aliases.extend(['genMet:met_genPt', 'genMetPhi:met_genPhi'])
 if options.skim.lower().startswith('dilep'):
@@ -266,6 +269,7 @@ if doTopPtReweighting:
   del c
   print "Found a top pt average correction factor of %f"%topScaleF
 
+nVetoEvents=0
 for chunk in chunks:
   sourceFileSize = os.path.getsize(chunk['file'])
   nSplit = 1+int(sourceFileSize/(200*10**6)) #split into 200MB
@@ -277,6 +281,7 @@ for chunk in chunks:
       good = checkRootFile(newFile, checkForObjects=["Events"]) 
       if good:
         print "Found file and looks OK -> skipping %s"%newFile
+        filesForHadd.append(newFileName)
         continue
       else:
         print "Found file and looks like a zombie -> remake %s"%newFile
@@ -320,6 +325,10 @@ for chunk in chunks:
         s.weightPU     = s.weight*puRW(r.nTrueInt)
         s.weightPUDown = s.weight*puRWDown(r.nTrueInt) 
         s.weightPUUp   = s.weight*puRWUp(r.nTrueInt)
+      else:
+        s.weightPU     = 1 
+        s.weightPUDown = 1 
+        s.weightPUUp   = 1 
       if sample.isData: 
         if not sample.lumiList.contains(r.run, r.lumi):
   #        print "Did not find run %i lumi %i in json file %s"%(r.run, r.lumi, sample.json)
@@ -335,11 +344,12 @@ for chunk in chunks:
               outputLumiList[r.run].append(r.lumi)
       if vetoList_:
         if (r.run, r.lumi, r.evt) in vetoList_.events:
-          print "Veto %i:%i:%i "%(r.run, r.lumi, r.evt)
+#          print "Veto %i:%i:%i "%(r.run, r.lumi, r.evt)
           s.weight=0
           s.weightPU=0
           s.weightPUUp=0
           s.weightPUDown=0
+          nVetoEvents+=1
 #        print "Found %i:%i:%i in %s"%(r.run, r.lumi, r.evt, vetoList.filename)
 #      else: print [r.run, r.lumi, r.evt], vetoList_.events[0]
 #        print "Found run %i lumi %i in json file %s"%(r.run, r.lumi, sample.json)
@@ -413,7 +423,7 @@ for chunk in chunks:
     for v in newVars:
       del v['branch']
 
-print "Event loop end"
+print "Event loop end. Vetoed %i events."%nVetoEvents
 
 if not options.small: 
   size=0
