@@ -7,7 +7,7 @@ import array, operator
 from StopsDilepton.tools.localInfo import plotDir
 from StopsDilepton.tools.helpers import getChain, getObjDict, getEList, getVarValue, deltaR, getObjFromFile
 from StopsDilepton.tools.objectSelection import getGenPartsAll, getGoodLeptons, getLeptons, looseMuID, looseEleID, getJets, leptonVars, jetVars, getGoodTaus 
-from StopsDilepton.tools.genParticleTools import getDaughters, descendDecay, decaysTo#, printDecay
+from StopsDilepton.tools.genParticleTools import getDaughters, descendDecay, decaysTo, printDecay
 from StopsDilepton.tools.mt2Calculator import mt2Calculator
 from StopsDilepton.tools.pdgToName import pdgToName
 mt2Calc = mt2Calculator()
@@ -55,10 +55,22 @@ cuts=[
  ("mRelIso01", "LepGood_miniRelIso[l1_index]<0.1&&LepGood_miniRelIso[l2_index]<0.1"),
  ("looseLeptonVeto", "Sum$(LepGood_pt>15&&LepGood_miniRelIso<0.4)==2"),
  ("ecalDeadCellTPFilter", "(!(run==1&&lumi==45896&&evt==38047218))&&(!(run==1&&lumi==24231&&evt==20087421))&&(!(run==1&&lumi==63423&&evt==52577001))&&(!(run==1&&lumi==87234&&evt==72316782))&&(!(run==1&&lumi==30168&&evt==25009164))"),
+#("evt","evt==847303"),#lepton from a jet?
+#("evt", "evt==24638863") #fake lepton?
+#("evt","evt==3916824")
+#("evt","evt==5439514")#jet mism and photon radiation?
+("evt","evt==22105179") #electron from top???
+#("evt","evt==12255583")
+#("evt","evt==72477272")
+#("evt","evt==32462388")
+#("evt","evt==18695814")
 # ("evt","evt==6960642"), #high pt nu
 # ("evt","evt==7955897"), #700GeV genMet
 #("evt","evt==67750352"), #ele from hadron
-#("evt","evt==67750352"), #ele from hadron
+#("evt","evt==24638863"),#lep-mism 490.78
+#("evt","evt==7955897"),#lep-mism 312.65 (matched to l from -24,24)
+#("evt","evt==68529377")# muon with large pt error
+
   ]
 #prefix+="_tauVeto_mRelIso01_looseLepVeto"
 preselection = "&&".join([c[1] for c in cuts])
@@ -102,6 +114,7 @@ for s in samples:
   counterRecofake_fakeMet50={}
   counterRecofake_fakeMet100={}
   counterRecofake_fakeMet200={}
+  counterRecoGen_failRelIso03={}
   badMuonCandidates={}
   badElectronCandidates={}
   for mode in ["isMuMu", "isEE", "isEMu"]:
@@ -121,6 +134,7 @@ for s in samples:
     counterRecofake_fakeMet50[mode]={}
     counterRecofake_fakeMet100[mode]={}
     counterRecofake_fakeMet200[mode]={}
+    counterRecoGen_failRelIso03[mode]={}
     badMuonCandidates[mode]=[]
     badElectronCandidates[mode]=[]
   for ev in range(nEvents):
@@ -258,6 +272,7 @@ for s in samples:
           counterRecofake_fakeMet50[mode][gMode]=0
           counterRecofake_fakeMet100[mode][gMode]=0
           counterRecofake_fakeMet200[mode][gMode]=0
+          counterRecoGen_failRelIso03[mode][gMode]=0
         counterRecoGen[mode][gMode]+=1
         if len(mu)==len(muMatched):counterRecoGen_muMatched[mode][gMode]+=1
         if len(ele)==len(eleMatched):counterRecoGen_eleMatched[mode][gMode]+=1
@@ -274,6 +289,11 @@ for s in samples:
         if len(tauMatched)>0:   counterRecoGen_recoMatchedTau[mode][gMode]+=1
         if len(looseMu)>=3:  counterRecoGen_looseMu[mode][gMode]+=1
         if len(looseEle)>=3:   counterRecoGen_looseEle[mode][gMode]+=1
+        leptonsFailRelIso03  = any([l['relIso03']>0.1 for l in leptons])
+        leptonsFailRelIso03_012  = any([l['relIso03']>0.12 for l in leptons])
+        leptonsFailRelIso04  = any([l['relIso04']>0.1 for l in leptons])
+        leptonsFailRelIso04_012  = any([l['relIso04']>0.12 for l in leptons])
+        if leptonsFailRelIso03: counterRecoGen_failRelIso03[mode][gMode]+=1 
         if deltaMet>50:  counterRecofake_fakeMet50[mode][gMode]+=1
         neutrinoFromWPt = vecPtSum(genNeutrinosFromW)
         neutrinoFromWAndTauPt = vecPtSum(genNeutrinosFromW+genNeutrinosFromTau)
@@ -313,9 +333,15 @@ for s in samples:
           gl = filter(lambda l: dRMatch([rl], dR=0.15, checkPdgId=True)(l), status1MuEle )
           if len(gl)==1:
             rl['matchMotherPdgId']=gl[0]['motherId']
-        mmatch = ",".join([str(l['matchMotherPdgId']) for l in leptons if l.has_key('matchMotherPdgId')])
+        mmatch = ",".join([pdgToName[l['matchMotherPdgId']] for l in leptons if l.has_key('matchMotherPdgId')])
         if mmatch!="":mmatch=" (matched to l from "+mmatch+")"
-        print " "*41+"lep-m %i %s %6.2f%s" %(len(lepMatched),lepStr, lepDMet, mmatch)
+        leptonsFailRelIso03Str = ""
+        if leptonsFailRelIso03: leptonsFailRelIso03Str=bold('>=1 lep fails relIso03<0.1!') 
+        if leptonsFailRelIso03_012: leptonsFailRelIso03Str=bold('>=1 lep fails relIso03<0.12!') 
+        leptonsFailRelIso04Str = ""
+        if leptonsFailRelIso04: leptonsFailRelIso04Str=bold('>=1 lep fails relIso04<0.1!') 
+        if leptonsFailRelIso04_012: leptonsFailRelIso04Str=bold('>=1 lep fails relIso04<0.12!') 
+        print " "*41+"lep-m %i %s %6.2f %s. %s %s" %(len(lepMatched),lepStr, lepDMet, mmatch, leptonsFailRelIso03Str, leptonsFailRelIso04Str)
         print 
         if deltaMet>100:  counterRecofake_fakeMet100[mode][gMode]+=1
         if deltaMet>200:  counterRecofake_fakeMet200[mode][gMode]+=1
@@ -343,6 +369,7 @@ for s in samples:
       print "    >=1 matched reco had. tau: %i"     %counterRecoGen_recoMatchedTau[mode][gMode]
       print "    >=1 extra mu: %i" % counterRecoGen_looseMu[mode][gMode]
       print "    >=1 extra ele: %i" % counterRecoGen_looseEle[mode][gMode]
+      print "    >=1 lep. fails relIso03: %i"% counterRecoGen_failRelIso03[mode][gMode] 
       print "    >50 fake MET %i"%counterRecofake_fakeMet50[mode][gMode]
       print "    >100 fake MET %i"%counterRecofake_fakeMet100[mode][gMode]
       print "    >200 fake MET %i"%counterRecofake_fakeMet200[mode][gMode]
