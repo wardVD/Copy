@@ -150,7 +150,7 @@ TTH={\
 ],
 'dir' : dir,
 'isData':False,
-'color': ROOT.kPink,
+'color': ROOT.kPink-4,
 'texName':"t#bar{t}H",
 }
 
@@ -162,7 +162,7 @@ TTW={\
 ],
 'dir' : dir,
 'isData':False,
-'color': ROOT.kPink,
+'color': ROOT.kPink-8,
 'texName':"t#bar{t}W",
 }
 
@@ -174,7 +174,7 @@ TTZ={\
 ],
 'dir' : dir,
 'isData':False,
-'color': ROOT.kPink,
+'color': ROOT.kPink+9,
 'texName':"t#bar{t}Z",
 }
 
@@ -186,7 +186,7 @@ TZQ={\
 ],
 'dir' : dir,
 'isData':False,
-'color': ROOT.kPink,
+'color': ROOT.kPink-7,
 'texName':"tZq",
 }
 
@@ -238,6 +238,7 @@ diBoson={
 "WWToLNuQQ",
 "WZTo1L1Nu2Q",
 "WZTo2L2Q",
+"WZTo3LNu",
 "ZZTo2L2Q",
 "ZZTo2Q2Nu",
 ],
@@ -246,6 +247,33 @@ diBoson={
 'color': ROOT.kOrange,
 'texName':"WW/ZZ/WZ",
 }
+
+ZZ={
+"name":"ZZ",
+"bins":[
+"ZZTo2L2Q",
+"ZZTo2Q2Nu",
+],
+'dir':dir,
+'isData':False,
+'color': ROOT.kOrange,
+'texName':"ZZ",
+}
+
+WZ={
+"name":"WZ",
+"bins":[
+"WZTo1L1Nu2Q",
+"WZTo2L2Q",
+"WZTo3LNu"
+],
+'dir':dir,
+'isData':False,
+'color': ROOT.kOrange,
+'texName':"WZ",
+}
+
+
 triBoson={
 "name":"triBoson",
 "bins":[
