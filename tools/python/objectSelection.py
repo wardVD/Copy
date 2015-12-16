@@ -4,11 +4,15 @@ from math import *
 mZ=90.2
 
 jetVars = ['eta','pt','phi','btagCSV', 'id']
+
 def getJets(c, jetVars=jetVars):
   return [getObjDict(c, 'Jet_', jetVars, i) for i in range(int(getVarValue(c, 'nJet')))]
 
-def getGoodJets(c):
-  return filter(lambda j:j['pt']>30 and abs(j['eta'])<2.4 and j['id'], getJets(c))
+def jetId(j, ptCut=30, absEtaCut=2.4, ptVar='pt'):
+ return j[ptVar]>ptCut and abs(j['eta'])<absEtaCut and j['id']
+
+def getGoodJets(c, ptCut=30, absEtaCut=2.4, jetVars=jetVars):
+  return filter(lambda j:jetId(j, ptCut=ptCut, absEtaCut=absEtaCut), getJets(c, jetVars))
 
 def isBJet(j):
   return j['btagCSV']>0.890

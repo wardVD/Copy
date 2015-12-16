@@ -8,11 +8,12 @@ from StopsDilepton.tools.mt2Calculator import mt2Calculator
 from StopsDilepton.tools.topPtReweighting import getUnscaledTopPairPtReweightungFunction, getTopPtDrawString, getTopPtsForReweighting 
 from StopsDilepton.tools.vetoList import vetoList
 mt2Calc = mt2Calculator()
-from StopsDilepton.tools.mtautau import mtautau as mtautau_
+#from StopsDilepton.tools.mtautau import mtautau as mtautau_
 from StopsDilepton.tools.helpers import getChain, getChunks, getObjDict, getEList, getVarValue, checkRootFile, getYieldFromChain
-from StopsDilepton.tools.objectSelection import getLeptons, getMuons, getElectrons, getGoodMuons, getGoodElectrons, getGoodLeptons, getJets, getGoodBJets, getGoodJets, isBJet 
-
+from StopsDilepton.tools.objectSelection import getLeptons, getMuons, getElectrons, getGoodMuons, getGoodElectrons, getGoodLeptons, getJets, getGoodBJets, getGoodJets, isBJet, jetVars, jetId, isBJet 
+from StopsDilepton.tools.addJERScaling import addJERScaling
 from StopsDilepton.tools.localInfo import *
+from cmgPostProcessingHelpers import getTreeFromChunk 
 
 ROOT.gSystem.Load("libFWCoreFWLite.so")
 ROOT.AutoLibraryLoader.enable()
@@ -36,7 +37,7 @@ parser.add_option("--keepPhotons", dest="keepPhotons", default = False, action="
 parser.add_option("--overwrite", dest="overwrite", default = False, action="store_true", help="Overwrite?")
 parser.add_option("--lheHTCut", dest="lheHTCut", default="", type="string", action="store", help="upper cut on lheHTIncoming")
 
-parser.skip_option("--skipVariations", dest="skipVariations", default = False, action="store_true", help="skipVariations: Don't calulcate JES and JER variations")
+parser.add_option("--skipVariations", dest="skipVariations", default = False, action="store_true", help="skipVariations: Don't calulcate JES and JER variations")
 
 (options, args) = parser.parse_args()
 #assert options.skim.lower() in ['inclusive', 'dilep'], "Unknown skim: %s"%options.skim
@@ -55,26 +56,6 @@ if options.skim.lower().startswith('dilep'):
 if sys.argv[0].count('ipython'):
   options.small=False
 
-def getTreeFromChunk(c, skimCond, iSplit, nSplit):
-  if not c.has_key('file'):return
-  rf = ROOT.TFile.Open(c['file'])
-  assert not rf.IsZombie()
-  rf.cd()
-  tc = rf.Get("tree")
-  nTot = tc.GetEntries()
-  fromFrac = iSplit/float(nSplit)
-  toFrac   = (iSplit+1)/float(nSplit)
-  start = int(fromFrac*nTot)
-  stop  = int(toFrac*nTot)
-  ROOT.gDirectory.cd('PyROOT:/')
-  print "Copy tree from source: total number of events found:",nTot,"Split counter: ",iSplit,"<",nSplit,"first Event:",start,"nEvents:",stop-start
-  t = tc.CopyTree(skimCond,"",stop-start,start)
-  tc.Delete()
-  del tc
-  rf.Close()
-  del rf
-  return t
-   
 maxN = 1 if options.small else -1
 exec('allSamples=['+options.allSamples+']')
 chunks, sumWeight = [], 0.
@@ -213,15 +194,16 @@ if sample.isData:
 else:
   lumiScaleFactor = sample.xSection*target_lumi/float(sumWeight)
   branchKeepStrings = branchKeepStrings_DATAMC + branchKeepStrings_MC
-  jetMCInfo = ['mcMatchFlav/I', 'partonId/I']
+  jetMCInfo = ['mcMatchFlav/I', 'partonId/I', 'mcPt/F', 'corr/F', 'corr_JECUp/F', 'corr_JECDown/F']
 
 readVariables = ['met_pt/F', 'met_phi/F', 'run/I', 'lumi/I', 'evt/l']
 if allMC: readVariables+= ['nTrueInt/I']
 newVariables = ['weight/F','weightPU/F','weightPUUp/F','weightPUDown/F', 'reweightTopPt/F']
+newVariables.extend( ['nGoodJets/I', 'nBTags/I', 'ht/F'] )
 aliases = [ "met:met_pt", "metPhi:met_phi"]
 readVectors = [\
   {'prefix':'LepGood',  'nMax':8, 'vars':['pt/F', 'eta/F', 'phi/F', 'pdgId/I', 'charge/I', 'relIso03/F', 'tightId/I', 'miniRelIso/F','mass/F','sip3d/F','mediumMuonId/I', 'mvaIdSpring15/F','lostHits/I', 'convVeto/I', 'dxy/F', 'dz/F']},
-  {'prefix':'Jet',  'nMax':100, 'vars':['pt/F', 'eta/F', 'phi/F', 'id/I','btagCSV/F', 'btagCMVA/F'] + jetMCInfo}]
+  {'prefix':'Jet',  'nMax':100, 'vars':['pt/F', 'eta/F', 'phi/F', 'id/I','btagCSV/F'] + jetMCInfo}]
 if allMC: readVectors+=[ {'prefix':'genPartAll',  'nMax':2000, 'vars':['pt/F', 'pdgId/I', 'status/I','nDaughters/I']} ]
 
 if not sample.isData: 
@@ -229,10 +211,17 @@ if not sample.isData:
 if options.skim.lower().startswith('dilep'):
   newVariables.extend( ['nGoodMuons/I', 'nGoodElectrons/I' ] )
   newVariables.extend( ['dl_pt/F', 'dl_eta/F', 'dl_phi/F', 'dl_mass/F' ] )
-  newVariables.extend( ['dl_mt2ll/F', 'dl_mt2bb/F', 'dl_mt2blbl/F', 'dl_mtautau/F', 'dl_alpha0/F',  'dl_alpha1/F' ] )
+  newVariables.extend( ['dl_mt2ll/F', 'dl_mt2bb/F', 'dl_mt2blbl/F' ] )
+#  newVariables.extend( ['dl_mtautau/F', 'dl_alpha0/F',  'dl_alpha1/F' ] )
   newVariables.extend( ['l1_pt/F', 'l1_eta/F', 'l1_phi/F', 'l1_mass/F', 'l1_pdgId/I', 'l1_index/I' ] )
   newVariables.extend( ['l2_pt/F', 'l2_eta/F', 'l2_phi/F', 'l2_mass/F', 'l2_pdgId/I', 'l2_index/I' ] )
   newVariables.extend( ['isEE/I', 'isMuMu/I', 'isEMu/I', 'isOS/I' ] )
+if not options.skipVariations:
+  for var in ['JECUp', 'JECDown', 'JER', 'JERUp', 'JERDown']:
+    newVariables.extend( ['nGoodJets_'+var+'/I', 'nbJets_'+var+'/I','ht_'+var+'/F'] )
+    newVariables.extend( ['met_pt_'+var+'/F', 'met_phi_'+var+'/F'] )
+    if options.skim.lower().startswith('dilep'):
+      newVariables.extend( ['dl_mt2ll_'+var+'/F', 'dl_mt2bb_'+var+'/F', 'dl_mt2blbl_'+var+'/F'] )
 
 newVars = [readVar(v, allowRenaming=False, isWritten = True, isRead=False) for v in newVariables]
 
@@ -261,13 +250,13 @@ if doTopPtReweighting:
   c = ROOT.TChain("tree")
   for chunk in chunks:
     c.Add(chunk['file'])
-  print "Computing top pt average weight"
+  print "Computing top pt average weight...",
 #  print getTopPtDrawString()
   topScaleF = getYieldFromChain(c, cutString = "(1)", weight=getTopPtDrawString())
   topScaleF/=c.GetEntries()
   c.IsA().Destructor(c)
   del c
-  print "Found a top pt average correction factor of %f"%topScaleF
+  print "found a top pt average correction factor of %f"%topScaleF
 
 nVetoEvents=0
 for chunk in chunks:
@@ -353,6 +342,35 @@ for chunk in chunks:
 #        print "Found %i:%i:%i in %s"%(r.run, r.lumi, r.evt, vetoList.filename)
 #      else: print [r.run, r.lumi, r.evt], vetoList_.events[0]
 #        print "Found run %i lumi %i in json file %s"%(r.run, r.lumi, sample.json)
+
+      allJets = getGoodJets(r, ptCut=0, jetVars=jetVars if options.skipVariations else jetVars+['mcPt', 'corr','corr_JECUp','corr_JECDown'])
+      jets = filter(lambda j:jetId(j, ptCut=30, absEtaCut=2.4), allJets)
+      s.nGoodJets   = len(jets)
+      s.ht          = sum([j['pt'] for j in jets])
+      s.nBTags      = len(filter(isBJet, jets))
+      if not options.skipVariations:
+        for j in allJets:
+          j['pt_JECUp']   =j['pt']/j['corr']*j['corr_JECUp']
+          j['pt_JECDown'] =j['pt']/j['corr']*j['corr_JECDown']
+          addJERScaling(j)
+        jets_      = {}
+        bJets_     = {}
+        nonBJets_  = {}
+        metShifts_ = {}
+ 
+        for var in ['JECUp', 'JECDown', 'JER', 'JERUp', 'JERDown']:
+          jets_[var]       = filter(lambda j:jetId(j, ptCut=30, absEtaCut=2.4, ptVar='pt_'+var), allJets)
+          bJets_[var]      = filter(isBJet, jets_[var])
+          nonBJets_[var]      = filter(lambda j: not isBJet(j), jets_[var])
+          met_corr_px = r.met_pt*cos(r.met_phi) + sum([(j['pt']-j['pt_'+var])*cos(j['phi']) for j in jets_[var] ])
+          met_corr_py = r.met_pt*sin(r.met_phi) + sum([(j['pt']-j['pt_'+var])*sin(j['phi']) for j in jets_[var] ])
+          
+          setattr(s, "met_pt_"+var, sqrt(met_corr_px**2 + met_corr_py**2))
+          setattr(s, "met_phi_"+var, atan2(met_corr_py, met_corr_px)) 
+          setattr(s, "nGoodJets_"+var, len(jets_[var])) 
+          setattr(s, "ht_"+var, sum([j['pt_'+var] for j in jets_[var]])) 
+          setattr(s, "nbJets_"+var, len(bJets_[var])) 
+
       if options.skim.lower().startswith('dilep'):
         leptons = getGoodLeptons(r)
         s.nGoodMuons      = len(filter( lambda l:abs(l['pdgId'])==13, leptons))
@@ -389,12 +407,10 @@ for chunk in chunks:
           s.dl_eta = dl.Eta()
           s.dl_phi = dl.Phi()
           s.dl_mass   = dl.M() 
-          mt2Calc.setMet(r.met_pt,r.met_phi)
           mt2Calc.setLeptons(s.l1_pt, s.l1_eta, s.l1_phi, s.l2_pt, s.l2_eta, s.l2_phi)
+          mt2Calc.setMet(r.met_pt,r.met_phi)
           s.dl_mt2ll = mt2Calc.mt2ll()
-          s.dl_mtautau, s.dl_alpha0, s.dl_alpha1 = mtautau_(r.met_pt,r.met_phi, s.l1_pt, s.l1_eta, s.l1_phi, s.l2_pt, s.l2_eta, s.l2_phi, retAll=True)
-
-          jets = getGoodJets(r)
+#          s.dl_mtautau, s.dl_alpha0, s.dl_alpha1 = mtautau_(r.met_pt,r.met_phi, s.l1_pt, s.l1_eta, s.l1_phi, s.l2_pt, s.l2_eta, s.l2_phi, retAll=True)
           if len(jets)>=2:
             bJets = filter(lambda j:isBJet(j), jets)
             nonBJets = filter(lambda j:not isBJet(j), jets)
@@ -402,7 +418,15 @@ for chunk in chunks:
             mt2Calc.setBJets(bj0['pt'], bj0['eta'], bj0['phi'], bj1['pt'], bj1['eta'], bj1['phi'])
             s.dl_mt2bb   = mt2Calc.mt2bb()
             s.dl_mt2blbl = mt2Calc.mt2blbl()
-#              print len(bJets), len(nonBJets), s.dl_mt2bb, s.dl_mt2blbl
+          if not options.skipVariations:
+            for var in ['JECUp', 'JECDown', 'JER', 'JERUp', 'JERDown']:
+              mt2Calc.setMet( getattr(s, "met_pt_"+var), getattr(s, "met_phi_"+var) )
+              setattr(s, "dl_mt2ll_"+var,  mt2Calc.mt2ll())
+              if len(jets_[var])>=2:
+                bj0, bj1 = (bJets_[var]+nonBJets_[var])[:2]
+                mt2Calc.setBJets(bj0['pt'], bj0['eta'], bj0['phi'], bj1['pt'], bj1['eta'], bj1['phi'])
+                setattr(s, 'dl_mt2bb_'+var, mt2Calc.mt2bb())
+                setattr(s, 'dl_mt2blbl_'+var,mt2Calc.mt2blbl())
 
       for v in newVars:
         v['branch'].Fill()

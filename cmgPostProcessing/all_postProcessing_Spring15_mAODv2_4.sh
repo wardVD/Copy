@@ -1,11 +1,11 @@
 #!/bin/sh
-python cmgPostProcessing.py --skim=dilepTiny  --samples=TToLeptons_tch_amcatnlo,TToLeptons_tch_amcatnlo_ext $1
-python cmgPostProcessing.py --skim=dilepTiny  --samples=TToLeptons_sch_amcatnlo $1
-python cmgPostProcessing.py --skim=dilepTiny  --samples=TBar_tWch $1
-python cmgPostProcessing.py --skim=dilepTiny  --samples=TBar_tWch_DS $1
-python cmgPostProcessing.py --skim=dilepTiny  --samples=T_tWch $1
-python cmgPostProcessing.py --skim=dilepTiny  --samples=T_tWch_DS $1
-python cmgPostProcessing.py --skim=dilepTiny  --samples=tZq_ll $1
-python cmgPostProcessing.py --skim=dilepTiny  --samples=tZq_nunu $1
-python cmgPostProcessing.py --skim=dilepTiny  --samples=WJetsToLNu $1
-python cmgPostProcessing.py --skim=dilepTiny  --samples=WJetsToLNu_LO $1
+python cmgPostProcessing.py --skim=$1 $2  --samples=TToLeptons_tch_amcatnlo,TToLeptons_tch_amcatnlo_ext &
+python cmgPostProcessing.py --skim=$1 $2  --samples=TToLeptons_sch_amcatnlo &
+python cmgPostProcessing.py --skim=$1 $2  --samples=TBar_tWch &
+python cmgPostProcessing.py --skim=$1 $2  --samples=TBar_tWch_DS &
+python cmgPostProcessing.py --skim=$1 $2  --samples=T_tWch &
+python cmgPostProcessing.py --skim=$1 $2  --samples=T_tWch_DS &
+python cmgPostProcessing.py --skim=$1 $2  --samples=tZq_ll &
+python cmgPostProcessing.py --skim=$1 $2  --samples=tZq_nunu &
+python cmgPostProcessing.py --skim=$1 $2  --samples=WJetsToLNu &
+python cmgPostProcessing.py --skim=$1 $2  --samples=WJetsToLNu_LO &
