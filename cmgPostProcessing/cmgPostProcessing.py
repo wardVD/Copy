@@ -24,7 +24,7 @@ target_lumi = 1000 #pb-1 Which lumi to normalize to
 
 defSampleStr = "DoubleMuon_Run2015D_v4"  #Which samples to run for by default (will be overritten by --samples option)
 
-subDir = "/afs/hephy.at/data/rschoefbeck01/cmgTuples/postProcessed_mAODv2_fix" #Output directory -> The first path should go to localInfo (e.g. 'dataPath' or something)
+subDir = "/afs/hephy.at/data/rschoefbeck01/cmgTuples/postProcessed_mAODv2_fix2" #Output directory -> The first path should go to localInfo (e.g. 'dataPath' or something)
 
 from optparse import OptionParser
 parser = OptionParser()
@@ -36,7 +36,7 @@ parser.add_option("--small", dest="small", default = False, action="store_true",
 parser.add_option("--keepPhotons", dest="keepPhotons", default = False, action="store_true", help="keep photons?")
 parser.add_option("--overwrite", dest="overwrite", default = False, action="store_true", help="Overwrite?")
 parser.add_option("--lheHTCut", dest="lheHTCut", default="", type="string", action="store", help="upper cut on lheHTIncoming")
-
+parser.add_option("--maxMultBTagWeight", dest="maxMultBTagWeight", default=2, type=int, action="store", help="Maximum btag multiplicity for which a combinatorical weight is calulcated")
 parser.add_option("--skipVariations", dest="skipVariations", default = False, action="store_true", help="skipVariations: Don't calulcate JES and JER variations")
 
 (options, args) = parser.parse_args()
@@ -86,6 +86,10 @@ doTopPtReweighting = sample.name.startswith("TTJets") or sample.name.startswith(
 if doTopPtReweighting:
   print "Sample %s will have top pt reweights!"% sample.name
 topPtReweightingFunc = getUnscaledTopPairPtReweightungFunction() if doTopPtReweighting else None
+
+if options.maxMultBTagWeight>=0:
+  from StopsDilepton.tools.btagEfficiency import btagEfficiency
+  btagEff = btagEfficiency()
 
 if options.lheHTCut:
   try:
@@ -194,7 +198,7 @@ if sample.isData:
 else:
   lumiScaleFactor = sample.xSection*target_lumi/float(sumWeight)
   branchKeepStrings = branchKeepStrings_DATAMC + branchKeepStrings_MC
-  jetMCInfo = ['mcMatchFlav/I', 'partonId/I', 'mcPt/F', 'corr/F', 'corr_JECUp/F', 'corr_JECDown/F']
+  jetMCInfo = ['mcMatchFlav/I', 'partonId/I', 'mcPt/F', 'corr/F', 'corr_JECUp/F', 'corr_JECDown/F', 'mcFlavor/I']
 
 readVariables = ['met_pt/F', 'met_phi/F', 'run/I', 'lumi/I', 'evt/l']
 if allMC: readVariables+= ['nTrueInt/I']
@@ -222,6 +226,10 @@ if not options.skipVariations:
     newVariables.extend( ['met_pt_'+var+'/F', 'met_phi_'+var+'/F'] )
     if options.skim.lower().startswith('dilep'):
       newVariables.extend( ['dl_mt2ll_'+var+'/F', 'dl_mt2bb_'+var+'/F', 'dl_mt2blbl_'+var+'/F'] )
+if options.maxMultBTagWeight>=0:
+  for i in range(options.maxMultBTagWeight+1):
+    for var in ['MC', 'SF', 'SF_b_Down', 'SF_b_Up', 'SF_l_Down', 'SF_l_Up']:
+      newVariables.extend(['reweightBTag'+str(i)+'_'+var+'/F', 'reweightBTag'+str(i+1)+'p_'+var+'/F'])
 
 newVars = [readVar(v, allowRenaming=False, isWritten = True, isRead=False) for v in newVariables]
 
@@ -231,15 +239,13 @@ for v in readVectors:
   v['vars'] = [readVar(v['prefix']+'_'+vvar, allowRenaming=False, isWritten=False, isRead=True) for vvar in v['vars']]
 
 printHeader("Compiling class to write")
-writeClassName = "ClassToWrite"#+str(isample)
+writeClassName = "ClassToWrite"
 writeClassString = createClassString(className=writeClassName, vars= newVars, vectors=[], nameKey = 'stage2Name', typeKey = 'stage2Type')
-#  print writeClassString
 s = compileClass(className=writeClassName, classString=writeClassString, tmpDir='/tmp/')
 
-readClassName = "ClassToRead"#+str(isample)
+readClassName = "ClassToRead"
 readClassString = createClassString(className=readClassName, vars=readVars, vectors=readVectors, nameKey = 'stage1Name', typeKey = 'stage1Type', stdVectors=False)
 printHeader("Class to Read")
-#  print readClassString
 r = compileClass(className=readClassName, classString=readClassString, tmpDir='/tmp/')
 
 
@@ -304,12 +310,6 @@ for chunk in chunks:
       genWeight = 1 if sample.isData else t.GetLeaf('genWeight').GetValue()
       s.weight = lumiScaleFactor*genWeight if not sample.isData else 1
       s.reweightTopPt = topPtReweightingFunc(getTopPtsForReweighting(r))/topScaleF if doTopPtReweighting else 1.
-#      if doTopPtReweighting:
-#        topPts = getTopPtsForReweighting(r)
-#        print topPts, topPtReweightingFunc(topPts), topScaleF
-#        s.reweightTopPt = topPtReweightingFunc(topPts)/topScaleF 
-#      else:
-#        s.reweightTopPt = 1. 
       if not sample.isData:
         s.weightPU     = s.weight*puRW(r.nTrueInt)
         s.weightPUDown = s.weight*puRWDown(r.nTrueInt) 
@@ -343,7 +343,7 @@ for chunk in chunks:
 #      else: print [r.run, r.lumi, r.evt], vetoList_.events[0]
 #        print "Found run %i lumi %i in json file %s"%(r.run, r.lumi, sample.json)
 
-      allJets = getGoodJets(r, ptCut=0, jetVars=jetVars if options.skipVariations else jetVars+['mcPt', 'corr','corr_JECUp','corr_JECDown'])
+      allJets = getGoodJets(r, ptCut=0, jetVars=jetVars if options.skipVariations else jetVars+['mcPt', 'corr','corr_JECUp','corr_JECDown','mcFlavor'])
       jets = filter(lambda j:jetId(j, ptCut=30, absEtaCut=2.4), allJets)
       s.nGoodJets   = len(jets)
       s.ht          = sum([j['pt'] for j in jets])
@@ -427,6 +427,14 @@ for chunk in chunks:
                 mt2Calc.setBJets(bj0['pt'], bj0['eta'], bj0['phi'], bj1['pt'], bj1['eta'], bj1['phi'])
                 setattr(s, 'dl_mt2bb_'+var, mt2Calc.mt2bb())
                 setattr(s, 'dl_mt2blbl_'+var,mt2Calc.mt2blbl())
+      if options.maxMultBTagWeight>=0:
+        for j in jets:
+          btagEff.addBTagEffToJet(j)
+        for var in ['MC', 'SF', 'SF_b_Down', 'SF_b_Up', 'SF_l_Down', 'SF_l_Up']:
+          res = btagEff.getTagWeightDict([j['beff'][var] for j in jets], options.maxMultBTagWeight)
+          for i in range(options.maxMultBTagWeight+1):
+            setattr(s, 'reweightBTag'+str(i)+'_'+var, res[i])
+            setattr(s, 'reweightBTag'+str(i+1)+'p_'+var, 1-sum([res[j] for j in range(i+1)]))
 
       for v in newVars:
         v['branch'].Fill()
