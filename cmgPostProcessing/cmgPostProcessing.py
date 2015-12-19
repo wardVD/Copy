@@ -22,9 +22,9 @@ ROOT.AutoLibraryLoader.enable()
 
 target_lumi = 1000 #pb-1 Which lumi to normalize to
 
-defSampleStr = "DoubleMuon_Run2015D_v4"  #Which samples to run for by default (will be overritten by --samples option)
+defSampleStr = "TTJets_LO"  #Which samples to run for by default (will be overritten by --samples option)
 
-subDir = "/afs/hephy.at/data/rschoefbeck01/cmgTuples/postProcessed_mAODv2_fix2" #Output directory -> The first path should go to localInfo (e.g. 'dataPath' or something)
+subDir = "/afs/hephy.at/data/rschoefbeck01/cmgTuples/postProcessed_mAODv2_fix" #Output directory -> The first path should go to localInfo (e.g. 'dataPath' or something)
 
 from optparse import OptionParser
 parser = OptionParser()
@@ -54,7 +54,7 @@ if options.skim.lower().startswith('dilep'):
   skimCond += "&&Sum$(LepGood_pt>20&&abs(LepGood_eta)<2.5)>=2"
 
 if sys.argv[0].count('ipython'):
-  options.small=False
+  options.small=True
 
 maxN = 1 if options.small else -1
 exec('allSamples=['+options.allSamples+']')
@@ -87,6 +87,10 @@ if doTopPtReweighting:
   print "Sample %s will have top pt reweights!"% sample.name
 topPtReweightingFunc = getUnscaledTopPairPtReweightungFunction() if doTopPtReweighting else None
 
+if allData and options.maxMultBTagWeight>=0:
+  print "No btag weights for data!"
+  options.maxMultBTagWeight=-1
+ 
 if options.maxMultBTagWeight>=0:
   from StopsDilepton.tools.btagEfficiency import btagEfficiency
   btagEff = btagEfficiency()
@@ -198,7 +202,7 @@ if sample.isData:
 else:
   lumiScaleFactor = sample.xSection*target_lumi/float(sumWeight)
   branchKeepStrings = branchKeepStrings_DATAMC + branchKeepStrings_MC
-  jetMCInfo = ['mcMatchFlav/I', 'partonId/I', 'mcPt/F', 'corr/F', 'corr_JECUp/F', 'corr_JECDown/F', 'mcFlavor/I']
+  jetMCInfo = ['mcMatchFlav/I', 'partonId/I', 'mcPt/F', 'corr/F', 'corr_JECUp/F', 'corr_JECDown/F', 'mcFlavour/I']
 
 readVariables = ['met_pt/F', 'met_phi/F', 'run/I', 'lumi/I', 'evt/l']
 if allMC: readVariables+= ['nTrueInt/I']
@@ -343,7 +347,7 @@ for chunk in chunks:
 #      else: print [r.run, r.lumi, r.evt], vetoList_.events[0]
 #        print "Found run %i lumi %i in json file %s"%(r.run, r.lumi, sample.json)
 
-      allJets = getGoodJets(r, ptCut=0, jetVars=jetVars if options.skipVariations else jetVars+['mcPt', 'corr','corr_JECUp','corr_JECDown','mcFlavor'])
+      allJets = getGoodJets(r, ptCut=0, jetVars=jetVars if options.skipVariations else jetVars+['mcPt', 'corr','corr_JECUp','corr_JECDown','mcFlavour'])
       jets = filter(lambda j:jetId(j, ptCut=30, absEtaCut=2.4), allJets)
       s.nGoodJets   = len(jets)
       s.ht          = sum([j['pt'] for j in jets])
@@ -435,6 +439,7 @@ for chunk in chunks:
           for i in range(options.maxMultBTagWeight+1):
             setattr(s, 'reweightBTag'+str(i)+'_'+var, res[i])
             setattr(s, 'reweightBTag'+str(i+1)+'p_'+var, 1-sum([res[j] for j in range(i+1)]))
+        if len(jets)==7: break
 
       for v in newVars:
         v['branch'].Fill()

@@ -28,11 +28,11 @@ def getBTagMCTruthEfficiencies(c, cut="(1)"):
   return mceff
 
 #for sample in [TTJets, TTJets_Lep]:
-for sample in [ TTJets_Lep]:
+for sample in [ TTJets_Lep, TTJets]:
   pickle.dump(\
     getBTagMCTruthEfficiencies(
       getChain(sample),  
-      cut="(Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id))>=2&&(isMuMu==1||isEE==1||isEMu==1)"
+      cut="(Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id))>=3&&(isMuMu==1||isEE==1||isEMu==1)"
     ), 
-    file(os.path.expandvars('/afs/hephy.at/data/rschoefbeck01/StopsDilepton/btagEfficiencyData/'+sample['name']+'_2j_2l.pkl'), 'w')
+    file(os.path.expandvars('/afs/hephy.at/data/rschoefbeck01/StopsDilepton/btagEfficiencyData/'+sample['name']+'_3j_2l.pkl'), 'w')
   )

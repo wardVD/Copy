@@ -1,5 +1,5 @@
 import ROOT, pickle, itertools, os
-effFile = '/afs/hephy.at/data/rschoefbeck01/StopsDilepton/btagEfficiencyData/TTJets_2j_2l.pkl'
+effFile = '/afs/hephy.at/data/rschoefbeck01/StopsDilepton/btagEfficiencyData/TTJets_Lep_2j_2l.pkl'
 sfFile =  '/afs/hephy.at/data/rschoefbeck01/StopsDilepton/btagEfficiencyData/CSVv2.csv' 
 
 ptBorders = [30, 40, 50, 60, 70, 80, 100, 120, 160, 210, 260, 320, 400, 500, 670]
@@ -13,7 +13,8 @@ ptBins.append([ptBorders[-1], -1])
 
 
 class btagEfficiency:
-  def __init__(self, WP = ROOT.BTagEntry.OP_MEDIUM, mcEfficiencyFile = effFile, scaleFactorFile = sfFile):
+  def __init__(self, WP = ROOT.BTagEntry.OP_MEDIUM, mcEfficiencyFile = effFile, scaleFactorFile = sfFile, verbose=True):
+    self.verbose=verbose
     print "[btagEfficiency] Loading scale factors from %s"%os.path.expandvars(scaleFactorFile)
     self.calib = ROOT.BTagCalibration("csvv2", os.path.expandvars(scaleFactorFile))
 ## get SF
@@ -25,6 +26,11 @@ class btagEfficiency:
     self.readerCombDown    = ROOT.BTagCalibrationReader(self.calib, WP, "comb", "down")
     print "[btagEfficiency] Loading MC efficiency %s"%os.path.expandvars(mcEfficiencyFile)
     self.mcEff = pickle.load(file(os.path.expandvars(mcEfficiencyFile)))
+#    for ptk in self.mcEff.keys():
+#      for ek in self.mcEff[ptk].keys():
+#        for fk in ["b", "c", "other"]:
+#            if self.mcEff[ptk][ek][fk]==1.:
+#            print "[btagEfficiency] Found efficiency of 1"
 
   def getMCEff(self, pdgId, pt, eta):
     for ptBin in ptBins:
@@ -75,8 +81,8 @@ class btagEfficiency:
     return (sf, sf_b_d, sf_b_u, sf_l_d, sf_l_u)
 
   def addBTagEffToJet(self, j):
-     mcEff = self.getMCEff(j['mcFlavor'], j['pt'], j['eta'])
-     sf =    self.getSF(j['mcFlavor'], j['pt'], j['eta'])
+     mcEff = self.getMCEff(j['mcFlavour'], j['pt'], j['eta'])
+     sf =    self.getSF(j['mcFlavour'], j['pt'], j['eta'])
      j['beff'] =  {'MC':mcEff, 'SF':mcEff*sf[0], 'SF_b_Down':mcEff*sf[1], 'SF_b_Up':mcEff*sf[2], 'SF_l_Down':mcEff*sf[3], 'SF_l_Up':mcEff*sf[4]}
 
 # get the combinatorical weights for jet efficiency list eff 
