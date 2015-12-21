@@ -256,7 +256,7 @@ ZZ={
 ],
 'dir':dir,
 'isData':False,
-'color': ROOT.kOrange,
+'color': ROOT.kOrange+1,
 'texName':"ZZ",
 }
 
@@ -269,7 +269,7 @@ WZ={
 ],
 'dir':dir,
 'isData':False,
-'color': ROOT.kOrange,
+'color': ROOT.kOrange+2,
 'texName':"WZ",
 }
 
