@@ -1,11 +1,11 @@
 #!/bin/sh
-python cmgPostProcessing.py --skim=dilepTiny  --samples=TToLeptons_tch_amcatnlo,TToLeptons_tch_amcatnlo_ext $1
-python cmgPostProcessing.py --skim=dilepTiny  --samples=TToLeptons_sch_amcatnlo $1
-python cmgPostProcessing.py --skim=dilepTiny  --samples=TBar_tWch $1
-python cmgPostProcessing.py --skim=dilepTiny  --samples=TBar_tWch_DS $1
-python cmgPostProcessing.py --skim=dilepTiny  --samples=T_tWch $1
-python cmgPostProcessing.py --skim=dilepTiny  --samples=T_tWch_DS $1
-python cmgPostProcessing.py --skim=dilepTiny  --samples=tZq_ll $1
-python cmgPostProcessing.py --skim=dilepTiny  --samples=tZq_nunu $1
-python cmgPostProcessing.py --skim=dilepTiny  --samples=WJetsToLNu $1
-python cmgPostProcessing.py --skim=dilepTiny  --samples=WJetsToLNu_LO $1
+nohup krenew -t -K 10 -- bash -c "python cmgPostProcessing.py --skim=$1 $2  --samples=TToLeptons_tch_amcatnlo,TToLeptons_tch_amcatnlo_ext" &
+nohup krenew -t -K 10 -- bash -c "python cmgPostProcessing.py --skim=$1 $2  --samples=TToLeptons_sch_amcatnlo" &
+nohup krenew -t -K 10 -- bash -c "python cmgPostProcessing.py --skim=$1 $2  --samples=TBar_tWch" &
+nohup krenew -t -K 10 -- bash -c "python cmgPostProcessing.py --skim=$1 $2  --samples=TBar_tWch_DS" &
+nohup krenew -t -K 10 -- bash -c "python cmgPostProcessing.py --skim=$1 $2  --samples=T_tWch" &
+nohup krenew -t -K 10 -- bash -c "python cmgPostProcessing.py --skim=$1 $2  --samples=T_tWch_DS" &
+nohup krenew -t -K 10 -- bash -c "python cmgPostProcessing.py --skim=$1 $2  --samples=tZq_ll" &
+nohup krenew -t -K 10 -- bash -c "python cmgPostProcessing.py --skim=$1 $2  --samples=tZq_nunu" &
+nohup krenew -t -K 10 -- bash -c "python cmgPostProcessing.py --skim=$1 $2  --samples=WJetsToLNu" &
+nohup krenew -t -K 10 -- bash -c "python cmgPostProcessing.py --skim=$1 $2  --samples=WJetsToLNu_LO" &
