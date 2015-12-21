@@ -384,8 +384,8 @@ for s in backgrounds+signals+data:
     #SF and OF channels
     channels = ['mumu','ee','emu']
 
-    mumuselection = True if (triggerMuMu and isMuMu==1 and nGoodMuons==2 and nGoodElectrons==0) and abs(90.2-mll)>15 else False
-    eeselection =   True if (triggerEleEle and isEE==1 and nGoodMuons==0 and nGoodElectrons==2) and abs(90.2-mll)>15 else False
+    mumuselection = True if (triggerMuMu and isMuMu==1 and nGoodMuons==2 and nGoodElectrons==0) and abs(91.2-mll)>15 else False
+    eeselection =   True if (triggerEleEle and isEE==1 and nGoodMuons==0 and nGoodElectrons==2) and abs(91.2-mll)>15 else False
     emuselection =  True if (triggerMuEle  and isEMu==1 and nGoodMuons==1 and nGoodElectrons==1) else False
 
     for channel in channels:

@@ -2,7 +2,7 @@ import os
 if os.environ['USER'] in ['wvandrie']:
   #plotDir = "/afs/cern.ch/user/w/wvandrie/www/Stops/"
   plotDir = "/user/wvandrie/public_html/"
-  dataDir = "/user/wvandrie/STOPS/ANALYSIS/CMSSW_7_4_12_patch4/src/tuples_2015_12_2/dilepTiny/"
+  dataDir = "/user/wvandrie/STOPS/ANALYSIS/CMSSW_7_4_12_patch4/src/tuples_2015_12_2/dilep/"
 if os.environ['USER'] in ['didar']:
   plotDir = "."
   dataDir = "~/eos/cms/store/cmst3/group/susy/schoef/postProcessed_Phys14V3_diLep" #needs EOS mount on lxplus at ~/eos 
