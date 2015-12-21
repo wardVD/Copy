@@ -42,9 +42,11 @@ def getChain(sampleList, histname='', maxN=-1, treeName="Events"):
           c.Add(f)
         else:
           print "File %s looks broken."%f
-    if type(s)==type({}):
+      print "Added ",i,'files from samples %s' %(", ".join([s['name'] for s in sampleList_]))
+    elif type(s)==type({}):
       if s.has_key('file'):
         c.Add(s['file'])
+#        print "Added file %s"%s['file']
         i+=1
       if s.has_key('bins'):
         for b in s['bins']:
@@ -55,7 +57,10 @@ def getChain(sampleList, histname='', maxN=-1, treeName="Events"):
               c.Add(f)
             else:
               print "File %s looks broken."%f
-    print "Added ",i,'files from samples %s' %(", ".join([s['name'] for s in sampleList_]))
+#      print 'Added %i files from %i elements' %(i, len(sampleList))
+    else: 
+#      print sampleList
+      print "Could not load chain from sampleList %s"%repr(sampleList)
   return c
 
 #def getChunks(sample,  maxN=-1):

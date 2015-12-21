@@ -1,4 +1,4 @@
-data_path = "/data/rschoefbeck/cmgTuples/MC25ns_v2_1l/"
+data_path = "/data/rschoefbeck/cmgTuples/MC25ns_v2_1l_151218/"
 from CMGTools.RootTools.samples.samples_13TeV_RunIISpring15MiniAODv2 import samples as bkgSamples 
 from CMGTools.RootTools.samples.samples_13TeV_RunIISpring15MiniAODv2 import * 
 from CMGTools.RootTools.samples.TTbarDMJets_signals_RunIISpring15MiniAODv2 import samples as TTJetsDMSamples 
