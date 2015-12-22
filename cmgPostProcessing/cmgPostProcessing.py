@@ -92,6 +92,7 @@ topPtReweightingFunc = getUnscaledTopPairPtReweightungFunction() if doTopPtRewei
 #  print "No btag weights for data!"
 #  options.maxMultBTagWeight=-1
 #if options.maxMultBTagWeight>=0:
+#from StopsDilepton.tools.btagEfficiency import btagEfficiency, getTagWeightDict
 from StopsDilepton.tools.btagEfficiency import btagEfficiency, btagMethod1DSystematics
 btagEff = btagEfficiency(method='1d')
 
@@ -437,7 +438,7 @@ for chunk in chunks:
 #        for j in jets:
 #          btagEff.addBTagEffToJet(j)
 #        for var in ['MC', 'SF', 'SF_b_Down', 'SF_b_Up', 'SF_l_Down', 'SF_l_Up']:
-#          res = btagEff.getTagWeightDict([j['beff'][var] for j in jets], options.maxMultBTagWeight)
+#          res = getTagWeightDict([j['beff'][var] for j in jets], options.maxMultBTagWeight)
 #          for i in range(options.maxMultBTagWeight+1):
 #            setattr(s, 'reweightBTag'+str(i)+'_'+var, res[i])
 #            setattr(s, 'reweightBTag'+str(i+1)+'p_'+var, 1-sum([res[j] for j in range(i+1)]))
@@ -445,7 +446,6 @@ for chunk in chunks:
         for j in jets:
           btagEff.addBTagEffToJet(j)
         for var in btagMethod1DSystematics:
-#          print var, [j['beff'][var] for j in jets], reduce(mul, [j['beff'][var] for j in jets], 1)
           setattr(s, 'reweightBTag_'+var, reduce(mul, [j['beff'][var] for j in jets], 1) )
 
       for v in newVars:
