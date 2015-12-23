@@ -3,12 +3,17 @@ ROOT.gROOT.LoadMacro("$CMSSW_BASE/src/StopsDilepton/tools/scripts/tdrstyle.C")
 ROOT.setTDRStyle()
 import numpy as n
 
+from StopsDilepton.tools.mt2Calculator import mt2Calculator
+mt2Calc = mt2Calculator()
+
 from math import *
 from StopsDilepton.tools.helpers import getChain,getWeight,getVarValue, getEList
 from StopsDilepton.tools.localInfo import *
 from datetime import datetime
 from StopsDilepton.tools.puReweighting import getReweightingFunction
 from StopsDilepton.tools.objectSelection import getLeptons, looseMuID, looseEleID, getJets, getGenParts, getGoodLeptons, getGoodElectrons, getGoodMuons
+
+import collections
 
 #puReweightingFunc = getReweightingFunction(era="doubleMu_onZ_isOS_1500pb_nVert_reweight")
 #puReweighting = lambda c:puReweightingFunc(getVarValue(c, "nVert"))
@@ -27,7 +32,7 @@ from StopsDilepton.samples.cmgTuples_Data25ns_mAODv2_postProcessed import *
 #######################################################
 #        SELECT WHAT YOU WANT TO DO HERE              #
 #######################################################
-reduceStat = 1 #recude the statistics, i.e. 10 is ten times less samples to look at
+reduceStat = 10 #recude the statistics, i.e. 10 is ten times less samples to look at
 makedraw1D = True
 makeTexFile = True
 mt2llcutscaling = False
@@ -37,28 +42,23 @@ noscaling = False
 btagcoeff          = 0.605
 njetscut           = [">=4",'4m']
 nbjetscut          = [">=2",'2m']
-flavour            = "MuMu"
 
 
 presel_njet        = 'Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id)'+njetscut[0]
 presel_nbjet       = 'Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id&&Jet_btagCSV>'+str(btagcoeff)+')'+nbjetscut[0]
 presel_nlep        = '(nGoodElectrons+nGoodMuons)>=2'
+presel_triggers    = '(HLT_mumuIso||HLT_ee_DZ||HLT_mue)'
 
-if flavour=="MuMu": 
-  presel_flavour     = 'nGoodMuons>=2&&HLT_mumuIso'
-  data = [DoubleMuon_Run2015D]
-elif flavour=="EE": 
-  presel_flavour     = 'nGoodElectrons>=2&&HLT_ee_DZ'
-  data = [DoubleEG_Run2015D]
+data = [DoubleMuon_Run2015D,DoubleEG_Run2015D,MuonEG_Run2015D]
 
 luminosity = data[0]["lumi"]
 
 datacut = "(Flag_HBHENoiseFilter&&Flag_goodVertices&&Flag_CSCTightHaloFilter&&Flag_eeBadScFilter&&weight>0)"
 
-preselection = presel_njet+'&&'+presel_nbjet+'&&'+presel_nlep+'&&'+presel_flavour
+preselection = presel_njet+'&&'+presel_nbjet+'&&'+presel_nlep+'&&'+presel_triggers
 
 #backgrounds = [DY_HT_LO,TTJets,WJetsToLNu,singleTop,QCD_Mu5,TTZ,TTW,TZQ,TTH,diBoson]
-backgrounds = [TTZ,TZQ,TTH,TTW,DY_HT_LO,TTJets,ZZ]
+backgrounds = [TTZ]
 
 #######################################################
 #            get the TChains for each sample          #
@@ -70,23 +70,71 @@ mt2llbinning = [15,0,300]
 mllbinning = [50,0,150]
 metbinning = [30,0,300]
 zptbinning = [50,0,300]
+lepptbinning = [40,0,400]
+njetsbinning = [10,0,10]
+nbjetsbinning = [10,0,10]
+
+
+ListOfDataEvents = []
+
 
 plots = {\
   '2l':{\
-    #'dl_mt2ll':{'title':'MT2ll (GeV)', 'name':'MT2ll_2l', 'binning': mt2llbinning, 'histo':{'totalbkg':0.,}},
+    #'dl_mt2ll_onZ':{'title':'MT2ll (GeV)', 'name':'MT2ll_2l_onZ', 'binning': mt2llbinning, 'histo':{'totalbkg':0.,}}, #offZ mt2ll doesn't make sense
     'dl_mass_onZ':{'title':'M_{ll} (GeV)', 'name':'Mll_2l_onZ', 'binning': mllbinning, 'histo':{'totalbkg':0.,}},
     'dl_mass_offZ':{'title':'M_{ll} (GeV)', 'name':'Mll_2l_offZ', 'binning': mllbinning, 'histo':{'totalbkg':0.,}},
-    #'met_pt':{'title':'MET (GeV)', 'name':'MET_2l', 'binning': metbinning, 'histo':{'totalbkg':0.,}},
+    'met_pt_onZ':{'title':'MET (GeV)', 'name':'MET_2l_onZ', 'binning': metbinning, 'histo':{'totalbkg':0.,}},
+    'met_pt_offZ':{'title':'MET (GeV)', 'name':'MET_2l_offZ', 'binning': metbinning, 'histo':{'totalbkg':0.,}},
     'Z_pt_onZ':{'title':'p_{T} Z (GeV)', 'name':'ZpT_2l_onZ', 'binning': zptbinning, 'histo':{'totalbkg':0.,}},
     'Z_pt_offZ':{'title':'p_{T} Z (GeV)', 'name':'ZpT_2l_offZ', 'binning': zptbinning, 'histo':{'totalbkg':0.,}},
+    'l1_pt_onZ':{'title':'p_{T} lep1 (GeV)', 'name':'lep1_2l_onZ', 'binning': lepptbinning, 'histo':{'totalbkg':0.,}},
+    'l1_pt_offZ':{'title':'p_{T} lep1 (GeV)', 'name':'lep1_2l_offZ', 'binning': lepptbinning, 'histo':{'totalbkg':0.,}},
+    'l2_pt_onZ':{'title':'p_{T} lep2 (GeV)', 'name':'lep2_2l_onZ', 'binning': lepptbinning, 'histo':{'totalbkg':0.,}},
+    'l2_pt_offZ':{'title':'p_{T} lep2 (GeV)', 'name':'lep2_2l_offZ', 'binning': lepptbinning, 'histo':{'totalbkg':0.,}},
+    'njets_onZ':{'title':'njets', 'name':'njets_2l_onZ', 'binning': njetsbinning, 'histo':{'totalbkg':0.,}}, 
+    'njets_offZ':{'title':'njets', 'name':'njets_2l_offZ', 'binning': njetsbinning, 'histo':{'totalbkg':0.,}},
+    'nbjets_onZ':{'title':'nbjets', 'name':'nbjets_2l_onZ', 'binning': nbjetsbinning, 'histo':{'totalbkg':0.,}},
+    'nbjets_offZ':{'title':'nbjets', 'name':'nbjets_2l_offZ', 'binning': nbjetsbinning, 'histo':{'totalbkg':0.,}},    
     },
   '3l':{\
-    #'dl_mt2ll':{'title':'MT2ll (GeV)', 'name':'MT2ll_3l', 'binning': mt2llbinning, 'histo':{'totalbkg':0.,}},
+    #'dl_mt2ll_onZ':{'title':'MT2ll (GeV)', 'name':'MT2ll_3l_onZ', 'binning': mt2llbinning, 'histo':{'totalbkg':0.,}}, #offZ mt2ll doesn't make sense
     'dl_mass_onZ':{'title':'M_{ll} (GeV)', 'name':'Mll_3l_onZ', 'binning': mllbinning, 'histo':{'totalbkg':0.,}},
     'dl_mass_offZ':{'title':'M_{ll} (GeV)', 'name':'Mll_3l_offZ', 'binning': mllbinning, 'histo':{'totalbkg':0.,}},
-    #'met_pt':{'title':'MET (GeV)', 'name':'MET_3l', 'binning': metbinning, 'histo':{'totalbkg':0.,}},
+    'met_pt_onZ':{'title':'MET (GeV)', 'name':'MET_3l_onZ', 'binning': metbinning, 'histo':{'totalbkg':0.,}},
+    'met_pt_offZ':{'title':'MET (GeV)', 'name':'MET_3l_offZ', 'binning': metbinning, 'histo':{'totalbkg':0.,}},
     'Z_pt_onZ':{'title':'p_{T} Z (GeV)', 'name':'ZpT_3l_onZ', 'binning': zptbinning, 'histo':{'totalbkg':0.,}},
     'Z_pt_offZ':{'title':'p_{T} Z (GeV)', 'name':'ZpT_3l_offZ', 'binning': zptbinning, 'histo':{'totalbkg':0.,}},
+    'l1_pt_onZ':{'title':'p_{T} lep1 (GeV)', 'name':'lep1_3l_onZ', 'binning': lepptbinning, 'histo':{'totalbkg':0.,}},
+    'l1_pt_offZ':{'title':'p_{T} lep1 (GeV)', 'name':'lep1_3l_offZ', 'binning': lepptbinning, 'histo':{'totalbkg':0.,}},
+    'l2_pt_onZ':{'title':'p_{T} lep2 (GeV)', 'name':'lep2_3l_onZ', 'binning': lepptbinning, 'histo':{'totalbkg':0.,}},
+    'l2_pt_offZ':{'title':'p_{T} lep2 (GeV)', 'name':'lep2_3l_offZ', 'binning': lepptbinning, 'histo':{'totalbkg':0.,}},
+    'l3_pt_onZ':{'title':'p_{T} lep3 (GeV)', 'name':'lep3_3l_onZ', 'binning': lepptbinning, 'histo':{'totalbkg':0.,}},
+    'l3_pt_offZ':{'title':'p_{T} lep3 (GeV)', 'name':'lep3_3l_offZ', 'binning': lepptbinning, 'histo':{'totalbkg':0.,}},
+    'njets_onZ':{'title':'njets', 'name':'njets_3l_onZ', 'binning': njetsbinning, 'histo':{'totalbkg':0.,}}, 
+    'njets_offZ':{'title':'njets', 'name':'njets_3l_offZ', 'binning': njetsbinning, 'histo':{'totalbkg':0.,}},
+    'nbjets_onZ':{'title':'nbjets', 'name':'nbjets_3l_onZ', 'binning': nbjetsbinning, 'histo':{'totalbkg':0.,}},
+    'nbjets_offZ':{'title':'nbjets', 'name':'nbjets_3l_offZ', 'binning': nbjetsbinning, 'histo':{'totalbkg':0.,}},    
+    },
+  '4l':{\
+    #'dl_mt2ll_onZ':{'title':'MT2ll (GeV)', 'name':'MT2ll_4l_onZ', 'binning': mt2llbinning, 'histo':{'totalbkg':0.,}}, #offZ mt2ll doesn't make sense
+    'dl_mass_onZ':{'title':'M_{ll} (GeV)', 'name':'Mll_4l_onZ', 'binning': mllbinning, 'histo':{'totalbkg':0.,}},
+    'dl_mass_offZ':{'title':'M_{ll} (GeV)', 'name':'Mll_4l_offZ', 'binning': mllbinning, 'histo':{'totalbkg':0.,}},
+    'met_pt_onZ':{'title':'MET (GeV)', 'name':'MET_4l_onZ', 'binning': metbinning, 'histo':{'totalbkg':0.,}},
+    'met_pt_offZ':{'title':'MET (GeV)', 'name':'MET_4l_offZ', 'binning': metbinning, 'histo':{'totalbkg':0.,}},
+    'Z_pt_onZ':{'title':'p_{T} Z (GeV)', 'name':'ZpT_4l_onZ', 'binning': zptbinning, 'histo':{'totalbkg':0.,}},
+    'Z_pt_offZ':{'title':'p_{T} Z (GeV)', 'name':'ZpT_4l_offZ', 'binning': zptbinning, 'histo':{'totalbkg':0.,}},
+    'l1_pt_onZ':{'title':'p_{T} lep1 (GeV)', 'name':'lep1_4l_onZ', 'binning': lepptbinning, 'histo':{'totalbkg':0.,}},
+    'l1_pt_offZ':{'title':'p_{T} lep1 (GeV)', 'name':'lep1_4l_offZ', 'binning': lepptbinning, 'histo':{'totalbkg':0.,}},
+    'l2_pt_onZ':{'title':'p_{T} lep2 (GeV)', 'name':'lep2_4l_onZ', 'binning': lepptbinning, 'histo':{'totalbkg':0.,}},
+    'l2_pt_offZ':{'title':'p_{T} lep2 (GeV)', 'name':'lep2_4l_offZ', 'binning': lepptbinning, 'histo':{'totalbkg':0.,}},
+    'l3_pt_onZ':{'title':'p_{T} lep3 (GeV)', 'name':'lep3_4l_onZ', 'binning': lepptbinning, 'histo':{'totalbkg':0.,}},
+    'l3_pt_offZ':{'title':'p_{T} lep3 (GeV)', 'name':'lep3_4l_offZ', 'binning': lepptbinning, 'histo':{'totalbkg':0.,}},
+    'l4_pt_onZ':{'title':'p_{T} lep4 (GeV)', 'name':'lep4_4l_onZ', 'binning': lepptbinning, 'histo':{'totalbkg':0.,}},
+    'l4_pt_offZ':{'title':'p_{T} lep4 (GeV)', 'name':'lep4_4l_offZ', 'binning': lepptbinning, 'histo':{'totalbkg':0.,}},
+    'njets_onZ':{'title':'njets', 'name':'njets_4l_onZ', 'binning': njetsbinning, 'histo':{'totalbkg':0.,}}, 
+    'njets_offZ':{'title':'njets', 'name':'njets_4l_offZ', 'binning': njetsbinning, 'histo':{'totalbkg':0.,}},
+    'nbjets_onZ':{'title':'nbjets', 'name':'nbjets_4l_onZ', 'binning': nbjetsbinning, 'histo':{'totalbkg':0.,}},
+    'nbjets_offZ':{'title':'nbjets', 'name':'nbjets_4l_offZ', 'binning': nbjetsbinning, 'histo':{'totalbkg':0.,}},    
     },
   }
 
@@ -103,13 +151,24 @@ for s in backgrounds+data:
 
   chain = s["chain"]
 
-  eList = getEList(chain, preselection) if not s['isData'] else getEList(chain, preselection+'&&'+datacut)
+  if (s == DoubleMuon_Run2015D): 
+    eList = getEList(chain, preselection) if not s['isData'] else getEList(chain, preselection+'&&'+datacut+'&&HLT_mumuIso')
+  elif (s == DoubleEG_Run2015D):
+    eList = getEList(chain, preselection) if not s['isData'] else getEList(chain, preselection+'&&'+datacut+'&&HLT_ee_DZ')
+  elif (s == MuonEG_Run2015D):   
+    eList = getEList(chain, preselection) if not s['isData'] else getEList(chain, preselection+'&&'+datacut+'&&HLT_mue')
+  else:
+    eList = getEList(chain, preselection) if not s['isData'] else getEList(chain, preselection)
   
   nEvents = eList.GetN()/reduceStat
   print "Found %i events in %s after preselection %s, looping over %i" % (eList.GetN(),s["name"],preselection,nEvents)
  
+   #start event loop
   for ev in range(nEvents):
 
+    ##################################
+    #        Processing output       #
+    ##################################
     increment = 50
     if nEvents>increment and ev%(nEvents/increment)==0: 
       sys.stdout.write('\r' + "=" * (ev / (nEvents/increment)) +  " " * ((nEvents - ev)/ (nEvents/increment)) + "]" +  str(round((ev+1) / (float(nEvents)/100),2)) + "%")
@@ -117,42 +176,35 @@ for s in backgrounds+data:
       sys.stdout.write('\r')
     chain.GetEntry(eList.GetEntry(ev))
 
-    #pileupweight = puReweighting(chain) if not s['isData'] else 1.
+    #No double counting in data samples
+    if getVarValue(chain, "evt") in ListOfDataEvents:
+      continue
+    else:
+      ListOfDataEvents.append(getVarValue(chain, "evt"))
     
     weight = reduceStat*getVarValue(chain, "weight")*(luminosity/1000.) if not s['isData'] else 1
-    
+
+    #leptons
     electrons = getGoodElectrons(chain)
     muons = getGoodMuons(chain)
-    leptons = getGoodLeptons(chain)
+    leptons = getGoodLeptons(chain,10)
 
+    #mt2ll for 2l
+    mt2ll = getVarValue(chain,"dl_mt2ll")
     
-    """
-    dilep = {\
-      'dl_12' : {'SF': False, 'SS': False, 'vector': l1+l2, 'lepton1': leptons[0], 'lepton2': leptons[1]},
-      'dl_13' : {'SF': False, 'SS': False, 'vector': l1+l3, 'lepton1': leptons[0], 'lepton2': leptons[2]},
-      'dl_23' : {'SF': False, 'SS': False, 'vector': l2+l3, 'lepton1': leptons[1], 'lepton2': leptons[2]},
-      }
+    #met
+    met = getVarValue(chain,'met_pt')
 
-    for key in dilep:
+    #jets
+    jets =  getGoodJets(chain)
+    bjets = filter(lambda j:j['btagCSV']>btagcoeff, jets)
+    nobjets = filter(lambda j:j['btagCSV']<=btagcoeff, jets)
 
-      dilep[key]['SS'] = True if (dilep[key]['lepton1']['pdgId']*dilep[key]['lepton2']['pdgId'] > 0) else False
-      dilep[key]['SF'] = True if (abs(dilep[key]['lepton1']['pdgId']) == abs(dilep[key]['lepton2']['pdgId'])) else False
 
-    if dilep['dl_12']['SS'] and dilep['dl_12']['SS'] and dilep['dl_12']['SS']: #all Same Sign, no Z-boson
-      continue
-    if dilep['dl_12']['SF'] and dilep['dl_12']['SF'] and dilep['dl_12']['SF']: #all Same Flavour: eee, mumumu
-      dl1,dl2 = [dl for dl in dilep if dilep[dl]['SS']==False ][0],[dl for dl in dilep if dilep[dl]['SS']==False ][1]
-      Z = dilep[dl1]['vector'] if (abs(dilep[dl1]['vector'].Pt()-91.2) < abs(dilep[dl2]['vector'].Pt()-91.2)) else dilep[dl2]['vector']
-    else: #eemu or mumue
-      dl = [dl for dl in dilep if dilep[dl]['SF']==True ][0]
-      if not dilep[dl]['SS']:
-        Z = dilep[dl]['vector']
-      else: 
-        continue
-    print Z.Pt()
-    """
+    zleptons = []
+    ttleptons = []
 
-    
+    #Find two leptons that are from a Z boson. If no lepton is found mZ = 999999.
     mZ = 9999999.
     Z_pt = 9999999.
     for Lep1 in range(len(leptons)-1):
@@ -167,21 +219,65 @@ for s in backgrounds+data:
             if (abs(diLep.M()-91.2) < abs(mZ-91.2)):
               mZ = diLep.M()
               Z_pt = diLep.Pt()
+              zleptons = [leptons[Lep1],leptons[Lep2]]
 
-    if abs(mZ - 91.2) < 15: 
+    ttleptons = [lep for lep in leptons if lep not in zleptons]
+              
+
+    if abs(mZ - 91.2) < 15: #there is a dilepton pair from a Z
       if len(leptons)==2:
         plots['2l']['dl_mass_onZ']['histo'][s["name"]].Fill(mZ,weight)
         plots['2l']['Z_pt_onZ']['histo'][s["name"]].Fill(Z_pt,weight)
+        plots['2l']['l1_pt_onZ']['histo'][s['name']].Fill(leptons[0]['pt'],weight)
+        plots['2l']['l2_pt_onZ']['histo'][s['name']].Fill(leptons[1]['pt'],weight)
+        plots['2l']['njets_onZ']['histo'][s['name']].Fill(len(jets),weight)
+        plots['2l']['nbjets_onZ']['histo'][s['name']].Fill(len(bjets),weight)
       elif len(leptons)==3:
+        #mt2Calc.reset()
         plots['3l']['dl_mass_onZ']['histo'][s["name"]].Fill(mZ,weight)
         plots['3l']['Z_pt_onZ']['histo'][s["name"]].Fill(Z_pt,weight)
+        plots['3l']['l1_pt_onZ']['histo'][s['name']].Fill(leptons[0]['pt'],weight)
+        plots['3l']['l2_pt_onZ']['histo'][s['name']].Fill(leptons[1]['pt'],weight)
+        plots['3l']['l3_pt_onZ']['histo'][s['name']].Fill(leptons[2]['pt'],weight)
+        plots['3l']['njets_onZ']['histo'][s['name']].Fill(len(jets),weight)
+        plots['3l']['nbjets_onZ']['histo'][s['name']].Fill(len(bjets),weight)
+      elif len(leptons)==4:
+        #mt2Calc.reset()
+        #print len(ttleptons), len(zleptons), ttleptons[0]['pt'],ttleptons[1]['pt'],zleptons[0]['pt'],zleptons[1]['pt']
+        #mt2Calc.setLeptons(???)
+        plots['4l']['dl_mass_onZ']['histo'][s["name"]].Fill(mZ,weight)
+        plots['4l']['Z_pt_onZ']['histo'][s["name"]].Fill(Z_pt,weight)
+        plots['4l']['l1_pt_onZ']['histo'][s['name']].Fill(leptons[0]['pt'],weight)
+        plots['4l']['l2_pt_onZ']['histo'][s['name']].Fill(leptons[1]['pt'],weight)
+        plots['4l']['l3_pt_onZ']['histo'][s['name']].Fill(leptons[2]['pt'],weight)
+        plots['4l']['l4_pt_onZ']['histo'][s['name']].Fill(leptons[3]['pt'],weight)
+        plots['4l']['njets_onZ']['histo'][s['name']].Fill(len(jets),weight)
+        plots['4l']['nbjets_onZ']['histo'][s['name']].Fill(len(bjets),weight)
     else:
       if len(leptons)==2:
         plots['2l']['dl_mass_offZ']['histo'][s["name"]].Fill(mZ,weight)
         plots['2l']['Z_pt_offZ']['histo'][s["name"]].Fill(Z_pt,weight)
+        plots['2l']['l1_pt_offZ']['histo'][s['name']].Fill(leptons[0]['pt'],weight)
+        plots['2l']['l2_pt_offZ']['histo'][s['name']].Fill(leptons[1]['pt'],weight)
+        plots['2l']['njets_offZ']['histo'][s['name']].Fill(len(jets),weight)
+        plots['2l']['nbjets_offZ']['histo'][s['name']].Fill(len(bjets),weight)
       elif len(leptons)==3:
         plots['3l']['dl_mass_offZ']['histo'][s["name"]].Fill(mZ,weight)
         plots['3l']['Z_pt_offZ']['histo'][s["name"]].Fill(Z_pt,weight)
+        plots['3l']['l1_pt_offZ']['histo'][s['name']].Fill(leptons[0]['pt'],weight)
+        plots['3l']['l2_pt_offZ']['histo'][s['name']].Fill(leptons[1]['pt'],weight)
+        plots['3l']['l3_pt_offZ']['histo'][s['name']].Fill(leptons[2]['pt'],weight)
+        plots['3l']['njets_offZ']['histo'][s['name']].Fill(len(jets),weight)
+        plots['3l']['nbjets_offZ']['histo'][s['name']].Fill(len(bjets),weight)
+      elif len(leptons)==4:
+        plots['4l']['dl_mass_offZ']['histo'][s["name"]].Fill(mZ,weight)
+        plots['4l']['Z_pt_offZ']['histo'][s["name"]].Fill(Z_pt,weight)
+        plots['4l']['l1_pt_offZ']['histo'][s['name']].Fill(leptons[0]['pt'],weight)
+        plots['4l']['l2_pt_offZ']['histo'][s['name']].Fill(leptons[1]['pt'],weight)
+        plots['4l']['l3_pt_offZ']['histo'][s['name']].Fill(leptons[2]['pt'],weight)
+        plots['4l']['l4_pt_offZ']['histo'][s['name']].Fill(leptons[3]['pt'],weight)
+        plots['4l']['njets_offZ']['histo'][s['name']].Fill(len(jets),weight)
+        plots['4l']['nbjets_offZ']['histo'][s['name']].Fill(len(bjets),weight)
       
 
   #overflow
@@ -199,6 +295,9 @@ for s in backgrounds+data:
         #Remove bins with negative events
       for i in range(nbinsx):
         if plots[lepton][plot]['histo'][s['name']].GetBinContent(i+1) < 0: plots[lepton][plot]['histo'][s['name']].SetBinContent(i+1,0.)
+
+
+print "listofdata: ", len(ListOfDataEvents)
         
 processtime = datetime.now()
 print "Time to process chains: ", processtime - start
@@ -207,16 +306,42 @@ print "Time to process chains: ", processtime - start
 for lepton in plots.keys():
   for plot in plots[lepton].keys():
     totalbkg = 0
+    dataint = 0
     for b in backgrounds:
       totalbkg += plots[lepton][plot]['histo'][b["name"]].Integral()
-    dataint = plots[lepton][plot]['histo'][data[0]["name"]].Integral()
+    for d in data:
+      dataint += plots[lepton][plot]['histo'][d["name"]].Integral()
 
     for b in backgrounds:
-      if noscaling:
+      if (noscaling or dataint == 0):
         plots[lepton][plot]['SF'] = 1.
       else:
         plots[lepton][plot]['histo'][b["name"]].Scale(dataint/totalbkg)
         plots[lepton][plot]['SF'] = dataint/totalbkg
+
+
+#######################################################
+#             Output text file                        #
+#######################################################
+
+output = open('./yields_njet_'+njetscut[1]+'_nbjet_'+nbjetscut[1]+'.txt','w')
+for lepton in sorted(plots.keys()):
+  output.write(lepton + '\n')
+  output.write('on Z \n')
+  for b in sorted(backgrounds,key=lambda sort:plots[lepton]['dl_mass_onZ']['histo'][sort['name']].Integral()):
+    output.write(' %-*s : %s' % (18,b['name'],str(plots[lepton]['dl_mass_onZ']['histo'][b['name']].Integral())))
+    output.write('\n')
+  for d in sorted(data,key=lambda sort:plots[lepton]['dl_mass_onZ']['histo'][sort['name']].Integral()):
+    output.write(' %-*s : %s' % (18,d['name'],str(plots[lepton]['dl_mass_onZ']['histo'][d['name']].Integral())))
+    output.write('\n')
+  output.write(' \n off Z \n')
+  for b in sorted(backgrounds,key=lambda sort:plots[lepton]['dl_mass_offZ']['histo'][sort['name']].Integral()):
+    output.write(' %-*s : %s' % (18,b['name'],str(plots[lepton]['dl_mass_offZ']['histo'][b['name']].Integral())))
+    output.write('\n')
+  for d in sorted(data,key=lambda sort:plots[lepton]['dl_mass_offZ']['histo'][sort['name']].Integral()):
+    output.write(' %-*s : %s' % (18,d['name'],str(plots[lepton]['dl_mass_offZ']['histo'][d['name']].Integral())))
+    output.write('\n')
+  output.write('\n')
 
 #######################################################
 #             Drawing done here                       #
@@ -230,8 +355,8 @@ histopad =  [0.0, 0.2, 1.0, .95]
 datamcpad = [0.0, 0.0, 1.0, 0.2]
 lumitagpos = [0.4,0.95,0.6,1.0]
 channeltagpos = [0.45,0.8,0.6,0.85]
-legendpos = [0.6,0.6,1.0,0.95]
-scalepos = [0.8,0.95,1.0,0.95]
+legendpos = [0.6,0.6,0.95,1.0]
+scalepos = [0.8,0.95,0.95,1.0]
 
 if makedraw1D:
   for lepton in plots.keys():
@@ -245,8 +370,11 @@ if makedraw1D:
 
       bkg_stack = ROOT.THStack("bkgs","bkgs") 
       totalbackground = plots[lepton][plot]['histo'][backgrounds[0]['name']].Clone()
+      totaldata = plots[lepton][plot]['histo'][data[0]['name']].Clone()
       for b in backgrounds:
         if b!= backgrounds[0]:totalbackground.Add(plots[lepton][plot]['histo'][b['name']])
+      for d in data:
+        if d!= data[0]:totaldata.Add(plots[lepton][plot]['histo'][d['name']])
 
       for j,b in enumerate(sorted(backgrounds,key=lambda sort:plots[lepton][plot]["histo"][sort["name"]].Integral())):
         plots[lepton][plot]['histo'][b["name"]].SetMarkerSize(0)
@@ -264,34 +392,28 @@ if makedraw1D:
       pad1.Draw()
       pad1.cd()
       pad1.SetLogy()
-      plots[lepton][plot]['histo'][data[0]["name"]].Draw("pe1same")
+      totaldata.Draw("pe1same")
       bkg_stack.Draw("same")
-      plots[lepton][plot]['histo'][data[0]["name"]].Draw("pe1same")
+      totaldata.Draw("pe1same")
       bkg_stack.GetXaxis().SetLabelSize(0.)
       l.Draw()
       ROOT.gPad.RedrawAxis()
 
-      plots[lepton][plot]['histo'][data[0]["name"]].GetXaxis().SetTitle(plots[lepton][plot]['title'])
-      plots[lepton][plot]['histo'][data[0]["name"]].GetYaxis().SetTitle("Events (A.U.)")
-      plots[lepton][plot]['histo'][data[0]["name"]].GetYaxis().SetRangeUser(0.005,1000000)
-      l.AddEntry(plots[lepton][plot]['histo'][data[0]["name"]],data[0]['texName'])
+      totaldata.GetXaxis().SetTitle(plots[lepton][plot]['title'])
+      totaldata.GetYaxis().SetTitle("Events (A.U.)")
+      totaldata.GetYaxis().SetRangeUser(0.005,1000000)
+      l.AddEntry(totaldata,'data')
 
-      channeltag = ROOT.TPaveText(channeltagpos[0],channeltagpos[1],channeltagpos[2],channeltagpos[3],"NDC")
       lumitag = ROOT.TPaveText(lumitagpos[0],lumitagpos[1],lumitagpos[2],lumitagpos[3],"NDC")
       scaletag = ROOT.TPaveText(scalepos[0],scalepos[1],scalepos[2],scalepos[3],"NDC")
-      channeltag.AddText(flavour)
-      lumitag.AddText("lumi: "+str(data[0]['lumi'])+' pb^{-1}')
+      lumitag.AddText("lumi: "+str(luminosity)+' pb^{-1}')
       scaletag.AddText("Scale Factor: " +str(round(plots[lepton][plot]['SF'],2)))
-      channeltag.SetFillColor(ROOT.kWhite)
-      channeltag.SetShadowColor(ROOT.kWhite)
-      channeltag.SetBorderSize(0)
       lumitag.SetFillColor(ROOT.kWhite)
       lumitag.SetShadowColor(ROOT.kWhite)
       lumitag.SetBorderSize(0)
       scaletag.SetShadowColor(ROOT.kWhite)
       scaletag.SetFillColor(ROOT.kWhite)
       scaletag.SetBorderSize(0)
-      channeltag.Draw()
       c1.cd()
       pad2 = ROOT.TPad("","",datamcpad[0],datamcpad[1],datamcpad[2],datamcpad[3])
       a.append(pad2)
@@ -301,7 +423,7 @@ if makedraw1D:
       pad2.SetRightMargin(0.05)
       pad2.Draw()
       pad2.cd()
-      ratio = plots[lepton][plot]['histo'][data[0]["name"]].Clone()
+      ratio = totaldata.Clone()
       a.append(ratio)
       ratio.Divide(totalbackground)
       ratio.SetMarkerStyle(20)
@@ -320,7 +442,7 @@ if makedraw1D:
       c1.cd()
       lumitag.Draw()
       scaletag.Draw()
-      path = plotDir+'/test/TTZstudy/'+lepton+'_'+flavour+'_njet_'+njetscut[1]+'_nbjet_'+nbjetscut[1]+'/'
+      path = plotDir+'/test/TTZstudy/'+lepton+'_njet_'+njetscut[1]+'_nbjet_'+nbjetscut[1]+'/'
       if not os.path.exists(path): os.makedirs(path)
       c1.Print(path+plot+".png")
       del ratio
