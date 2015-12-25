@@ -11,13 +11,23 @@ from StopsDilepton.tools.helpers import getChain,getWeight,getVarValue, getEList
 from StopsDilepton.tools.localInfo import *
 from datetime import datetime
 from StopsDilepton.tools.puReweighting import getReweightingFunction
-from StopsDilepton.tools.objectSelection import getLeptons, looseMuID, looseEleID, getJets, getGenParts, getGoodLeptons, getGoodElectrons, getGoodMuons
+from StopsDilepton.tools.objectSelection import getLeptons, looseMuID, looseEleID, getJets, getGenParts, getGoodLeptons, getGoodElectrons, getGoodMuons, getGoodJets
 
 import collections
 
 #puReweightingFunc = getReweightingFunction(era="doubleMu_onZ_isOS_1500pb_nVert_reweight")
 #puReweighting = lambda c:puReweightingFunc(getVarValue(c, "nVert"))
 
+"""
+from optparse import OptionParser
+parser = OptionParser()
+parser.add_option("--njets", dest="njets", default=2, type=int, action="store", help="Select minimal amount of jets")
+parser.add_option("--nbjets", dest="nbjets", default=1, type=int, action="store", help="Select minimal amount of b-tagged jets")
+
+(options, args) = parser.parse_args()
+"""
+
+import sys
 
 start = datetime.now()
 print '\n','\n', "Starting code",'\n','\n'
@@ -32,7 +42,7 @@ from StopsDilepton.samples.cmgTuples_Data25ns_mAODv2_postProcessed import *
 #######################################################
 #        SELECT WHAT YOU WANT TO DO HERE              #
 #######################################################
-reduceStat = 10 #recude the statistics, i.e. 10 is ten times less samples to look at
+reduceStat = 1 #recude the statistics, i.e. 10 is ten times less samples to look at
 makedraw1D = True
 makeTexFile = True
 mt2llcutscaling = False
@@ -40,13 +50,13 @@ noscaling = False
 
 #btagcoeff          = 0.89
 btagcoeff          = 0.605
-njetscut           = [">=4",'4m']
-nbjetscut          = [">=2",'2m']
+njetscut           = [">="+str(sys.argv[1]),str(sys.argv[1])+'m']
+nbjetscut          = [">="+str(sys.argv[2]),str(sys.argv[2])+'m']
 
 
 presel_njet        = 'Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id)'+njetscut[0]
 presel_nbjet       = 'Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id&&Jet_btagCSV>'+str(btagcoeff)+')'+nbjetscut[0]
-presel_nlep        = '(nGoodElectrons+nGoodMuons)>=2'
+presel_nlep        = '(nGoodElectrons+nGoodMuons)>=2&&Sum$(LepGood_pt>10)>=2'
 presel_triggers    = '(HLT_mumuIso||HLT_ee_DZ||HLT_mue)'
 
 data = [DoubleMuon_Run2015D,DoubleEG_Run2015D,MuonEG_Run2015D]
@@ -57,8 +67,8 @@ datacut = "(Flag_HBHENoiseFilter&&Flag_goodVertices&&Flag_CSCTightHaloFilter&&Fl
 
 preselection = presel_njet+'&&'+presel_nbjet+'&&'+presel_nlep+'&&'+presel_triggers
 
-#backgrounds = [DY_HT_LO,TTJets,WJetsToLNu,singleTop,QCD_Mu5,TTZ,TTW,TZQ,TTH,diBoson]
-backgrounds = [TTZ]
+backgrounds = [DY_HT_LO,TTJets,WJetsToLNu,singleTop,QCD_Mu5,TTZ,TTW,TZQ,TTH,diBoson]
+#backgrounds = [TTZ,TTJets]
 
 #######################################################
 #            get the TChains for each sample          #
@@ -232,6 +242,7 @@ for s in backgrounds+data:
         plots['2l']['l2_pt_onZ']['histo'][s['name']].Fill(leptons[1]['pt'],weight)
         plots['2l']['njets_onZ']['histo'][s['name']].Fill(len(jets),weight)
         plots['2l']['nbjets_onZ']['histo'][s['name']].Fill(len(bjets),weight)
+        plots['2l']['met_pt_onZ']['histo'][s['name']].Fill(met,weight)
       elif len(leptons)==3:
         #mt2Calc.reset()
         plots['3l']['dl_mass_onZ']['histo'][s["name"]].Fill(mZ,weight)
@@ -241,6 +252,7 @@ for s in backgrounds+data:
         plots['3l']['l3_pt_onZ']['histo'][s['name']].Fill(leptons[2]['pt'],weight)
         plots['3l']['njets_onZ']['histo'][s['name']].Fill(len(jets),weight)
         plots['3l']['nbjets_onZ']['histo'][s['name']].Fill(len(bjets),weight)
+        plots['3l']['met_pt_onZ']['histo'][s['name']].Fill(met,weight)
       elif len(leptons)==4:
         #mt2Calc.reset()
         #print len(ttleptons), len(zleptons), ttleptons[0]['pt'],ttleptons[1]['pt'],zleptons[0]['pt'],zleptons[1]['pt']
@@ -253,6 +265,7 @@ for s in backgrounds+data:
         plots['4l']['l4_pt_onZ']['histo'][s['name']].Fill(leptons[3]['pt'],weight)
         plots['4l']['njets_onZ']['histo'][s['name']].Fill(len(jets),weight)
         plots['4l']['nbjets_onZ']['histo'][s['name']].Fill(len(bjets),weight)
+        plots['4l']['met_pt_onZ']['histo'][s['name']].Fill(met,weight)
     else:
       if len(leptons)==2:
         plots['2l']['dl_mass_offZ']['histo'][s["name"]].Fill(mZ,weight)
@@ -261,6 +274,7 @@ for s in backgrounds+data:
         plots['2l']['l2_pt_offZ']['histo'][s['name']].Fill(leptons[1]['pt'],weight)
         plots['2l']['njets_offZ']['histo'][s['name']].Fill(len(jets),weight)
         plots['2l']['nbjets_offZ']['histo'][s['name']].Fill(len(bjets),weight)
+        plots['2l']['met_pt_offZ']['histo'][s['name']].Fill(met,weight)
       elif len(leptons)==3:
         plots['3l']['dl_mass_offZ']['histo'][s["name"]].Fill(mZ,weight)
         plots['3l']['Z_pt_offZ']['histo'][s["name"]].Fill(Z_pt,weight)
@@ -269,6 +283,7 @@ for s in backgrounds+data:
         plots['3l']['l3_pt_offZ']['histo'][s['name']].Fill(leptons[2]['pt'],weight)
         plots['3l']['njets_offZ']['histo'][s['name']].Fill(len(jets),weight)
         plots['3l']['nbjets_offZ']['histo'][s['name']].Fill(len(bjets),weight)
+        plots['3l']['met_pt_offZ']['histo'][s['name']].Fill(met,weight)
       elif len(leptons)==4:
         plots['4l']['dl_mass_offZ']['histo'][s["name"]].Fill(mZ,weight)
         plots['4l']['Z_pt_offZ']['histo'][s["name"]].Fill(Z_pt,weight)
@@ -278,6 +293,7 @@ for s in backgrounds+data:
         plots['4l']['l4_pt_offZ']['histo'][s['name']].Fill(leptons[3]['pt'],weight)
         plots['4l']['njets_offZ']['histo'][s['name']].Fill(len(jets),weight)
         plots['4l']['nbjets_offZ']['histo'][s['name']].Fill(len(bjets),weight)
+        plots['4l']['met_pt_offZ']['histo'][s['name']].Fill(met,weight)
       
 
   #overflow
@@ -324,22 +340,23 @@ for lepton in plots.keys():
 #             Output text file                        #
 #######################################################
 
-output = open('./yields_njet_'+njetscut[1]+'_nbjet_'+nbjetscut[1]+'.txt','w')
+output = open('./yields/yields_njet_'+njetscut[1]+'_nbjet_'+nbjetscut[1]+'.txt','w')
 for lepton in sorted(plots.keys()):
+  error = n.zeros(1,dtype=float)
   output.write(lepton + '\n')
   output.write('on Z \n')
   for b in sorted(backgrounds,key=lambda sort:plots[lepton]['dl_mass_onZ']['histo'][sort['name']].Integral()):
-    output.write(' %-*s : %s' % (18,b['name'],str(plots[lepton]['dl_mass_onZ']['histo'][b['name']].Integral())))
+    output.write(' %-*s : %s +- %s' % (20,b['name'],str(plots[lepton]['dl_mass_onZ']['histo'][b['name']].IntegralAndError(1,mllbinning[0],error)),error[0]))
     output.write('\n')
   for d in sorted(data,key=lambda sort:plots[lepton]['dl_mass_onZ']['histo'][sort['name']].Integral()):
-    output.write(' %-*s : %s' % (18,d['name'],str(plots[lepton]['dl_mass_onZ']['histo'][d['name']].Integral())))
+    output.write(' %-*s : %s +- %s' % (20,d['name'],str(plots[lepton]['dl_mass_onZ']['histo'][d['name']].IntegralAndError(1,mllbinning[0],error)),error[0]))
     output.write('\n')
   output.write(' \n off Z \n')
   for b in sorted(backgrounds,key=lambda sort:plots[lepton]['dl_mass_offZ']['histo'][sort['name']].Integral()):
-    output.write(' %-*s : %s' % (18,b['name'],str(plots[lepton]['dl_mass_offZ']['histo'][b['name']].Integral())))
+    output.write(' %-*s : %s +- %s' % (20,b['name'],str(plots[lepton]['dl_mass_offZ']['histo'][b['name']].IntegralAndError(1,mllbinning[0],error)),error[0]))
     output.write('\n')
   for d in sorted(data,key=lambda sort:plots[lepton]['dl_mass_offZ']['histo'][sort['name']].Integral()):
-    output.write(' %-*s : %s' % (18,d['name'],str(plots[lepton]['dl_mass_offZ']['histo'][d['name']].Integral())))
+    output.write(' %-*s : %s +- %s' % (20,d['name'],str(plots[lepton]['dl_mass_offZ']['histo'][d['name']].IntegralAndError(1,mllbinning[0],error)),error[0]))
     output.write('\n')
   output.write('\n')
 
