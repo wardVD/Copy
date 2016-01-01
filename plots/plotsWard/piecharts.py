@@ -7,7 +7,8 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from math import *
 
-from StopsDilepton.tools.helpers import getChain, getObjDict, getEList, getVarValue, genmatching, latexmaker_2, piemaker, getWeight, deltaPhi
+from StopsDilepton.tools.helpers import getChain, getObjDict, getEList, getVarValue, deltaPhi
+from StopsDilepton.tools.texHelpers import latexmaker_2 
 from StopsDilepton.tools.objectSelection import getLeptons, looseMuID, looseEleID, getJets, getGenParts, getGoodLeptons, getGoodElectrons, getGoodMuons
 from StopsDilepton.tools.localInfo import *
 from StopsDilepton.tools.mt2Calculator import mt2Calculator

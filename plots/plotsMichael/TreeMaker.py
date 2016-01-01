@@ -9,7 +9,7 @@ import array
 ## This is a test
 
 from StopsDilepton.tools.mtautau import mtautau as mtautau_
-from StopsDilepton.tools.helpers import getChain, getObjDict, getEList, getVarValue, genmatching, latexmaker_1, piemaker, getWeight, deltaPhi
+from StopsDilepton.tools.helpers import getChain, getObjDict, getEList, getVarValue, deltaPhi
 from StopsDilepton.tools.objectSelection import getLeptons, looseMuID, looseEleID, getJets 
 from StopsDilepton.tools.mt2Calculator import mt2Calculator
 mt2Calc = mt2Calculator()
