@@ -1,6 +1,5 @@
-data_path = "/data/rschoefbeck/cmgTuples/MC25ns_v2_1l_151218/"
-from CMGTools.RootTools.samples.samples_13TeV_RunIISpring15MiniAODv2 import samples as bkgSamples 
-from CMGTools.RootTools.samples.samples_13TeV_RunIISpring15MiniAODv2 import * 
+data_path = "/data/rschoefbeck/cmgTuples/T2tt_0l_151231/"
+from CMGTools.RootTools.samples.samples_13TeV_signals import * 
 
 TTJetsDMSamples=[]
 #from CMGTools.RootTools.samples.TTbarDMJets_signals_RunIISpring15MiniAODv2 import samples as TTJetsDMSamples 
@@ -9,8 +8,8 @@ TTJetsDMSamples=[]
 from StopsDilepton.samples.helpers import getSubDir 
 import os
 
-mcSamples = []
-for s in bkgSamples+TTJetsDMSamples:
+signals = []
+for s in SignalSUSYFullScan:
   s.isData = False
   s.treeName = "tree"
 ##for production with heppy_batch
@@ -27,10 +26,10 @@ for s in bkgSamples+TTJetsDMSamples:
   if os.path.exists(path):
     s.path = path
     s.chunkString = subDir
-    mcSamples.append(s)
+    signals.append(s)
   else:
     print "Did not find %s in %s"%(s.name, path)
    
 print 
-print "Found %i MC datasets in %s\n%s"% (len(mcSamples), data_path, (", ".join([s.name for s in mcSamples])))
+print "Found %i signals in %s\n%s"% (len(signals), data_path, (", ".join([s.name for s in signals])))
 print 

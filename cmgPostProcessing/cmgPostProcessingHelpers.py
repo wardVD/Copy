@@ -1,10 +1,10 @@
 import ROOT
-def getTreeFromChunk(c, skimCond, iSplit, nSplit):
+def getTreeFromChunk(c, skimCond, iSplit=0, nSplit=1, treeName='tree'):
   if not c.has_key('file'):return
   rf = ROOT.TFile.Open(c['file'])
   assert not rf.IsZombie()
   rf.cd()
-  tc = rf.Get("tree")
+  tc = rf.Get(treeName)
   nTot = tc.GetEntries()
   fromFrac = iSplit/float(nSplit)
   toFrac   = (iSplit+1)/float(nSplit)
