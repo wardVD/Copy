@@ -74,9 +74,9 @@ assert allData or len(set([s.xSection for s in allSamples]))==1, "Not all sample
 assert allMC or len(allSamples)==1, "Don't concatenate data samples"
 
 if allMC:
-  puRW = getReweightingFunction(data="PU_1500_XSecCentral", mc="Spring15")
-  puRWDown = getReweightingFunction(data="PU_1500_XSecDown", mc="Spring15")
-  puRWUp   = getReweightingFunction(data="PU_1500_XSecUp", mc="Spring15")
+  puRW = getReweightingFunction(data="PU_2100_XSecCentral", mc="Spring15")
+  puRWDown = getReweightingFunction(data="PU_2100_XSecDown", mc="Spring15")
+  puRWUp   = getReweightingFunction(data="PU_2100_XSecUp", mc="Spring15")
 
 assert False not in [hasattr(s, 'path') for s in allSamples], "Not all samples have a path: "+", ".join([s.name for s in allSamples])
 
