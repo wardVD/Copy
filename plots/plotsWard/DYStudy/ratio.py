@@ -34,8 +34,8 @@ presel_ngoodlep    = '((nGoodMuons+nGoodElectrons)=='+str(ngoodleptons)+')'
 presel_OS          = 'isOS'
 presel_dphi        = 'cos(met_phi-Jet_phi[0])<cos(0.25)&&cos(met_phi-Jet_phi[1])<cos(0.25)'
 presel_isSF        = 'isMuMu == 1 || isEE == 1'
-presel_onZ         = 'abs(dl_mass-90.2)<15'
-presel_offZ        = 'abs(dl_mass-90.2)>=15'
+presel_onZ         = 'abs(dl_mass-91.2)<15'
+presel_offZ        = 'abs(dl_mass-91.2)>=15'
 
 #preselection: MET>40, njets>=2, n_bjets>=1, n_lep>=2
 #For now see here for the Sum$ syntax: https://root.cern.ch/root/html/TTree.html#TTree:Draw@2
@@ -44,9 +44,9 @@ preselection = presel_ngoodlep+'&&'+presel_OS+'&&'+presel_njet+'&&'+presel_nbjet
 #######################################################
 #                 load all the samples                #
 #######################################################
-from StopsDilepton.samples.cmgTuples_Spring15_25ns_postProcessed import *
+from StopsDilepton.samples.cmgTuples_Spring15_mAODv2_25ns_1l_postProcessed import *
 #backgrounds = [DY_25ns,DYHT_25ns]
-backgrounds = [DY_25ns]
+backgrounds = [DY_HT_LO]
 
 #######################################################
 #            get the TChains for each sample          #

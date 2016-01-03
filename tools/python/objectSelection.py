@@ -63,7 +63,8 @@ def looseEleID(l, ptCut=20, absEtaCut=2.4):
     and abs(l["dxy"]) < 0.05\
     and abs(l["dz"]) < 0.1\
 
-leptonVars=['eta','pt','phi','mass','charge', 'dxy', 'dz', 'relIso03','tightId', 'pdgId', 'mediumMuonId', 'miniRelIso', 'sip3d', 'mvaIdSpring15', 'convVeto', 'lostHits']
+#leptonVars=['eta','pt','phi','mass','charge', 'dxy', 'dz', 'relIso03','tightId', 'pdgId', 'mediumMuonId', 'miniRelIso', 'sip3d', 'mvaIdSpring15', 'convVeto', 'lostHits']
+leptonVars=['eta','pt','phi','dxy', 'dz','tightId', 'pdgId', 'mediumMuonId', 'miniRelIso', 'sip3d', 'mvaIdSpring15', 'convVeto', 'lostHits']
 
 def getLeptons(c, collVars=leptonVars):
   return [getObjDict(c, 'LepGood_', collVars, i) for i in range(int(getVarValue(c, 'nLepGood')))]
@@ -75,8 +76,8 @@ def getGoodMuons(c, collVars=leptonVars):
   return [l for l in getMuons(c, collVars) if looseMuID(l)]
 def getGoodElectrons(c, collVars=leptonVars):
   return [l for l in getElectrons(c, collVars) if looseEleID(l)]
-def getGoodLeptons(c, collVars=leptonVars):
-  return [l for l in getLeptons(c, collVars) if (abs(l["pdgId"])==11 and looseEleID(l)) or (abs(l["pdgId"])==13 and looseMuID(l))]
+def getGoodLeptons(c, ptCut=20, collVars=leptonVars):
+  return [l for l in getLeptons(c, collVars) if (abs(l["pdgId"])==11 and looseEleID(l, ptCut)) or (abs(l["pdgId"])==13 and looseMuID(l, ptCut))]
 def m_ll(l1,l2):
   return sqrt(2.*l1['pt']*l2['pt']*(cosh(l1['eta']-l2['eta']) - cos(l1['phi']-l2['phi'])))
 def pt_ll(l1,l2):
