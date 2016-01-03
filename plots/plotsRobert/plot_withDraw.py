@@ -11,7 +11,7 @@ preselectionHadronic = 'Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id)>=2&&Sum$(Jet_p
 
 ## let's require opposite-sign di-muons off the Z-peak. You can also remove this selection and select later in the loop.
 ## However, if you don't preselect, the event loop will be slow because you process all events.
-preselection = "&&".join([preselectionHadronic, "isMuMu", "isOS", "abs(dl_mass-90.2)>15."])
+preselection = "&&".join([preselectionHadronic, "isMuMu", "isOS", "abs(dl_mass-91.2)>15."])
 print "Using cut %s"%preselection
 
 ## load all the samples

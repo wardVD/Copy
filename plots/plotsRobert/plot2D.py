@@ -14,7 +14,7 @@ from StopsDilepton.tools.objectSelection import getLeptons, looseMuID, getJets
 from StopsDilepton.tools.localInfo import *
 
 #preselection: MET>50, HT>100, n_bjets>=2
-preselection = 'abs(dl_mass-90.2)>15.&&(isMuMu)&&Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id&&Jet_btagCSV>0.814)>=0&&Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id)>=2'
+preselection = 'abs(dl_mass-91.2)>15.&&(isMuMu)&&Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id&&Jet_btagCSV>0.814)>=0&&Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id)>=2'
 
 reduceStat = 1
 
