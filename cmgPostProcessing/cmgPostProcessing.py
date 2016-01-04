@@ -37,7 +37,6 @@ parser.add_option("--small", dest="small", default = False, action="store_true",
 parser.add_option("--keepPhotons", dest="keepPhotons", default = False, action="store_true", help="keep photons?")
 parser.add_option("--overwrite", dest="overwrite", default = False, action="store_true", help="Overwrite?")
 parser.add_option("--lheHTCut", dest="lheHTCut", default="", type="string", action="store", help="upper cut on lheHTIncoming")
-#parser.add_option("--maxMultBTagWeight", dest="maxMultBTagWeight", default=2, type=int, action="store", help="Maximum btag multiplicity for which a combinatorical weight is calulcated")
 parser.add_option("--skipVariations", dest="skipVariations", default = False, action="store_true", help="skipVariations: Don't calulcate JES and JER variations")
 parser.add_option("--signal", dest="signal", default = False, action="store_true", help="Is this T2tt signal?")
 
@@ -94,13 +93,9 @@ if doTopPtReweighting:
   print "Sample %s will have top pt reweights!"% sample.name
 topPtReweightingFunc = getUnscaledTopPairPtReweightungFunction() if doTopPtReweighting else None
 
-#if allData and options.maxMultBTagWeight>=0:
-#  print "No btag weights for data!"
-#  options.maxMultBTagWeight=-1
-#if options.maxMultBTagWeight>=0:
-#from StopsDilepton.tools.btagEfficiency import btagEfficiency, getTagWeightDict
-from StopsDilepton.tools.btagEfficiency import btagEfficiency, btagMethod1DSystematics
-btagEff = btagEfficiency(method='1d')
+if not options.skipVariations:
+  from StopsDilepton.tools.btagEfficiency import btagEfficiency, btagMethod1DSystematics
+  btagEff = btagEfficiency(method='1d')
 
 if options.lheHTCut:
   try:
@@ -276,14 +271,10 @@ if options.skim.lower().startswith('dilep'):
   newVariables.extend( ['isEE/I', 'isMuMu/I', 'isEMu/I', 'isOS/I' ] )
 if not options.skipVariations:
   for var in ['JECUp', 'JECDown', 'JER', 'JERUp', 'JERDown']:
-    newVariables.extend( ['nGoodJets_'+var+'/I', 'nbJets_'+var+'/I','ht_'+var+'/F'] )
+    newVariables.extend( ['nGoodJets_'+var+'/I', 'nBTags_'+var+'/I','ht_'+var+'/F'] )
     newVariables.extend( ['met_pt_'+var+'/F', 'met_phi_'+var+'/F'] )
     if options.skim.lower().startswith('dilep'):
       newVariables.extend( ['dl_mt2ll_'+var+'/F', 'dl_mt2bb_'+var+'/F', 'dl_mt2blbl_'+var+'/F'] )
-  #if options.maxMultBTagWeight>=0:
-  #  for i in range(options.maxMultBTagWeight+1):
-  #    for var in ['MC', 'SF', 'SF_b_Down', 'SF_b_Up', 'SF_l_Down', 'SF_l_Up']:
-  #      newVariables.extend(['reweightBTag'+str(i)+'_'+var+'/F', 'reweightBTag'+str(i+1)+'p_'+var+'/F'])
   for var in btagMethod1DSystematics:
     newVariables.append('reweightBTag_'+var+'/F')
 
@@ -420,7 +411,7 @@ for chunk in chunks:
           setattr(s, "met_phi_"+var, atan2(met_corr_py, met_corr_px)) 
           setattr(s, "nGoodJets_"+var, len(jets_[var])) 
           setattr(s, "ht_"+var, sum([j['pt_'+var] for j in jets_[var]])) 
-          setattr(s, "nbJets_"+var, len(bJets_[var])) 
+          setattr(s, "nBTags_"+var, len(bJets_[var])) 
 
       if options.skim.lower().startswith('dilep'):
         leptons = getGoodLeptons(r)
@@ -478,14 +469,7 @@ for chunk in chunks:
                 mt2Calc.setBJets(bj0['pt'], bj0['eta'], bj0['phi'], bj1['pt'], bj1['eta'], bj1['phi'])
                 setattr(s, 'dl_mt2bb_'+var, mt2Calc.mt2bb())
                 setattr(s, 'dl_mt2blbl_'+var,mt2Calc.mt2blbl())
-#      if not options.skipVariations and options.maxMultBTagWeight>=0:
-#        for j in jets:
-#          btagEff.addBTagEffToJet(j)
-#        for var in ['MC', 'SF', 'SF_b_Down', 'SF_b_Up', 'SF_l_Down', 'SF_l_Up']:
-#          res = getTagWeightDict([j['beff'][var] for j in jets], options.maxMultBTagWeight)
-#          for i in range(options.maxMultBTagWeight+1):
-#            setattr(s, 'reweightBTag'+str(i)+'_'+var, res[i])
-#            setattr(s, 'reweightBTag'+str(i+1)+'p_'+var, 1-sum([res[j] for j in range(i+1)]))
+
       if not options.skipVariations:
         for j in jets:
           btagEff.addBTagEffToJet(j)

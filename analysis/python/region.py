@@ -22,10 +22,10 @@ class region:
     res=copy.deepcopy(self)
     res.vals.update(otherRegion.vals)
     return res
-  def cutString(self, sys=None):
+  def cutString(self, selectionModifier=None):
     res=[]
     for var in self.variables():
-      svar = var if not sys else var+"_"+sys
+      svar = var if not selectionModifier else var+"_"+selectionModifier
       s1=svar+">="+str(self.vals[var][0])
       if self.vals[var][1]>0: s1+="&&"+svar+"<"+str(self.vals[var][1])
       res.append(s1)

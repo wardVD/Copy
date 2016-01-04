@@ -1,4 +1,3 @@
-
 import copy, os, sys
 from StopsDilepton.tools.localInfo import dataDir
 import ROOT
@@ -140,6 +139,21 @@ TTX={\
 'isData':False,
 'color': ROOT.kPink,
 'texName':"t#bar{t}X",
+}
+TTXNoZ={\
+"name" : "TTXNoZ",
+"bins" : [
+"TTHbb_comb",
+"TTHnobb",
+"TTWToLNu",
+"TTWToQQ",
+"tZq_ll",
+"tZq_nunu",
+],
+'dir' : dir,
+'isData':False,
+'color': ROOT.kPink,
+'texName':"t#bar{t}H/W, tZq",
 }
 
 TTH={\
