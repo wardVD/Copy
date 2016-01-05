@@ -1,11 +1,13 @@
 from StopsDilepton.tools.helpers import getYieldFromChain
 from math import sqrt
+from Systematics import AbstractSystematic
 
-class MCBasedEstimate():
+class MCBasedEstimate(AbstractSystematic):
   def __init__(self, sample):
     self.sample=sample
-  def estimate(self, r, setup, verbose=False,sys=None):
-    cut = "&&".join([r.cutString(setup.sys['selectionModifier']), setup.preselection('MC')])
+#Concrete implementation of abstract method 'estimate' as defined in Systematic
+  def estimate(self, region, setup, verbose=False):
+    cut = "&&".join([region.cutString(setup.sys['selectionModifier']), setup.preselection('MC')])
     weight = setup.sys['weight']
     if setup.sys['reweight']: weight+="*"+setup.sys['reweight']
     if verbose: 

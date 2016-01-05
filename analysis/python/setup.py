@@ -50,7 +50,7 @@ class setup:
       loadChain(s)
 
   #Clone the setup and optinally modify the systematic variation
-  def clone(self, sys=None):
+  def sysClone(self, sys=None):
     '''Clone setup and change systematic if provided'''
     res     = copy.copy(self)
     res.sys = copy.deepcopy(self.sys)
