@@ -12,7 +12,7 @@ TTJetsSample  = TTJets #NLO
 TTZSample     = TTZ 
 QCDSample     = QCD_HT #FIXME: Need MuMu, EE, EMu samples here
 
-from systematics import jmeVariations
+from Systematics import jmeVariations
 def getCuts(selectionModifier=None):
   if selectionModifier: assert selectionModifier in jmeVariations, "Don't know about systematic variation %r preselection(), take one of %s"%(selectionModifier, ",".join(jmeVariations))
   sysStr="" if not selectionModifier else "_"+selectionModifier
@@ -31,7 +31,6 @@ def getCuts(selectionModifier=None):
 from StopsDilepton.analysis.setupHelpers import getZCut, loadChain
 class setup:
   def __init__(self):
-    self.zMassRange   = zMassRange
     self.channel='all'
     self.zWindow='offZ'
     self.zMassRange=zMassRange
