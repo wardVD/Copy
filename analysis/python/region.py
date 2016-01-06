@@ -1,4 +1,5 @@
 allowedVars = ["dl_mt2ll", "dl_mt2blbl", "dl_mt2bb"]
+from systematics import jmeVariations
 class region:
   def __init__(self, var, val):
     assert type(val)==type(()) and len(val)==2, "Don't know how to make region with this val argument: %r."%val
@@ -23,6 +24,7 @@ class region:
     res.vals.update(otherRegion.vals)
     return res
   def cutString(self, selectionModifier=None):
+    if selectionModifier: assert selectionModifier in jmeVariations, "Don't know about systematic variation %r preselection(), take one of %s"%(selectionModifier, ",".join(jmeVariations))
     res=[]
     for var in self.variables():
       svar = var if not selectionModifier else var+"_"+selectionModifier
@@ -37,3 +39,5 @@ class region:
     return "+".join([ "region('%s', %r)"%(v, self.vals[v]) for v in self.variables()])
   def __hash__(self):
     return hash(repr(self))
+  def __eq__(self, other):
+    return self.__repr__() == other.__repr__()

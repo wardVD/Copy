@@ -1,3 +1,4 @@
+from StopsDilepton.tools.localInfo import analysisOutputDir
 import copy
 #Numerical constants
 zMassRange=15
@@ -14,7 +15,7 @@ QCDSample     = QCD_HT #FIXME: Need MuMu, EE, EMu samples here
 
 from Systematics import jmeVariations
 def getCuts(selectionModifier=None):
-  if selectionModifier: assert selectionModifier in jmeVariations, "Don't know about systematic variation %r preselection(), take one of %s"%(selectionModifier, ",".join(jmeVariations))
+  if selectionModifier: assert selectionModifier in jmeVariations, "Don't know about systematic variation %r, take one of %s"%(selectionModifier, ",".join(jmeVariations))
   sysStr="" if not selectionModifier else "_"+selectionModifier
   nbstr = "nBTags" if not selectionModifier else "nbJets" #Correct stupid naming convention I already fixed in the postprocessing...
   return [
@@ -29,11 +30,14 @@ def getCuts(selectionModifier=None):
   ]
 
 from StopsDilepton.analysis.setupHelpers import getZCut, loadChain
-class setup:
+#import json
+class _setup:
   def __init__(self):
+    self.verbose=False
+    self.analysisOutputDir = analysisOutputDir
     self.channel='all'
     self.zWindow='offZ'
-    self.zMassRange=zMassRange
+    self.zMassRange   = zMassRange
     self.useTriggers=True
     self.lumi         =  10000 #10/fb
     self.sys          = {'weight':'weightPU', 'reweight':None, 'selectionModifier':None}
@@ -56,7 +60,7 @@ class setup:
 #    assert sys==None or all([k in sys.keys() for k in self.sys.keys()]), "Argument sys has too few keys: %r. Should look like %r."%(sys, self.sys) #Assure that all default sys keys are provided
     if sys:
       for k in sys.keys():
-        res.sys[k]=sys[k] if sys[k] else res.sys[k]
+        res.sys[k]=sys[k]# if sys[k] else res.sys[k]
     return res
 
   def preselection(self, dataMC):
@@ -75,7 +79,7 @@ sys: Systematic variation, default is None. '''
     assert dataMC in ['Data','MC'], "dataMC = Data or MC, got %r."%dataMC
     assert self.channel in ['all', 'EE', 'MuMu', 'EMu'], "channel must be one of all,ee,mumu,emu. Got %r."%channel
     assert self.zWindow in ['offZ', 'onZ', 'allZ'], "zWindow must be one of onZ, offZ, allZ. Got %r"%zWindow
-    if self.sys['selectionModifier']: assert self.sys['selectionModifier'] in jmeVariations, "Don't know about systematic variation %r preselection(), take one of %s"%(self.sys['selectionModifier'], ",".join(jmeVariations))
+    if self.sys['selectionModifier']: assert self.sys['selectionModifier'] in jmeVariations, "Don't know about systematic variation %r, take one of %s"%(self.sys['selectionModifier'], ",".join(jmeVariations))
     assert not (dataMC=='Data' and self.sys['selectionModifier']), "Why would you need data preselection with selectionModifier=%r? Should be None."%self.sys['selectionModifier']
 
   #basic cuts
@@ -107,17 +111,22 @@ sys: Systematic variation, default is None. '''
       presel+="&&"+filterCut
     return presel 
 
+setup=_setup()
+
 #define analysis regions
 from regions import regions1D, regions3D
-regions =  regions1D
+regions =  regions1D[:1]
 
 from collections import OrderedDict
 from MCBasedEstimate import MCBasedEstimate
 from DataDrivenDYEstimate import DataDrivenDYEstimate
 #from WardsGreatCode import DataDrivenDYEstimate, DataDrivenTTZEstimate
-estimates = OrderedDict([
-  [ 'TTJets',MCBasedEstimate(sample=TTJetsSample)],
-  [ 'TTZ',   MCBasedEstimate(sample=TTZSample)],
-  [ 'DY' ,   DataDrivenDYEstimate()], #placeholder, is just MC based using setup.DYSample
-  [ 'QCD',   MCBasedEstimate(sample=QCDSample)],
-])
+cacheDir = os.path.join(setup.analysisOutputDir, 'cacheFiles', setup.prefix)
+estimates = [
+   MCBasedEstimate(name='TTJets',  sample=TTJetsSample, cacheDir=cacheDir),
+#   MCBasedEstimate(name='TTZ',     sample=TTZSample, cacheDir=cacheDir),
+##   DataDrivenDYEstimate(name='DY', cacheDir=cacheDir), #placeholder, is just MC based using setup.DYSample
+#   MCBasedEstimate(name='QCD',      sample=QCDSample, cacheDir=cacheDir),
+]
+nList = [e.name for e in estimates]
+assert len(list(set(nList))) == len(nList), "Names of estimates are not unique: %s"%",".join(nList)
