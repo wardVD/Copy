@@ -23,7 +23,6 @@ from StopsDilepton.tools.localInfo import plotDir
 from StopsDilepton.plots.simplePlotHelpers import plot, stack, loopAndFill, drawNMStacks
 
 #from StopsDilepton.tools.puReweighting import getReweightingFunction
-#puReweightingFunc = getReweightingFunction(era="doubleMu_onZ_isOS_1500pb_nVert_reweight")
 #puReweighting = lambda c:puReweightingFunc(getVarValue(c, "nVert"))
 def topPtReweighting(c):
   return c.GetLeaf('reweightTopPt').GetValue() 
@@ -37,10 +36,7 @@ cutBranches = ["weight*", "leptonPt", "met*", "nVert",'run',\
                 ]
 
 doPU = "official"
-subdir = "png25ns_2l_mAODv2_1500_officialPU"
-
-#doPU = None
-#subdir = "png25ns_2l_mAODv2_1500_noPU"
+subdir = "png25ns_2l_mAODv2_2100_officialPU"
 
 preprefixes = [] if not opts.small else ['small']
 maxN = 1 if opts.small else -1

@@ -4,7 +4,7 @@ ROOT.setTDRStyle()
 import numpy, sys
 from math import *
 
-from StopsDilepton.tools.helpers import getChain, getObjDict, getEList, getVarValue, genmatching, latexmaker_2, piemaker, getWeight
+from StopsDilepton.tools.helpers import getChain, getObjDict, getEList, getVarValue
 from StopsDilepton.tools.objectSelection import getLeptons, looseMuID, looseEleID, getJets, getGenParts
 from StopsDilepton.tools.localInfo import *
 from StopsDilepton.tools.mt2Calculator import mt2Calculator
@@ -184,7 +184,7 @@ def cutflow(sig):
               subleadingleptonpt = l1pt
             mll = sqrt(2.*l0pt*l1pt*(cosh(l0eta-l1eta)-cos(l0phi-l1phi)))
             zveto = False
-        if (twoleptons and mll>20 and not zveto) or (twoleptons and mll > 20 and zveto and abs(mll-90.2)>15):
+        if (twoleptons and mll>20 and not zveto) or (twoleptons and mll > 20 and zveto and abs(mll-91.2)>15):
           mt2Calc.setMet(met,metPhi)
           mt2Calc.setLeptons(l0pt, l0eta, l0phi, l1pt, l1eta, l1phi)        
           mt2ll = mt2Calc.mt2ll()

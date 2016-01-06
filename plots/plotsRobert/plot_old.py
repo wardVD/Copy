@@ -81,7 +81,7 @@ for s in backgrounds+signals+[data]:
       l0pt, l0eta, l0phi = leptons[0]['pt'],  leptons[0]['eta'],  leptons[0]['phi']
       l1pt, l1eta, l1phi = leptons[1]['pt'],  leptons[1]['eta'],  leptons[1]['phi']
       mll = sqrt(2.*l0pt*l1pt*(cosh(l0eta-l1eta)-cos(l0phi-l1phi)))
-      if  mll>20 and abs(mll-90.2)<15:
+      if  mll>20 and abs(mll-91.2)<15:
         jets = filter(lambda j:j['pt']>30 and abs(j['eta'])<2.4 and j['id'], getJets(chain))
         bjets = filter(lambda j:j['btagCSV']>0.890, jets)
         if len(bjets)==2:

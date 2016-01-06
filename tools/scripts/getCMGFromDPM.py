@@ -28,7 +28,7 @@ def isNonEmptyDir(fileLine):
     lsplit = fileLine.split()
     return lsplit[4]=='0' and int(lsplit[1])>0
   except:
-    return False
+    pass
   return False
 
 def isNonEmptyFile(fileLine):
@@ -36,7 +36,7 @@ def isNonEmptyFile(fileLine):
     lsplit = fileLine.split()
     return int(lsplit[4])>0 and int(lsplit[1])==1
   except:
-    return False
+    pass
   return False
 
 def filename(line):

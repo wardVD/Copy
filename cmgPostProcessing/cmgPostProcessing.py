@@ -1,6 +1,7 @@
 import ROOT
 import sys, os, copy, random, subprocess, datetime, shutil
 from array import array
+from operator import mul
 from StopsDilepton.tools.convertHelpers import compileClass, readVar, printHeader, typeStr, createClassString
 from StopsDilepton.tools.puReweighting import getReweightingFunction 
 from math import *
@@ -9,7 +10,7 @@ from StopsDilepton.tools.topPtReweighting import getUnscaledTopPairPtReweightung
 from StopsDilepton.tools.vetoList import vetoList
 mt2Calc = mt2Calculator()
 #from StopsDilepton.tools.mtautau import mtautau as mtautau_
-from StopsDilepton.tools.helpers import getChain, getChunks, getObjDict, getEList, getVarValue, checkRootFile, getYieldFromChain
+from StopsDilepton.tools.helpers import getChain, getChunks, getObjDict, writeObjToFile,  getEList, getVarValue, checkRootFile, getYieldFromChain
 from StopsDilepton.tools.objectSelection import getLeptons, getMuons, getElectrons, getGoodMuons, getGoodElectrons, getGoodLeptons, getJets, getGoodBJets, getGoodJets, isBJet, jetVars, jetId, isBJet 
 from StopsDilepton.tools.addJERScaling import addJERScaling
 from StopsDilepton.tools.localInfo import *
@@ -20,9 +21,9 @@ ROOT.AutoLibraryLoader.enable()
 
 #from StopsDilepton.samples.xsec import xsec
 
-target_lumi = 1000 #pb-1 Which lumi to normalize to
+targetLumi = 1000 #pb-1 Which lumi to normalize to
 
-defSampleStr = "TTJets_LO"  #Which samples to run for by default (will be overritten by --samples option)
+defSampleStr = "SMS_T2tt_mStop200_mLSP1to125"
 
 subDir = "/afs/hephy.at/data/rschoefbeck01/cmgTuples/postProcessed_mAODv2_fix" #Output directory -> The first path should go to localInfo (e.g. 'dataPath' or something)
 
@@ -36,27 +37,32 @@ parser.add_option("--small", dest="small", default = False, action="store_true",
 parser.add_option("--keepPhotons", dest="keepPhotons", default = False, action="store_true", help="keep photons?")
 parser.add_option("--overwrite", dest="overwrite", default = False, action="store_true", help="Overwrite?")
 parser.add_option("--lheHTCut", dest="lheHTCut", default="", type="string", action="store", help="upper cut on lheHTIncoming")
-parser.add_option("--maxMultBTagWeight", dest="maxMultBTagWeight", default=2, type=int, action="store", help="Maximum btag multiplicity for which a combinatorical weight is calulcated")
 parser.add_option("--skipVariations", dest="skipVariations", default = False, action="store_true", help="skipVariations: Don't calulcate JES and JER variations")
+parser.add_option("--signal", dest="signal", default = False, action="store_true", help="Is this T2tt signal?")
 
 (options, args) = parser.parse_args()
 #assert options.skim.lower() in ['inclusive', 'dilep'], "Unknown skim: %s"%options.skim
 skimCond = "(1)"
+interactive = sys.argv[0].count('ipython')
+if interactive:
+  options.small=True
+  options.signal=True
+  options.overwrite=True
 
-from StopsDilepton.samples.cmgTuples_Data25ns_mAODv2 import *
-if options.skim.lower().startswith("dilep"):
-  from StopsDilepton.samples.cmgTuples_Spring15_mAODv2_25ns_1l import *
-elif options.skim.lower().startswith("inclusive"):
-  from StopsDilepton.samples.cmgTuples_Spring15_mAODv2_25ns_0l import *
-
+#Loading samples
+if options.signal:
+  from StopsDilepton.samples.cmgTuples_Signals_mAODv2_25ns_0l import *
+else:
+  from StopsDilepton.samples.cmgTuples_Data25ns_mAODv2 import *
+  if options.skim.lower().startswith("dilep"):
+    from StopsDilepton.samples.cmgTuples_Spring15_mAODv2_25ns_1l import *
+  elif options.skim.lower().startswith("inclusive"):
+    from StopsDilepton.samples.cmgTuples_Spring15_mAODv2_25ns_0l import *
 
 if options.skim.lower().startswith('dilep'):
   skimCond += "&&Sum$(LepGood_pt>20&&abs(LepGood_eta)<2.5)>=2"
 
-if sys.argv[0].count('ipython'):
-  options.small=True
-
-maxN = 1 if options.small else -1
+maxN = 5 if options.small else -1
 exec('allSamples=['+options.allSamples+']')
 chunks, sumWeight = [], 0.
 
@@ -67,9 +73,9 @@ assert allData or len(set([s.xSection for s in allSamples]))==1, "Not all sample
 assert allMC or len(allSamples)==1, "Don't concatenate data samples"
 
 if allMC:
-  puRW = getReweightingFunction(data="PU_1500_XSecCentral", mc="Spring15")
-  puRWDown = getReweightingFunction(data="PU_1500_XSecDown", mc="Spring15")
-  puRWUp   = getReweightingFunction(data="PU_1500_XSecUp", mc="Spring15")
+  puRW = getReweightingFunction(data="PU_2100_XSecCentral", mc="Spring15")
+  puRWDown = getReweightingFunction(data="PU_2100_XSecDown", mc="Spring15")
+  puRWUp   = getReweightingFunction(data="PU_2100_XSecUp", mc="Spring15")
 
 assert False not in [hasattr(s, 'path') for s in allSamples], "Not all samples have a path: "+", ".join([s.name for s in allSamples])
 
@@ -87,13 +93,9 @@ if doTopPtReweighting:
   print "Sample %s will have top pt reweights!"% sample.name
 topPtReweightingFunc = getUnscaledTopPairPtReweightungFunction() if doTopPtReweighting else None
 
-if allData and options.maxMultBTagWeight>=0:
-  print "No btag weights for data!"
-  options.maxMultBTagWeight=-1
- 
-if options.maxMultBTagWeight>=0:
-  from StopsDilepton.tools.btagEfficiency import btagEfficiency
-  btagEff = btagEfficiency()
+if not options.skipVariations:
+  from StopsDilepton.tools.btagEfficiency import btagEfficiency, btagMethod1DSystematics
+  btagEff = btagEfficiency(method='1d')
 
 if options.lheHTCut:
   try:
@@ -130,7 +132,44 @@ else:
     shutil.rmtree(outDir)
   if not os.path.exists(outDir): os.makedirs(outDir)
   if not os.path.exists(tmpDir): os.makedirs(tmpDir)
-
+if options.signal:
+  signalDir = os.path.join(options.targetDir, options.skim, "T2tt")
+  if not os.path.exists(signalDir):
+    os.makedirs(signalDir)
+if doTopPtReweighting:
+  c = ROOT.TChain("tree")
+  for chunk in chunks:
+    c.Add(chunk['file'])
+  print "Computing top pt average weight...",
+#  print getTopPtDrawString()
+  topScaleF = getYieldFromChain(c, cutString = "(1)", weight=getTopPtDrawString())
+  topScaleF/=c.GetEntries()
+  c.IsA().Destructor(c)
+  del c
+  print "found a top pt average correction factor of %f"%topScaleF
+if options.signal:
+  from StopsDilepton.tools.xSecSusy import xSecSusy
+  xSecSusy_ = xSecSusy()
+  channel='stop13TeV'
+  signalWeight={}
+  c = ROOT.TChain("tree")
+  for chunk in chunks:
+    c.Add(chunk['file'])
+  print "Fetching signal weights..."
+  mMax = 1500
+  bStr = str(mMax)+','+str(mMax)
+  c.Draw("GenSusyMScan2:GenSusyMScan1>>hNEvents("+','.join([bStr, bStr])+")")
+  hNEvents = ROOT.gDirectory.Get("hNEvents")
+  for i in range (mMax):
+    for j in range (mMax):
+      n = hNEvents.GetBinContent(hNEvents.FindBin(i,j))
+      if n>0:
+        signalWeight[(i,j)] = {'weight':targetLumi*xSecSusy_.getXSec(channel=channel,mass=i,sigma=0)/n, 'xSecFacUp':xSecSusy_.getXSec(channel=channel,mass=i,sigma=1)/xSecSusy_.getXSec(channel=channel,mass=i,sigma=0), 'xSecFacDown':xSecSusy_.getXSec(channel=channel,mass=i,sigma=-1)/xSecSusy_.getXSec(channel=channel,mass=i,sigma=0)}
+        print "Found mStop %5i mNeu %5i Number of events: %6i, xSec: %10.6f, weight: %6.6f (+1 sigma rel: %6.6f, -1 sigma rel: %6.6f)"%(i,j,n, xSecSusy_.getXSec(channel=channel,mass=i,sigma=0),  signalWeight[(i,j)]['weight'], signalWeight[(i,j)]['xSecFacUp'], signalWeight[(i,j)]['xSecFacDown'])
+  c.IsA().Destructor(c)
+  del c
+  del hNEvents
+  print "Done fetching signal weights."
 if options.skim.lower().count('tiny'):
   #branches to be kept for data and MC
   branchKeepStrings_DATAMC = ["run", "lumi", "evt", "isData", "nVert", 
@@ -189,8 +228,10 @@ else:
               ]
 
 if options.keepPhotons:
-  branchKeepStrings_DATAMC+=["ngamma", "gamma_idCutBased", "gamma_hOverE", "gamma_r9", "gamma_sigmaIetaIeta", "gamma_chHadIso04", "gamma_chHadIso", "gamma_phIso", "gamma_neuHadIso", "gamma_relIso", "gamma_mcMatchId", "gamma_mcPt", "gamma_pdgId", "gamma_pt", "gamma_eta", "gamma_phi", "gamma_mass", "gamma_genIso04", "gamma_genIso03", "gamma_chHadIsoRC04", "gamma_chHadIsoRC", "gamma_drMinParton"]
-
+  branchKeepStrings_DATAMC+=["ngamma", "gamma_idCutBased", "gamma_hOverE", "gamma_r9", "gamma_sigmaIetaIeta", "gamma_chHadIso04", "gamma_chHadIso", "gamma_phIso", "gamma_neuHadIso", "gamma_relIso", "gamma_pdgId", "gamma_pt", "gamma_eta", "gamma_phi", "gamma_mass", "gamma_chHadIsoRC04", "gamma_chHadIsoRC"]
+  if allMC: branchKeepStrings_DATAMC+=[ "gamma_mcMatchId", "gamma_mcPt", "gamma_genIso04", "gamma_genIso03", "gamma_drMinParton"]
+if options.signal:
+  branchKeepStrings_MC+=['GenSusyMScan1', 'GenSusyMScan2']
 if sample.isData: 
   lumiScaleFactor=1
   branchKeepStrings = branchKeepStrings_DATAMC + branchKeepStrings_DATA 
@@ -200,20 +241,24 @@ if sample.isData:
   outputLumiList = {}
   print "Loaded json %s"%sample.json
 else:
-  lumiScaleFactor = sample.xSection*target_lumi/float(sumWeight)
+  lumiScaleFactor = sample.xSection*targetLumi/float(sumWeight)
   branchKeepStrings = branchKeepStrings_DATAMC + branchKeepStrings_MC
-  jetMCInfo = ['mcMatchFlav/I', 'partonId/I', 'mcPt/F', 'corr/F', 'corr_JECUp/F', 'corr_JECDown/F', 'mcFlavour/I']
+  jetMCInfo = ['mcMatchFlav/I', 'partonId/I', 'mcPt/F', 'corr/F', 'corr_JECUp/F', 'corr_JECDown/F', 'hadronFlavour/I']
 
 readVariables = ['met_pt/F', 'met_phi/F', 'run/I', 'lumi/I', 'evt/l']
 if allMC: readVariables+= ['nTrueInt/I']
 newVariables = ['weight/F','weightPU/F','weightPUUp/F','weightPUDown/F', 'reweightTopPt/F']
 newVariables.extend( ['nGoodJets/I', 'nBTags/I', 'ht/F'] )
 aliases = [ "met:met_pt", "metPhi:met_phi"]
+if options.signal:
+  aliases       +=  ["mStop:GenSusyMScan1", "mNeu:GenSusyMScan2"]
+  readVariables += ['GenSusyMScan1/I', 'GenSusyMScan2/I']
+  newVariables  += ['reweightXSecUp/F', 'reweightXSecDown/F']
+  signalMassPoints = set()
 readVectors = [\
   {'prefix':'LepGood',  'nMax':8, 'vars':['pt/F', 'eta/F', 'phi/F', 'pdgId/I', 'charge/I', 'relIso03/F', 'tightId/I', 'miniRelIso/F','mass/F','sip3d/F','mediumMuonId/I', 'mvaIdSpring15/F','lostHits/I', 'convVeto/I', 'dxy/F', 'dz/F']},
   {'prefix':'Jet',  'nMax':100, 'vars':['pt/F', 'eta/F', 'phi/F', 'id/I','btagCSV/F'] + jetMCInfo}]
 if allMC: readVectors+=[ {'prefix':'genPartAll',  'nMax':2000, 'vars':['pt/F', 'pdgId/I', 'status/I','nDaughters/I']} ]
-
 if not sample.isData: 
   aliases.extend(['genMet:met_genPt', 'genMetPhi:met_genPhi'])
 if options.skim.lower().startswith('dilep'):
@@ -226,14 +271,12 @@ if options.skim.lower().startswith('dilep'):
   newVariables.extend( ['isEE/I', 'isMuMu/I', 'isEMu/I', 'isOS/I' ] )
 if not options.skipVariations:
   for var in ['JECUp', 'JECDown', 'JER', 'JERUp', 'JERDown']:
-    newVariables.extend( ['nGoodJets_'+var+'/I', 'nbJets_'+var+'/I','ht_'+var+'/F'] )
+    newVariables.extend( ['nGoodJets_'+var+'/I', 'nBTags_'+var+'/I','ht_'+var+'/F'] )
     newVariables.extend( ['met_pt_'+var+'/F', 'met_phi_'+var+'/F'] )
     if options.skim.lower().startswith('dilep'):
       newVariables.extend( ['dl_mt2ll_'+var+'/F', 'dl_mt2bb_'+var+'/F', 'dl_mt2blbl_'+var+'/F'] )
-if options.maxMultBTagWeight>=0:
-  for i in range(options.maxMultBTagWeight+1):
-    for var in ['MC', 'SF', 'SF_b_Down', 'SF_b_Up', 'SF_l_Down', 'SF_l_Up']:
-      newVariables.extend(['reweightBTag'+str(i)+'_'+var+'/F', 'reweightBTag'+str(i+1)+'p_'+var+'/F'])
+  for var in btagMethod1DSystematics:
+    newVariables.append('reweightBTag_'+var+'/F')
 
 newVars = [readVar(v, allowRenaming=False, isWritten = True, isRead=False) for v in newVariables]
 
@@ -254,19 +297,7 @@ r = compileClass(className=readClassName, classString=readClassString, tmpDir='/
 
 
 filesForHadd=[]
-if options.small: chunks=chunks[:1]
-
-if doTopPtReweighting:
-  c = ROOT.TChain("tree")
-  for chunk in chunks:
-    c.Add(chunk['file'])
-  print "Computing top pt average weight...",
-#  print getTopPtDrawString()
-  topScaleF = getYieldFromChain(c, cutString = "(1)", weight=getTopPtDrawString())
-  topScaleF/=c.GetEntries()
-  c.IsA().Destructor(c)
-  del c
-  print "found a top pt average correction factor of %f"%topScaleF
+#if options.small: chunks=chunks[:1]
 
 nVetoEvents=0
 for chunk in chunks:
@@ -310,9 +341,16 @@ for chunk in chunks:
       s.init()
       r.init()
       t.GetEntry(i)
-
+      if options.signal: signalMassPoints.add((r.GenSusyMScan1, r.GenSusyMScan2))
       genWeight = 1 if sample.isData else t.GetLeaf('genWeight').GetValue()
-      s.weight = lumiScaleFactor*genWeight if not sample.isData else 1
+      if allMC and not options.signal:
+        s.weight = lumiScaleFactor*genWeight
+      if allData:
+        s.weight = 1.
+      if options.signal:
+          s.weight=signalWeight[(r.GenSusyMScan1, r.GenSusyMScan2)]['weight']
+          s.reweightXSecUp    = signalWeight[(r.GenSusyMScan1, r.GenSusyMScan2)]['xSecFacUp']
+          s.reweightXSecDown  = signalWeight[(r.GenSusyMScan1, r.GenSusyMScan2)]['xSecFacDown']
       s.reweightTopPt = topPtReweightingFunc(getTopPtsForReweighting(r))/topScaleF if doTopPtReweighting else 1.
       if not sample.isData:
         s.weightPU     = s.weight*puRW(r.nTrueInt)
@@ -347,7 +385,7 @@ for chunk in chunks:
 #      else: print [r.run, r.lumi, r.evt], vetoList_.events[0]
 #        print "Found run %i lumi %i in json file %s"%(r.run, r.lumi, sample.json)
 
-      allJets = getGoodJets(r, ptCut=0, jetVars=jetVars if options.skipVariations else jetVars+['mcPt', 'corr','corr_JECUp','corr_JECDown','mcFlavour'])
+      allJets = getGoodJets(r, ptCut=0, jetVars=jetVars if options.skipVariations else jetVars+['mcPt', 'corr','corr_JECUp','corr_JECDown','hadronFlavour'])
       jets = filter(lambda j:jetId(j, ptCut=30, absEtaCut=2.4), allJets)
       s.nGoodJets   = len(jets)
       s.ht          = sum([j['pt'] for j in jets])
@@ -373,7 +411,7 @@ for chunk in chunks:
           setattr(s, "met_phi_"+var, atan2(met_corr_py, met_corr_px)) 
           setattr(s, "nGoodJets_"+var, len(jets_[var])) 
           setattr(s, "ht_"+var, sum([j['pt_'+var] for j in jets_[var]])) 
-          setattr(s, "nbJets_"+var, len(bJets_[var])) 
+          setattr(s, "nBTags_"+var, len(bJets_[var])) 
 
       if options.skim.lower().startswith('dilep'):
         leptons = getGoodLeptons(r)
@@ -431,20 +469,17 @@ for chunk in chunks:
                 mt2Calc.setBJets(bj0['pt'], bj0['eta'], bj0['phi'], bj1['pt'], bj1['eta'], bj1['phi'])
                 setattr(s, 'dl_mt2bb_'+var, mt2Calc.mt2bb())
                 setattr(s, 'dl_mt2blbl_'+var,mt2Calc.mt2blbl())
-      if options.maxMultBTagWeight>=0:
+
+      if not options.skipVariations:
         for j in jets:
           btagEff.addBTagEffToJet(j)
-        for var in ['MC', 'SF', 'SF_b_Down', 'SF_b_Up', 'SF_l_Down', 'SF_l_Up']:
-          res = btagEff.getTagWeightDict([j['beff'][var] for j in jets], options.maxMultBTagWeight)
-          for i in range(options.maxMultBTagWeight+1):
-            setattr(s, 'reweightBTag'+str(i)+'_'+var, res[i])
-            setattr(s, 'reweightBTag'+str(i+1)+'p_'+var, 1-sum([res[j] for j in range(i+1)]))
-        if len(jets)==7: break
+        for var in btagMethod1DSystematics:
+          setattr(s, 'reweightBTag_'+var, reduce(mul, [j['beff'][var] for j in jets], 1) )
 
       for v in newVars:
         v['branch'].Fill()
     filesForHadd.append(newFileName)
-    if not options.small:
+    if not options.small or interactive:
       f = ROOT.TFile(newFile, 'recreate')
       t.SetBranchStatus("*",0)
       for b in branchKeepStrings + [v['stage2Name'] for v in newVars] +  [v.split(':')[1] for v in aliases]:
@@ -462,10 +497,11 @@ for chunk in chunks:
 
 print "Event loop end. Vetoed %i events."%nVetoEvents
 
-if not options.small: 
+if not options.small or interactive: 
   size=0
   counter=0
   files=[]
+  ofiles=[]
   for f in filesForHadd:
     size+=os.path.getsize(tmpDir+'/'+f)
     files.append(f)
@@ -474,6 +510,7 @@ if not options.small:
       print "Running hadd on", tmpDir, files
       os.system('cd '+tmpDir+';hadd -f '+ofile+' '+' '.join(files))
       print "Written output file %s" % ofile
+      ofiles.append(ofile)
       size=0
       counter+=1
       files=[]
@@ -482,3 +519,19 @@ if not options.small:
     jsonFile = outDir+'/'+sample.name+'.json'
     LumiList(runsAndLumis = outputLumiList).writeJSON(jsonFile)
     print "Written JSON file %s" % jsonFile
+  if options.signal:
+    c = ROOT.TChain('Events')
+    for f in ofiles:c.Add(f)
+    for s in signalMassPoints:
+      cut = "GenSusyMScan1=="+str(s[0])+"&&GenSusyMScan2=="+str(s[1])
+      signalFile = signalDir+'/T2tt_'+str(s[0])+'_'+str(s[1])+'.root'
+      if not os.path.exists(signalFile) or options.overwrite:
+        t = c.CopyTree(cut)
+        writeObjToFile(signalFile, t)
+        print "Written signal file for masses mStop %i mNeu %i to %s"%(s[0], s[1], signalFile)
+  #      t.IsA().Destructor(c)
+  #      del t
+      else:
+        print "Found file %s -> Skipping"%(signalFile)
+    c.IsA().Destructor(c)
+    del c

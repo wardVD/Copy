@@ -86,7 +86,7 @@ for i,s in enumerate(backgrounds+signals): #Enumerate returns a couple (index of
   for ev in range(nEvents):
     chain.GetEntry(eList.GetEntry(ev))
     m_ll = getVarValue(chain, "dl_mass")
-    ZVetoCut = abs(90.2-m_ll) > 15
+    ZVetoCut = abs(91.2-m_ll) > 15
     isSF = True if (getVarValue(chain, "isEE") == 1 or getVarValue(chain, "isMuMu") == 1) else False
     if (not isSF):
       ZVetoCut = True

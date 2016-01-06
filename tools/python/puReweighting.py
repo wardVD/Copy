@@ -1,6 +1,6 @@
 from StopsDilepton.tools.helpers import getObjFromFile
 #Define a functor that returns a reweighting-function according to the era
-def getReweightingFunction(data="PU_1500_XSecCentral", mc="Spring15"):
+def getReweightingFunction(data="PU_2100_XSecCentral", mc="Spring15"):
   fileNameData = "$CMSSW_BASE/src/StopsDilepton/tools/python/puReweightingData/"+data+'.root'
   histoData = getObjFromFile(fileNameData, 'pileup')
   histoData.Scale(1./histoData.Integral())

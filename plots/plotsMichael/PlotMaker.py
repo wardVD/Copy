@@ -37,7 +37,7 @@ for process in range(len(everything)):
 		if event.isMuonElec:
 			isOF=1
 
-		ZVeto=abs(event.dileptonInvariantMass-90.2)>=15
+		ZVeto=abs(event.dileptonInvariantMass-91.2)>=15
 
 		#if event.dileptonInvariantMass > 20 and event.MET > 140 and event.mindPhiMetJet12 > 0.25 and event.MET/sqrt(event.HT) > 8 and event.nbjets >0 and event.nleptons==2 and event.njets > 1 and ( (isSF and ZVeto) or isOF ):
 		if event.dileptonInvariantMass > 20 and event.nbjets >0 and event.nleptons==2 and event.njets > 1 and ( (isSF and ZVeto) or isOF ):

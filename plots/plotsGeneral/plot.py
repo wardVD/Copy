@@ -4,7 +4,8 @@ ROOT.setTDRStyle()
 import numpy
 
 from math import *
-from StopsDilepton.tools.helpers import getChain, getObjDict, getEList, getVarValue, genmatching, latexmaker_1, piemaker, getWeight, deltaPhi
+from StopsDilepton.tools.helpers import getChain, getObjDict, getEList, getVarValue, deltaPhi
+from StopsDilepton.tools.texHelpers import latexmaker_1, piemaker
 from StopsDilepton.tools.objectSelection import getLeptons, looseMuID, looseEleID, getJets, getGenParts
 from StopsDilepton.tools.localInfo import *
 from StopsDilepton.tools.mt2Calculator import mt2Calculator
@@ -391,7 +392,7 @@ for s in backgrounds+signals+data:
           mll = sqrt(2.*l0pt*l1pt*(cosh(l0eta-l1eta)-cos(l0phi-l1phi)))
           plots[leptons[lep]['name']]['mll']['histo'][s["name"]].Fill(mll,weight) #mll as n-1 plot without Z-mass cut
           zveto = False
-      if (twoleptons and mll>20 and not zveto) or (twoleptons and mll > 20 and zveto and abs(mll-90.2)>15):
+      if (twoleptons and mll>20 and not zveto) or (twoleptons and mll > 20 and zveto and abs(mll-91.2)>15):
         jets = filter(lambda j:j['pt']>30 and abs(j['eta'])<2.4 and j['id'], getJets(chain))
         ht = sum([j['pt'] for j in jets])
         PhiMetJet1 = deltaPhi(metPhi,getVarValue(chain, "Jet_phi",0))
