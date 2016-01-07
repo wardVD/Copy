@@ -147,7 +147,7 @@ setup=_setup()
 
 #define analysis regions
 from regions import regions1D, regions3D
-regions =  regions1D[:1]
+regions =  regions1D
 
 from collections import OrderedDict
 from MCBasedEstimate import MCBasedEstimate

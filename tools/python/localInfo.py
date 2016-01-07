@@ -2,7 +2,7 @@ import os
 if os.environ['USER'] in ['wvandrie']:
   #plotDir = "/afs/cern.ch/user/w/wvandrie/www/Stops/"
   plotDir = "/user/wvandrie/public_html/"
-  analysisOutputDir = '.' #Path to analysis results
+  analysisOutputDir = '/user/wvandrie/STOPS/ANALYSIS/CMSSW_7_4_12_patch4/src/tempDir/' #Path to analysis results
   dataDir = "/user/wvandrie/STOPS/ANALYSIS/CMSSW_7_4_12_patch4/src/tuples_2015_12_2/dilepTiny/"
 if os.environ['USER'] in ['didar']:
   plotDir = "."
