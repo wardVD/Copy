@@ -1,5 +1,5 @@
 from StopsDilepton.tools.helpers import getYieldFromChain
-from math import sqrt
+from u_float import u_float 
 from systematics import SystematicBaseClass
 
 class MCBasedEstimate(SystematicBaseClass):
@@ -13,7 +13,4 @@ class MCBasedEstimate(SystematicBaseClass):
 
     if setup.verbose: 
       print "Using cut %s and weight %s"%(cut, weight)
-    val          = setup.lumi[channel]/1000.*getYieldFromChain(self.sample[channel]['chain'], cutString = cut, weight=weight)
-    valVariance  = setup.lumi[channel]/1000.*getYieldFromChain(self.sample[channel]['chain'], cutString = cut, weight="("+weight+")**2")
-    res = {'val':val, 'sigma':sqrt(valVariance)}
-    return res
+    return setup.lumi[channel]/1000.*u_float(getYieldFromChain(self.sample[channel]['chain'], cutString = cut, weight=weight, returnError = True) )

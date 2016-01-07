@@ -16,9 +16,9 @@ TTJetsSample  = TTJets #NLO
 allChannels = ['all', 'EE', 'MuMu', 'EMu']
 
 #to run on data
-lumi = {'EMu':MuonEG_Run2015D['lumi'], 'MuMu':DoubleMuon_Run2015D['lumi'], 'EE':DoubleEG_Run2015D['lumi']}
+#lumi = {'EMu':MuonEG_Run2015D['lumi'], 'MuMu':DoubleMuon_Run2015D['lumi'], 'EE':DoubleEG_Run2015D['lumi']}
 #10/fb to run on MC
-#lumi = {c:10000 for c in allChannels}
+lumi = {c:10000 for c in allChannels}
 
 from systematics import jmeVariations
 def getCuts(selectionModifier=None, nBTags=(1,-1)):
@@ -155,7 +155,7 @@ from DataDrivenDYEstimate import DataDrivenDYEstimate
 #from WardsGreatCode import DataDrivenDYEstimate, DataDrivenTTZEstimate
 cacheDir = os.path.join(setup.analysisOutputDir, 'cacheFiles', setup.prefix)
 estimates = [
-   DataDrivenDYEstimate(name='DY-DD', cacheDir=None),
+#   DataDrivenDYEstimate(name='DY-DD', cacheDir=None),
    MCBasedEstimate(name='TTJets',    sample=setup.sample['TTJets'], cacheDir=cacheDir),
    MCBasedEstimate(name='TTZ',       sample=setup.sample['TTZ'], cacheDir=cacheDir),
    MCBasedEstimate(name='TTXNoZ',    sample=setup.sample['TTXNoZ'], cacheDir=cacheDir),

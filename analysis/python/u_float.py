@@ -35,6 +35,8 @@ class u_float():
       val = self.val*other
       sigma = self.sigma*other
     return u_float(val,sigma)
+  def __rmul__(self,other):
+    return self.__mul__(other) 
   def __div__(self,other):
     assert type(other)==int or type(other)==float or type(other)==type(self), "Can't multiply, %r is not a float, int or u_float"%type(other)
     if type(other)==type(self):
@@ -47,3 +49,5 @@ class u_float():
 
   def __str__(self):
     return str(self.val)+'+-'+str(self.sigma)
+  def __repr__(self):
+    return self.__str__()
