@@ -24,7 +24,7 @@ class region:
     res.vals.update(otherRegion.vals)
     return res
   def cutString(self, selectionModifier=None):
-    if selectionModifier: assert selectionModifier in jmeVariations, "Don't know about systematic variation %r preselection(), take one of %s"%(selectionModifier, ",".join(jmeVariations))
+    if selectionModifier: assert selectionModifier in jmeVariations, "Don't know about systematic variation %r, take one of %s"%(selectionModifier, ",".join(jmeVariations))
     res=[]
     for var in self.variables():
       svar = var if not selectionModifier else var+"_"+selectionModifier

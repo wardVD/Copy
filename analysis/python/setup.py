@@ -13,15 +13,25 @@ TTJetsSample  = TTJets #NLO
 TTZSample     = TTZ 
 QCDSample     = QCD_HT #FIXME: Need MuMu, EE, EMu samples here
 
+allChannels = ['all', 'EE', 'MuMu', 'EMu']
+
 from systematics import jmeVariations
-def getCuts(selectionModifier=None):
+def getCuts(selectionModifier=None, nBTags=(1,-1)):
   if selectionModifier: assert selectionModifier in jmeVariations, "Don't know about systematic variation %r, take one of %s"%(selectionModifier, ",".join(jmeVariations))
   sysStr="" if not selectionModifier else "_"+selectionModifier
   nbstr = "nBTags" if not selectionModifier else "nbJets" #Correct stupid naming convention I already fixed in the postprocessing...
+
+  assert nBTags[0]>=0 and (nBTags[1]>=nBTags[0] or nBTags[1]<0), "Not a good nBTags selection: %r"%nBTags
+  nbtstr = nbstr+sysStr+">="+str(nBTags[0])
+  kstr = "nbtag"+str(nBTags[0])
+  if nBTags[1]>0: 
+    nbtstr+= "&&"+nbstr+sysStr+"<="+str(nBTags[1])
+    kstr+='-'+str(nBTags[1])
   return [
  ("isOS", "isOS"),
  ("njet2", "nGoodJets"+sysStr+">=2"),
- ("nbtag1", nbstr+sysStr+">=1"),
+ (kstr, nbtstr), 
+# ("nbtag1", nbtstr),
 # ("nbtag0", "Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id&&Jet_btagCSV>0.890)==0"),
  ("mll20", "dl_mass>20"),
  ("met80", "met_pt"+sysStr+">80"),
@@ -35,35 +45,53 @@ class _setup:
   def __init__(self):
     self.verbose=False
     self.analysisOutputDir = analysisOutputDir
-    self.channel='all'
-    self.zWindow='offZ'
     self.zMassRange   = zMassRange
     self.useTriggers=True
-    self.lumi         =  10000 #10/fb
-    self.sys          = {'weight':'weightPU', 'reweight':None, 'selectionModifier':None}
-    self.prefix = '-'.join(c[0] for c in getCuts())
-    self.prefix = self.zWindow+'_'+self.prefix
-    self.prefix = self.channel+'_'+self.prefix
+#    self.lumi         =  10000 #/pb
+    self.lumi         =  2100 #/pb
+    self.sys          = {'weight':'weightPU', 'reweight':[], 'selectionModifier':None}
 
-    self.DYSample     = DYSample
-    self.TTJetsSample = TTJetsSample
-    self.TTZSample    = TTZSample
-    self.QCDSample    = QCDSample
-    for s in [self.DYSample, self.TTJetsSample, self.TTZSample, self.QCDSample]:
+    self.sample = {
+    'DY':         {c:DYSample for c in allChannels},
+    'TTJets' :    {c:TTJetsSample for c in allChannels},
+    'singleTop' : {c:singleTop for c in allChannels},
+    'TTZ'    :    {c:TTZSample for c in allChannels},
+    'diBoson':    {c:diBoson for c in allChannels},
+    'triBoson' :  {c:triBoson for c in allChannels},
+    'TTXNoZ'   :  {c:TTXNoZ for c in allChannels},
+    'WJetsToLNu_HT' : {c: WJetsToLNu_HT for c in allChannels} ,
+    'QCD'    :    {'MuMu':QCD_Mu5, 'EE': QCD_EMbcToE, 'EMu':QCD_Mu5EMbcToE, 'all':QCD_Mu5EMbcToE},
+    'data'   : {'MuMu':DoubleMuon_Run2015D, 'EE': DoubleEG_Run2015D, 'EMu':MuonEG_Run2015D},
+    }
+    for s in sum([s.values() for s in self.sample.values()],[]):
       loadChain(s)
+    self.prefix = '-'.join(c[0] for c in getCuts())
 
   #Clone the setup and optinally modify the systematic variation
   def sysClone(self, sys=None):
     '''Clone setup and change systematic if provided'''
     res     = copy.copy(self)
     res.sys = copy.deepcopy(self.sys)
-#    assert sys==None or all([k in sys.keys() for k in self.sys.keys()]), "Argument sys has too few keys: %r. Should look like %r."%(sys, self.sys) #Assure that all default sys keys are provided
     if sys:
       for k in sys.keys():
-        res.sys[k]=sys[k]# if sys[k] else res.sys[k]
+        if k=='reweight':
+#          res.sys[k]=list(set(res.sys[k]+sys[k])) #Add with unique elements 
+          res.sys[k] = res.sys[k]+sys[k] #Add with unique elements 
+          if len(res.sys[k])!=len(list(set(res.sys[k]))): print "Warning! non-exclusive list of reweights: %s"% ",".join(res.sys['k'])
+        else:
+          res.sys[k]=sys[k]# if sys[k] else res.sys[k]
     return res
 
-  def preselection(self, dataMC):
+  def weightString(self):
+    wStr = setup.sys['weight']
+    if setup.sys['reweight']:
+      wStr += "*"+"*".join(setup.sys['reweight'])
+    return wStr
+
+  def preselection(self, dataMC , channel='all', zWindow = 'offZ'):
+    return self.selection(dataMC, channel = channel, zWindow = zWindow, nBTags = (1,-1))
+
+  def selection(self, dataMC, channel = 'all', zWindow = 'offZ', nBTags = (1,-1) ):
     '''Get preselection  cutstring.
 Arguments: dataMC: 'Data' or 'MC'
 sys: Systematic variation, default is None. '''
@@ -77,17 +105,17 @@ sys: Systematic variation, default is None. '''
     filterCut = "(Flag_HBHENoiseFilter&&Flag_goodVertices&&Flag_CSCTightHaloFilter&&Flag_eeBadScFilter&&weight>0)"
 
     assert dataMC in ['Data','MC'], "dataMC = Data or MC, got %r."%dataMC
-    assert self.channel in ['all', 'EE', 'MuMu', 'EMu'], "channel must be one of all,ee,mumu,emu. Got %r."%channel
-    assert self.zWindow in ['offZ', 'onZ', 'allZ'], "zWindow must be one of onZ, offZ, allZ. Got %r"%zWindow
+    assert channel in allChannels, "channel must be one of "+",".join(allChannels)+". Got %r."%channel
+    assert zWindow in ['offZ', 'onZ', 'allZ'], "zWindow must be one of onZ, offZ, allZ. Got %r"%zWindow
     if self.sys['selectionModifier']: assert self.sys['selectionModifier'] in jmeVariations, "Don't know about systematic variation %r, take one of %s"%(self.sys['selectionModifier'], ",".join(jmeVariations))
     assert not (dataMC=='Data' and self.sys['selectionModifier']), "Why would you need data preselection with selectionModifier=%r? Should be None."%self.sys['selectionModifier']
 
   #basic cuts
-    cuts = getCuts(self.sys['selectionModifier'])
+    cuts = getCuts(self.sys['selectionModifier'], nBTags=nBTags)
     presel = "&&".join(c[1] for c in cuts)
   #Z window
-    if self.zWindow in ['onZ', 'offZ']:
-       presel+="&&"+getZCut(self.zWindow, self.zMassRange)
+    if zWindow in ['onZ', 'offZ']:
+       presel+="&&"+getZCut(zWindow, self.zMassRange)
   #triggers
     if self.useTriggers:
       pMuMu = preselMuMu + "&&" + triggerMuMu
@@ -98,13 +126,13 @@ sys: Systematic variation, default is None. '''
       pEE   = preselEE  
       pEMu  = preselEMu 
   # dilepton channels    
-    if self.channel=="MuMu":
+    if channel=="MuMu":
       presel+="&&"+pMuMu
-    if self.channel=="EE":
+    if channel=="EE":
       presel+="&&"+pEE
-    if self.channel=="EMu":
+    if channel=="EMu":
       presel+="&&"+pEMu
-    if self.channel=="all":
+    if channel=="all":
       presel+="&&("+pMuMu+'||'+pEE+'||'+pEMu+')'
 
     if dataMC=='Data':
@@ -123,10 +151,11 @@ from DataDrivenDYEstimate import DataDrivenDYEstimate
 #from WardsGreatCode import DataDrivenDYEstimate, DataDrivenTTZEstimate
 cacheDir = os.path.join(setup.analysisOutputDir, 'cacheFiles', setup.prefix)
 estimates = [
-   MCBasedEstimate(name='TTJets',  sample=TTJetsSample, cacheDir=cacheDir),
-#   MCBasedEstimate(name='TTZ',     sample=TTZSample, cacheDir=cacheDir),
-##   DataDrivenDYEstimate(name='DY', cacheDir=cacheDir), #placeholder, is just MC based using setup.DYSample
-#   MCBasedEstimate(name='QCD',      sample=QCDSample, cacheDir=cacheDir),
+#   MCBasedEstimate(name='TTJets',  sample=setup.sample['TTJets'], cacheDir=cacheDir),
+#   MCBasedEstimate(name='TTZ',     sample=setup.TTZSample, cacheDir=cacheDir),
+#   DataDrivenDYEstimate(name='DY', cacheDir=cacheDir)
+   DataDrivenDYEstimate(name='DY', cacheDir=None)
+#   MCBasedEstimate(name='QCD',      sample=setup.QCDSample, cacheDir=cacheDir),
 ]
 nList = [e.name for e in estimates]
 assert len(list(set(nList))) == len(nList), "Names of estimates are not unique: %s"%",".join(nList)
