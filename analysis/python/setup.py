@@ -13,7 +13,7 @@ TTJetsSample  = TTJets #NLO
 TTZSample     = TTZ 
 QCDSample     = QCD_HT #FIXME: Need MuMu, EE, EMu samples here
 
-from Systematics import jmeVariations
+from systematics import jmeVariations
 def getCuts(selectionModifier=None):
   if selectionModifier: assert selectionModifier in jmeVariations, "Don't know about systematic variation %r, take one of %s"%(selectionModifier, ",".join(jmeVariations))
   sysStr="" if not selectionModifier else "_"+selectionModifier
@@ -115,7 +115,7 @@ setup=_setup()
 
 #define analysis regions
 from regions import regions1D, regions3D
-regions =  regions1D[:1]
+regions =  regions1D
 
 from collections import OrderedDict
 from MCBasedEstimate import MCBasedEstimate
