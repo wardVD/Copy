@@ -13,3 +13,4 @@ def getZCut(mode, zMassRange=15):
   if mode.lower()=="onz": return zstr+"<="+str(zMassRange)
   if mode.lower()=="offz": return zstr+">"+str(zMassRange)
   return "(1)"
+
