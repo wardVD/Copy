@@ -39,25 +39,34 @@ class SystematicBaseClass:
       if not os.path.exists(os.path.dirname(cacheFileName)):
         os.makedirs(os.path.dirname(cacheFileName))
       self.cache = cache(cacheFileName, verbosity=2)
+    else:
+      self.cache=None
 
-#      def uniqueKey():
-#        '''return a unique key that changes when self.sys changes'''
-#        return json.dumps(self.sys, sort_keys=True)
+  def uniqueKey(self, region, channel, setup):
+    return region, setup.lumi, channel, json.dumps(setup.sys, sort_keys=True)
 
-  def uniqueKey(self, region, setup):
-    return region, json.dumps(setup.sys, sort_keys=True)
+  def cachedEstimate(self, region, channel, setup):
+    key =  self.uniqueKey(region, channel, setup)
+    if self.cache and self.cache.contains(key):
+      res = self.cache.get(key)
+      if setup.verbose: print "Loading cached %s result for %r : %r"%(self.name, key, res)
+      return res
+    elif self.cache:
+      return self.cache.add( key, self._estimate( region, channel, setup))
+    else:
+      return self._estimate( region, channel, setup)
 
   @abc.abstractmethod
-  def estimate(self, region, setup):
+  def _estimate(self, region, channel, setup):
     '''Estimate yield in 'region' using setup'''
     return
  
-  def JERSystematic(self, region, setup):
-    up   = self.estimate(region, setup.sysClone({'selectionModifier':'JERUp'}))
-    down = self.estimate(region, setup.sysClone({'selectionModifier':'JERDown'}))
+  def JERSystematic(self, region, channel, setup):
+    up   = self.cachedEstimate(region, channel, setup.sysClone({'selectionModifier':'JERUp'}))
+    down = self.cachedEstimate(region, channel, setup.sysClone({'selectionModifier':'JERDown'}))
     return {'val': 0.5*(up['val'] - down['val']), 'sigma':0.5*sqrt(up['sigma']**2 + down['sigma']**2)}
 
-  def JECSystematic(self, region, setup):
-    up   = self.estimate(region, setup.sysClone({'selectionModifier':'JECUp'}))
-    down = self.estimate(region, setup.sysClone({'selectionModifier':'JECDown'}))
+  def JECSystematic(self, region, channel, setup):
+    up   = self.cachedEstimate(region, channel, setup.sysClone({'selectionModifier':'JECUp'}))
+    down = self.cachedEstimate(region, channel, setup.sysClone({'selectionModifier':'JECDown'}))
     return {'val': 0.5*(up['val'] - down['val']), 'sigma':0.5*sqrt(up['sigma']**2 + down['sigma']**2)}
