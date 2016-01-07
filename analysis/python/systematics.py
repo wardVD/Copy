@@ -43,7 +43,7 @@ class SystematicBaseClass:
       self.cache=None
 
   def uniqueKey(self, region, channel, setup):
-    return region, setup.lumi, channel, json.dumps(setup.sys, sort_keys=True)
+    return region, channel, json.dumps(setup.lumi, sort_keys=True), json.dumps(setup.sys, sort_keys=True)
 
   def cachedEstimate(self, region, channel, setup):
     key =  self.uniqueKey(region, channel, setup)

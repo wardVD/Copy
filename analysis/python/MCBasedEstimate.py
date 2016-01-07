@@ -13,7 +13,7 @@ class MCBasedEstimate(SystematicBaseClass):
 
     if setup.verbose: 
       print "Using cut %s and weight %s"%(cut, weight)
-    val          = setup.lumi/1000.*getYieldFromChain(self.sample[channel]['chain'], cutString = cut, weight=weight)
-    valVariance  = setup.lumi/1000.*getYieldFromChain(self.sample[channel]['chain'], cutString = cut, weight="("+weight+")**2")
+    val          = setup.lumi[channel]/1000.*getYieldFromChain(self.sample[channel]['chain'], cutString = cut, weight=weight)
+    valVariance  = setup.lumi[channel]/1000.*getYieldFromChain(self.sample[channel]['chain'], cutString = cut, weight="("+weight+")**2")
     res = {'val':val, 'sigma':sqrt(valVariance)}
     return res

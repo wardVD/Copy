@@ -6,14 +6,19 @@ zMassRange=15
 #define samples
 from StopsDilepton.samples.cmgTuples_Data25ns_mAODv2_postProcessed import *
 from StopsDilepton.samples.cmgTuples_Spring15_mAODv2_25ns_1l_postProcessed import *
+
+#choices for specific samples
 DYSample      = DY #NLO M10t050 + M50
 #DYSample      = DY_HT_LO #LO, HT binned including a low HT bin starting from zero from the inclusive sample
 TTJetsSample  = TTJets #NLO
 #TTJetsSample  = TTJets_Lep #LO, very large dilep + single lep samples
-TTZSample     = TTZ 
-QCDSample     = QCD_HT #FIXME: Need MuMu, EE, EMu samples here
 
 allChannels = ['all', 'EE', 'MuMu', 'EMu']
+
+#to run on data
+lumi = {'EMu':MuonEG_Run2015D['lumi'], 'MuMu':DoubleMuon_Run2015D['lumi'], 'EE':DoubleEG_Run2015D['lumi']}
+#10/fb to run on MC
+#lumi = {c:10000 for c in allChannels}
 
 from systematics import jmeVariations
 def getCuts(selectionModifier=None, nBTags=(1,-1)):
@@ -47,21 +52,20 @@ class _setup:
     self.analysisOutputDir = analysisOutputDir
     self.zMassRange   = zMassRange
     self.useTriggers=True
-#    self.lumi         =  10000 #/pb
-    self.lumi         =  2100 #/pb
+    self.lumi=lumi
     self.sys          = {'weight':'weightPU', 'reweight':[], 'selectionModifier':None}
 
     self.sample = {
     'DY':         {c:DYSample for c in allChannels},
     'TTJets' :    {c:TTJetsSample for c in allChannels},
     'singleTop' : {c:singleTop for c in allChannels},
-    'TTZ'    :    {c:TTZSample for c in allChannels},
+    'TTZ'    :    {c:TTZ for c in allChannels},
     'diBoson':    {c:diBoson for c in allChannels},
     'triBoson' :  {c:triBoson for c in allChannels},
     'TTXNoZ'   :  {c:TTXNoZ for c in allChannels},
     'WJetsToLNu_HT' : {c: WJetsToLNu_HT for c in allChannels} ,
     'QCD'    :    {'MuMu':QCD_Mu5, 'EE': QCD_EMbcToE, 'EMu':QCD_Mu5EMbcToE, 'all':QCD_Mu5EMbcToE},
-    'data'   : {'MuMu':DoubleMuon_Run2015D, 'EE': DoubleEG_Run2015D, 'EMu':MuonEG_Run2015D},
+    'Data'   : {'MuMu':DoubleMuon_Run2015D, 'EE': DoubleEG_Run2015D, 'EMu':MuonEG_Run2015D},
     }
     for s in sum([s.values() for s in self.sample.values()],[]):
       loadChain(s)
@@ -151,11 +155,16 @@ from DataDrivenDYEstimate import DataDrivenDYEstimate
 #from WardsGreatCode import DataDrivenDYEstimate, DataDrivenTTZEstimate
 cacheDir = os.path.join(setup.analysisOutputDir, 'cacheFiles', setup.prefix)
 estimates = [
-#   MCBasedEstimate(name='TTJets',  sample=setup.sample['TTJets'], cacheDir=cacheDir),
-#   MCBasedEstimate(name='TTZ',     sample=setup.TTZSample, cacheDir=cacheDir),
-#   DataDrivenDYEstimate(name='DY', cacheDir=cacheDir)
-   DataDrivenDYEstimate(name='DY', cacheDir=None)
-#   MCBasedEstimate(name='QCD',      sample=setup.QCDSample, cacheDir=cacheDir),
+   DataDrivenDYEstimate(name='DY-DD', cacheDir=None),
+   MCBasedEstimate(name='TTJets',    sample=setup.sample['TTJets'], cacheDir=cacheDir),
+   MCBasedEstimate(name='TTZ',       sample=setup.sample['TTZ'], cacheDir=cacheDir),
+   MCBasedEstimate(name='TTXNoZ',    sample=setup.sample['TTXNoZ'], cacheDir=cacheDir),
+   MCBasedEstimate(name='singleTop', sample=setup.sample['singleTop'], cacheDir=cacheDir),
+   MCBasedEstimate(name='diBoson',   sample=setup.sample['diBoson'], cacheDir=cacheDir),
+   MCBasedEstimate(name='triBoson',  sample=setup.sample['triBoson'], cacheDir=cacheDir),
+   MCBasedEstimate(name='WJetsToLNu_HT', sample=setup.sample['WJetsToLNu_HT'], cacheDir=cacheDir),
+   MCBasedEstimate(name='DY',        sample=setup.sample['DY'], cacheDir=cacheDir),
+   MCBasedEstimate(name='QCD',      sample=setup.sample['QCD'], cacheDir=cacheDir),
 ]
 nList = [e.name for e in estimates]
 assert len(list(set(nList))) == len(nList), "Names of estimates are not unique: %s"%",".join(nList)

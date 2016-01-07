@@ -8,10 +8,9 @@ class DataDrivenDYEstimate(SystematicBaseClass):
 #Concrete implementation of abstract method 'estimate' as defined in Systematic
   def _estimate(self, region, channel, setup):
     weight = setup.weightString()
-
     #Sum of all channels for 'all'
     if channel=='all':
-      res=[ self.cachedEstimate(region, c, setup) for c in ['MuMu', 'EE', 'EMu'] ]
+      res=[ self.cachedEstimate(region, c, channel, setup) for c in ['MuMu', 'EE', 'EMu'] ]
       return {'val':sum([r['val'] for r in res]), 'sigma':sqrt(sum(r['sigma']**2 for r in res))}
 
     #MC based for 'EMu'
@@ -19,13 +18,14 @@ class DataDrivenDYEstimate(SystematicBaseClass):
       cut = "&&".join([region.cutString(setup.sys['selectionModifier']), setup.preselection('MC', channel=channel)])
       if setup.verbose: 
         print "Using cut %s and weight %s"%(cut, weight)
-      val          = setup.lumi/1000.*getYieldFromChain(setup.sample['DY'][channel]['chain'], cutString = cut, weight=weight)
-      valVariance  = setup.lumi/1000.*getYieldFromChain(setup.sample['DY'][channel]['chain'], cutString = cut, weight="("+weight+")**2")
+      val          = setup.lumi[channel]/1000.*getYieldFromChain(setup.sample['DY'][channel]['chain'], cutString = cut, weight=weight)
+      valVariance  = setup.lumi[channel]/1000.*getYieldFromChain(setup.sample['DY'][channel]['chain'], cutString = cut, weight="("+weight+")**2")
       res = {'val':val, 'sigma':sqrt(valVariance)}
       return res
 
     #Data driven for EMu and MuMu
     else:
+      assert abs(1.-setup.lumi[channel]/setup.sample['Data'][channel]['lumi'])<0.01, "Lumi specified in setup %f does not match lumi in data sample %f in channel %s"%(setup.lumi[channel], setup.sample['Data'][channel]['lumi'], channel)
       cut_offZ_1b = "&&".join([region.cutString(setup.sys['selectionModifier']), setup.selection('MC', channel=channel, zWindow = 'offZ', nBTags= (1,-1))])
       cut_onZ_1b  = "&&".join([region.cutString(setup.sys['selectionModifier']), setup.selection('MC', channel=channel, zWindow = 'onZ',  nBTags= (1,-1))])
       cut_onZ_0b  = "&&".join([region.cutString(setup.sys['selectionModifier']), setup.selection('MC', channel=channel, zWindow = 'onZ',  nBTags= (0,0))])
@@ -42,7 +42,7 @@ class DataDrivenDYEstimate(SystematicBaseClass):
       yield_onZ_0b  = {'val'   : getYieldFromChain(setup.sample['DY'][channel]['chain'], cutString = cut_onZ_0b,  weight=weight),
                        'sigma' : getYieldFromChain(setup.sample['DY'][channel]['chain'], cutString = cut_onZ_0b,  weight="("+weight+")**2") }
       if setup.verbose: print "yield_onZ_0b %r"%yield_onZ_0b 
-      yield_data    = {'val'   : getYieldFromChain(setup.sample['data'][channel]['chain'], cutString = cut_data_onZ_0b,  weight=weight) }
+      yield_data    = {'val'   : getYieldFromChain(setup.sample['Data'][channel]['chain'], cutString = cut_data_onZ_0b,  weight=weight) }
       yield_data['sigma'] = sqrt(yield_data['val'])
       if setup.verbose: print "yield_data %r cut %s weight %s"%(yield_data, cut_data_onZ_0b, weight) 
 
