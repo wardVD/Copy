@@ -1,14 +1,16 @@
 from math import sqrt
-
+import numbers
 class u_float():
   def __init__(self,val,sigma=0):
     if type(val)==type(()):
       assert len(val)==2, "Not possible to construct u_float from tuple %r"%val
-      self.val=val[0]
-      self.sigma=val[1]
+      assert isinstance(val[0], numbers.Number) and isinstance(val[1], numbers.Number), "Not a number among %r, %r"%val
+      self.val = float(val[0])
+      self.sigma=float(val[1])
     else:
-      self.val = val
-      self.sigma = sigma
+      assert isinstance(val, numbers.Number) and isinstance(sigma, numbers.Number), "Not a number among %r, %r"%(val, sigma)
+      self.val = float(val)
+      self.sigma = float(sigma)
 
   def __add__(self,other):
     assert type(other)==type(self), "Can't add, two objects should be u_float but is %r."%(type(other))
