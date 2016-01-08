@@ -2,27 +2,27 @@ from StopsDilepton.tools.helpers import getYieldFromChain
 from math import sqrt
 from systematics import SystematicBaseClass
 from u_float import u_float
-class DataDrivenDYEstimate(SystematicBaseClass):
+class DataDrivenTTZEstimate(SystematicBaseClass):
   def __init__(self, name, cacheDir=None):
-    super(DataDrivenDYEstimate, self).__init__(name, cacheDir=cacheDir)
+    super(DataDrivenTTZEstimate, self).__init__(name, cacheDir=cacheDir)
 #Concrete implementation of abstract method 'estimate' as defined in Systematic
   def _estimate(self, region, channel, setup):
     print   "\n" \
           + "********************************* \n" \
-          + "Starting Data Driven DY printouts \n" \
+          + "Starting Data Driven TTZ printouts \n" \
           + "********************************* \n" 
 
     weight = setup.weightString()
     #Sum of all channels for 'all'
     if channel=='all':
-      return sum( [ self.cachedEstimate(region, channel, setup) for c in ['MuMu', 'EE', 'EMu'] ] )
+      return sum( [ self.cachedEstimate(region, c, channel, setup) for c in ['MuMu', 'EE', 'EMu'] ] )
 
     #MC based for 'EMu'
     elif channel=='EMu':
       cut = "&&".join([region.cutString(setup.sys['selectionModifier']), setup.preselection('MC', channel=channel)])
       if setup.verbose: 
         print "Using cut %s and weight %s"%(cut, weight)
-      return setup.lumi[channel]/1000. * u_float( getYieldFromChain(setup.sample['DY'][channel]['chain'], cutString = cut, weight=weight, returnError = True) )
+      return setup.lumi[channel]/1000. * u_float( getYieldFromChain(setup.sample['TTZ'][channel]['chain'], cutString = cut, weight=weight, returnError = True) )
 
     #Data driven for EE and MuMu
     else:
@@ -47,7 +47,7 @@ class DataDrivenDYEstimate(SystematicBaseClass):
       yield_ewk = u_float(0., 0.) 
       for ewk in ['TTJets' , 'singleTop' , 'TTZ' , 'diBoson', 'triBoson' , 'TTXNoZ' , 'WJetsToLNu_HT']:
         yield_ewk+=u_float(getYieldFromChain(setup.sample[ewk][channel]['chain'], cutString = cut_onZ_0b,  weight=weight, returnError=True))
-        if setup.verbose: print "yield_ewk_onZ_0b %s added, now: %s"%(ewk, yield_ewk)
+        if setup.verbose: print "yield_ewk %s added, now: %s"%(ewk, yield_ewk)
       
       normRegYield = yield_data - yield_ewk
       if normRegYield.val<0: print "\n !!!Warning!!! \n Negative normalization region yield data: (%s), MC: (%s) \n"%(yield_data, yield_ewk)

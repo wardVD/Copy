@@ -62,11 +62,13 @@ class SystematicBaseClass:
     return
  
   def JERSystematic(self, region, channel, setup):
+    ref   = self.cachedEstimate(region, channel)
     up   = self.cachedEstimate(region, channel, setup.sysClone({'selectionModifier':'JERUp'}))
     down = self.cachedEstimate(region, channel, setup.sysClone({'selectionModifier':'JERDown'}))
-    return {'val': 0.5*(up['val'] - down['val']), 'sigma':0.5*sqrt(up['sigma']**2 + down['sigma']**2)}
+    return 0.5*(up-down)/ref
 
   def JECSystematic(self, region, channel, setup):
+    ref   = self.cachedEstimate(region, channel)
     up   = self.cachedEstimate(region, channel, setup.sysClone({'selectionModifier':'JECUp'}))
     down = self.cachedEstimate(region, channel, setup.sysClone({'selectionModifier':'JECDown'}))
-    return {'val': 0.5*(up['val'] - down['val']), 'sigma':0.5*sqrt(up['sigma']**2 + down['sigma']**2)}
+    return 0.5*(up-down)/ref 

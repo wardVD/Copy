@@ -1,4 +1,5 @@
 from StopsDilepton.tools.helpers import getYieldFromChain
+from setupHelpers import loadChain
 from u_float import u_float 
 from systematics import SystematicBaseClass
 
@@ -18,4 +19,6 @@ class MCBasedEstimate(SystematicBaseClass):
 
     if setup.verbose: 
       print "Using cut %s and weight %s"%(cut, weight)
+    if not self.sample[channel].has_key('chain'):
+      loadChain(self.sample[channel])
     return setup.lumi[channel]/1000.*u_float(getYieldFromChain(self.sample[channel]['chain'], cutString = cut, weight=weight, returnError = True) )

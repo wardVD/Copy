@@ -4,14 +4,18 @@ import copy
 zMassRange=15
 
 #define samples
+from StopsDilepton.samples.helpers import combineSamples
 from StopsDilepton.samples.cmgTuples_Data25ns_mAODv2_postProcessed import *
 from StopsDilepton.samples.cmgTuples_Spring15_mAODv2_25ns_1l_postProcessed import *
 
 #choices for specific samples
-DYSample      = DY #NLO M10t050 + M50
-#DYSample      = DY_HT_LO #LO, HT binned including a low HT bin starting from zero from the inclusive sample
-TTJetsSample  = TTJets #NLO
-#TTJetsSample  = TTJets_Lep #LO, very large dilep + single lep samples
+#DYSample      = DY #NLO M10t050 + M50
+DYSample      = DY_HT_LO #LO, HT binned including a low HT bin starting from zero from the inclusive sample
+#TTJetsSample  = TTJets #NLO
+TTJetsSample  = TTJets_Lep #LO, very large dilep + single lep samples
+otherEWKBkgs   = combineSamples([singleTop, diBoson, triBoson, TTXNoZ, WJetsToLNu_HT])
+otherEWKBkgs['name'] = 'otherBkgs'
+otherEWKBkgs['texName'] = 'other bkgs.'
 
 allChannels = ['all', 'EE', 'MuMu', 'EMu']
 
@@ -36,8 +40,6 @@ def getCuts(selectionModifier=None, nBTags=(1,-1)):
  ("isOS", "isOS"),
  ("njet2", "nGoodJets"+sysStr+">=2"),
  (kstr, nbtstr), 
-# ("nbtag1", nbtstr),
-# ("nbtag0", "Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id&&Jet_btagCSV>0.890)==0"),
  ("mll20", "dl_mass>20"),
  ("met80", "met_pt"+sysStr+">80"),
  ("metSig5", "met_pt"+sysStr+"/sqrt(ht"+sysStr+")>5"),
@@ -59,18 +61,21 @@ class _setup:
     'DY':         {c:DYSample for c in allChannels},
     'DY_HT_LO':   {c:DY_HT_LO for c in allChannels},
     'TTJets' :    {c:TTJetsSample for c in allChannels},
-    'singleTop' : {c:singleTop for c in allChannels},
     'TTZ'    :    {c:TTZ for c in allChannels},
+    'singleTop' : {c:singleTop for c in allChannels},
     'diBoson':    {c:diBoson for c in allChannels},
     'triBoson' :  {c:triBoson for c in allChannels},
     'TTXNoZ'   :  {c:TTXNoZ for c in allChannels},
     'WJetsToLNu_HT' : {c: WJetsToLNu_HT for c in allChannels} ,
     'QCD'    :    {'MuMu':QCD_Mu5, 'EE': QCD_EMbcToE, 'EMu':QCD_Mu5EMbcToE, 'all':QCD_Mu5EMbcToE},
-    'Data'   : {'MuMu':DoubleMuon_Run2015D, 'EE': DoubleEG_Run2015D, 'EMu':MuonEG_Run2015D},
+    'other'  :    {'MuMu':combineSamples([otherEWKBkgs, QCD_Mu5]), 'EE': combineSamples([otherEWKBkgs,QCD_EMbcToE]), 'EMu':combineSamples([otherEWKBkgs, QCD_Mu5EMbcToE]), 
+                   'all': combineSamples([otherEWKBkgs, QCD_Mu5EMbcToE])},
+    'Data'   :    {'MuMu':DoubleMuon_Run2015D, 'EE': DoubleEG_Run2015D, 'EMu':MuonEG_Run2015D},
     }
     for s in sum([s.values() for s in self.sample.values()],[]):
-      loadChain(s)
+      loadChain(s)# if not type(s)==type([]) else [loadChain(t) for t in s]
     self.prefix = '-'.join(c[0] for c in getCuts())
+    self.cacheDir = os.path.join(self.analysisOutputDir, 'cacheFiles', self.prefix)
 
   #Clone the setup and optinally modify the systematic variation
   def sysClone(self, sys=None):
@@ -94,12 +99,12 @@ class _setup:
     return wStr
 
   def preselection(self, dataMC , channel='all', zWindow = 'offZ'):
-    return self.selection(dataMC, channel = channel, zWindow = zWindow, nBTags = (1,-1))
-
-  def selection(self, dataMC, channel = 'all', zWindow = 'offZ', nBTags = (1,-1) ):
     '''Get preselection  cutstring.
 Arguments: dataMC: 'Data' or 'MC'
 sys: Systematic variation, default is None. '''
+    return self.selection(dataMC, channel = channel, zWindow = zWindow, nBTags = (1,-1))
+
+  def selection(self, dataMC, channel = 'all', zWindow = 'offZ', nBTags = (1,-1) ):
 
     triggerMuMu   = "HLT_mumuIso"
     triggerEleEle = "HLT_ee_DZ"
@@ -150,22 +155,17 @@ setup=_setup()
 from regions import regions1D, regions3D
 regions =  regions1D
 
-from collections import OrderedDict
 from MCBasedEstimate import MCBasedEstimate
 from DataDrivenDYEstimate import DataDrivenDYEstimate
-#from WardsGreatCode import DataDrivenDYEstimate, DataDrivenTTZEstimate
-cacheDir = os.path.join(setup.analysisOutputDir, 'cacheFiles', setup.prefix)
+#from collections import OrderedDict
 estimates = [
    DataDrivenDYEstimate(name='DY-DD', cacheDir=None),
-   # MCBasedEstimate(name='TTJets',    sample=setup.sample['TTJets'], cacheDir=cacheDir),
-   # MCBasedEstimate(name='TTZ',       sample=setup.sample['TTZ'], cacheDir=cacheDir),
-   # MCBasedEstimate(name='TTXNoZ',    sample=setup.sample['TTXNoZ'], cacheDir=cacheDir),
-   # MCBasedEstimate(name='singleTop', sample=setup.sample['singleTop'], cacheDir=cacheDir),
-   # MCBasedEstimate(name='diBoson',   sample=setup.sample['diBoson'], cacheDir=cacheDir),
-   # MCBasedEstimate(name='triBoson',  sample=setup.sample['triBoson'], cacheDir=cacheDir),
-   # MCBasedEstimate(name='WJetsToLNu_HT', sample=setup.sample['WJetsToLNu_HT'], cacheDir=cacheDir),
-   MCBasedEstimate(name='DY',        sample=setup.sample['DY'], cacheDir=cacheDir),
-   # MCBasedEstimate(name='QCD',      sample=setup.sample['QCD'], cacheDir=cacheDir),
+
+   MCBasedEstimate(name='DY',          sample=setup.sample['DY'], cacheDir=setup.cacheDir),
+   #MCBasedEstimate(name='TTJets',      sample=setup.sample['TTJets'], cacheDir=setup.cacheDir),
+   #MCBasedEstimate(name='TTZ',         sample=setup.sample['TTZ'], cacheDir=setup.cacheDir),
+   #MCBasedEstimate(name='other',       sample=setup.sample['other'], cacheDir=setup.cacheDir),
 ]
+
 nList = [e.name for e in estimates]
 assert len(list(set(nList))) == len(nList), "Names of estimates are not unique: %s"%",".join(nList)

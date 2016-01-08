@@ -1,8 +1,8 @@
 from region import region
 
-mt2llThresholds  = [0, 100, 1000]
-mt2blblThresholds= [0, 140, 240]
-mt2bbThresholds  = [70,170,270]
+mt2llThresholds  = [0, 100, 200]
+mt2blblThresholds= [0, 100, 200]
+mt2bbThresholds  = [70,170, 270]
 
 def getRegionsFromThresholds(var, vals):
   return [region(var, (vals[i], vals[i+1])) for i in range(len(vals)-1)]+[region(var, (vals[-1], -1))]
