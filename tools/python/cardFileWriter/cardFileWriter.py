@@ -11,7 +11,7 @@ class cardFileWriter:
     self.niceNames = {}
     self.defWidth = 12
     self.precision = 3
-    self.maxUncNameWidth = 15
+    self.maxUncNameWidth = 30
     self.maxUncStrWidth = 30
     self.hasContamination=False
 
@@ -34,10 +34,7 @@ class cardFileWriter:
     self.processes[name] = ["signal"]+processes
 
   def addUncertainty(self, name, t, n=0):
-    if len(name)>self.maxUncNameWidth:
-      print "That's too long:",name,"Max. length is", self.maxUncNameWidth
-      del self.uncertaintyString[name]
-      return
+    assert len(name)<self.maxUncNameWidth,  "That's too long: %s. Max. length is %i"%(name, self.maxUncNameWidth)
     if self.uncertainties.count(name):
       print "Uncertainty already there! (",name,")"
       return

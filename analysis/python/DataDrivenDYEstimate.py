@@ -10,7 +10,7 @@ class DataDrivenDYEstimate(SystematicBaseClass):
     weight = setup.weightString()
     #Sum of all channels for 'all'
     if channel=='all':
-      return sum( [ self.cachedEstimate(region, c, channel, setup) for c in ['MuMu', 'EE', 'EMu'] ] )
+      return sum( [ self.cachedEstimate(region, c, setup) for c in ['MuMu', 'EE', 'EMu'] ], u_float(0.,0.) )
 
     #MC based for 'EMu'
     elif channel=='EMu':

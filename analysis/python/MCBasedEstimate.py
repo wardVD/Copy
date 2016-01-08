@@ -9,11 +9,14 @@ class MCBasedEstimate(SystematicBaseClass):
     self.sample=sample
 #Concrete implementation of abstract method 'estimate' as defined in Systematic
   def _estimate(self, region, channel, setup):
-    cut = "&&".join([region.cutString(setup.sys['selectionModifier']), setup.preselection('MC', channel=channel)])
-    weight = setup.weightString()
+    if channel=='all':
+      return sum( [ self.cachedEstimate(region, c, setup) for c in ['MuMu', 'EE', 'EMu'] ], u_float(0., 0.) )
+    else:
+      cut = "&&".join([region.cutString(setup.sys['selectionModifier']), setup.preselection('MC', channel=channel)])
+      weight = setup.weightString()
 
-    if setup.verbose: 
-      print "Using cut %s and weight %s"%(cut, weight)
-    if not self.sample[channel].has_key('chain'):
-      loadChain(self.sample[channel])
-    return setup.lumi[channel]/1000.*u_float(getYieldFromChain(self.sample[channel]['chain'], cutString = cut, weight=weight, returnError = True) )
+      if setup.verbose: 
+        print "Using cut %s and weight %s"%(cut, weight)
+      if not self.sample[channel].has_key('chain'):
+        loadChain(self.sample[channel])
+      return setup.lumi[channel]/1000.*u_float(getYieldFromChain(self.sample[channel]['chain'], cutString = cut, weight=weight, returnError = True) )
