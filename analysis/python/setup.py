@@ -16,9 +16,9 @@ TTJetsSample  = TTJets #NLO
 allChannels = ['all', 'EE', 'MuMu', 'EMu']
 
 #to run on data
-#lumi = {'EMu':MuonEG_Run2015D['lumi'], 'MuMu':DoubleMuon_Run2015D['lumi'], 'EE':DoubleEG_Run2015D['lumi']}
+lumi = {'EMu':MuonEG_Run2015D['lumi'], 'MuMu':DoubleMuon_Run2015D['lumi'], 'EE':DoubleEG_Run2015D['lumi']}
 #10/fb to run on MC
-lumi = {c:10000 for c in allChannels}
+#lumi = {c:10000 for c in allChannels}
 
 from systematics import jmeVariations
 def getCuts(selectionModifier=None, nBTags=(1,-1)):
@@ -53,10 +53,11 @@ class _setup:
     self.zMassRange   = zMassRange
     self.useTriggers=True
     self.lumi=lumi
-    self.sys          = {'weight':'weightPU', 'reweight':[], 'selectionModifier':None}
+    self.sys          = {'weight':'weight', 'reweight':[], 'selectionModifier':None}
 
     self.sample = {
     'DY':         {c:DYSample for c in allChannels},
+    'DY_HT_LO':   {c:DY_HT_LO for c in allChannels},
     'TTJets' :    {c:TTJetsSample for c in allChannels},
     'singleTop' : {c:singleTop for c in allChannels},
     'TTZ'    :    {c:TTZ for c in allChannels},
@@ -155,16 +156,16 @@ from DataDrivenDYEstimate import DataDrivenDYEstimate
 #from WardsGreatCode import DataDrivenDYEstimate, DataDrivenTTZEstimate
 cacheDir = os.path.join(setup.analysisOutputDir, 'cacheFiles', setup.prefix)
 estimates = [
-#   DataDrivenDYEstimate(name='DY-DD', cacheDir=None),
-   MCBasedEstimate(name='TTJets',    sample=setup.sample['TTJets'], cacheDir=cacheDir),
-   MCBasedEstimate(name='TTZ',       sample=setup.sample['TTZ'], cacheDir=cacheDir),
-   MCBasedEstimate(name='TTXNoZ',    sample=setup.sample['TTXNoZ'], cacheDir=cacheDir),
-   MCBasedEstimate(name='singleTop', sample=setup.sample['singleTop'], cacheDir=cacheDir),
-   MCBasedEstimate(name='diBoson',   sample=setup.sample['diBoson'], cacheDir=cacheDir),
-   MCBasedEstimate(name='triBoson',  sample=setup.sample['triBoson'], cacheDir=cacheDir),
-   MCBasedEstimate(name='WJetsToLNu_HT', sample=setup.sample['WJetsToLNu_HT'], cacheDir=cacheDir),
+   DataDrivenDYEstimate(name='DY-DD', cacheDir=None),
+   # MCBasedEstimate(name='TTJets',    sample=setup.sample['TTJets'], cacheDir=cacheDir),
+   # MCBasedEstimate(name='TTZ',       sample=setup.sample['TTZ'], cacheDir=cacheDir),
+   # MCBasedEstimate(name='TTXNoZ',    sample=setup.sample['TTXNoZ'], cacheDir=cacheDir),
+   # MCBasedEstimate(name='singleTop', sample=setup.sample['singleTop'], cacheDir=cacheDir),
+   # MCBasedEstimate(name='diBoson',   sample=setup.sample['diBoson'], cacheDir=cacheDir),
+   # MCBasedEstimate(name='triBoson',  sample=setup.sample['triBoson'], cacheDir=cacheDir),
+   # MCBasedEstimate(name='WJetsToLNu_HT', sample=setup.sample['WJetsToLNu_HT'], cacheDir=cacheDir),
    MCBasedEstimate(name='DY',        sample=setup.sample['DY'], cacheDir=cacheDir),
-   MCBasedEstimate(name='QCD',      sample=setup.sample['QCD'], cacheDir=cacheDir),
+   # MCBasedEstimate(name='QCD',      sample=setup.sample['QCD'], cacheDir=cacheDir),
 ]
 nList = [e.name for e in estimates]
 assert len(list(set(nList))) == len(nList), "Names of estimates are not unique: %s"%",".join(nList)

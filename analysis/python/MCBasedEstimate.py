@@ -8,6 +8,11 @@ class MCBasedEstimate(SystematicBaseClass):
     self.sample=sample
 #Concrete implementation of abstract method 'estimate' as defined in Systematic
   def _estimate(self, region, channel, setup):
+    print   "\n" \
+        + "********************************* \n" \
+        + "Starting MC prediction for " + self.name + " \n" \
+        + "********************************* \n" 
+
     cut = "&&".join([region.cutString(setup.sys['selectionModifier']), setup.preselection('MC', channel=channel)])
     weight = setup.weightString()
 

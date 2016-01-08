@@ -1,6 +1,6 @@
 from region import region
 
-mt2llThresholds  = [0, 140, 240]
+mt2llThresholds  = [0, 100, 1000]
 mt2blblThresholds= [0, 140, 240]
 mt2bbThresholds  = [70,170,270]
 
