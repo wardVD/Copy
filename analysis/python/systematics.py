@@ -60,15 +60,26 @@ class SystematicBaseClass:
   def _estimate(self, region, channel, setup):
     '''Estimate yield in 'region' using setup'''
     return
+
+  def PUSystematic(self, region, channel, setup):
+    ref  = self.cachedEstimate(region, channel, setup)
+    up   = self.cachedEstimate(region, channel, setup.sysClone({'reweight':['weightPUUp']}))
+    down = self.cachedEstimate(region, channel, setup.sysClone({'reweight':['weightPUDown']}))
+    return 0.5*(up-down)/ref
+
+  def topPtSystematic(self, region, channel, setup):
+    ref   = self.cachedEstimate(region, channel, setup)
+    up   = self.cachedEstimate(region, channel, setup.sysClone({'reweight':['topPtReweight']}))
+    return 0.5*(up-ref)/ref
  
   def JERSystematic(self, region, channel, setup):
-    ref   = self.cachedEstimate(region, channel)
+    ref   = self.cachedEstimate(region, channel, setup)
     up   = self.cachedEstimate(region, channel, setup.sysClone({'selectionModifier':'JERUp'}))
     down = self.cachedEstimate(region, channel, setup.sysClone({'selectionModifier':'JERDown'}))
     return 0.5*(up-down)/ref
 
   def JECSystematic(self, region, channel, setup):
-    ref   = self.cachedEstimate(region, channel)
+    ref   = self.cachedEstimate(region, channel, setup)
     up   = self.cachedEstimate(region, channel, setup.sysClone({'selectionModifier':'JECUp'}))
     down = self.cachedEstimate(region, channel, setup.sysClone({'selectionModifier':'JECDown'}))
     return 0.5*(up-down)/ref 

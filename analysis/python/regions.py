@@ -1,17 +1,18 @@
 from region import region
 
+def getRegionsFromThresholds(var, vals):
+  return [region(var, (vals[i], vals[i+1])) for i in range(len(vals)-1)]+[region(var, (vals[-1], -1))]
+
+regions1D = getRegionsFromThresholds('dl_mt2ll', [140, 240])
+
 mt2llThresholds  = [0, 100, 200]
 mt2blblThresholds= [0, 100, 200]
 mt2bbThresholds  = [70,170, 270]
-
-def getRegionsFromThresholds(var, vals):
-  return [region(var, (vals[i], vals[i+1])) for i in range(len(vals)-1)]+[region(var, (vals[-1], -1))]
 
 regions_mt2ll = getRegionsFromThresholds('dl_mt2ll', mt2llThresholds)
 regions_mt2bb = getRegionsFromThresholds('dl_mt2bb', mt2bbThresholds)
 regions_mt2blbl = getRegionsFromThresholds('dl_mt2blbl', mt2blblThresholds)
 
-regions1D = regions_mt2ll[1:]
 
 regions3D = []
 for r1 in regions_mt2ll:

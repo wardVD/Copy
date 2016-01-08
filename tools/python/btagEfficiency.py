@@ -2,13 +2,13 @@ import ROOT, pickle, itertools, os
 from operator import or_
 
 #Method 1b
-effFile = '/afs/hephy.at/data/rschoefbeck01/StopsDilepton/btagEfficiencyData/TTJets_DiLepton_comb_2j_2l.pkl'
-sfFile_1b =  '/afs/hephy.at/data/rschoefbeck01/StopsDilepton/btagEfficiencyData/CSVv2.csv' 
+effFile   = '$CMSSW_BASE/src/StopsDilepton/tools/data/btagEfficiencyData/TTJets_DiLepton_comb_2j_2l.pkl'
+sfFile_1b = '$CMSSW_BASE/src/StopsDilepton/tools/data/btagEfficiencyData/CSVv2.csv' 
 
 #Method 1d
 #https://twiki.cern.ch/twiki/bin/view/CMS/BTagShapeCalibration
 #https://twiki.cern.ch/twiki/bin/view/CMS/BTagSFMethods
-sfFile_1d = '/afs/hephy.at/data/rschoefbeck01/StopsDilepton/btagEfficiencyData/ttH_BTV_CSVv2_13TeV_2015D_20151120.csv'
+sfFile_1d = '$CMSSW_BASE/src/StopsDilepton/tools/data/btagEfficiencyData/ttH_BTV_CSVv2_13TeV_2015D_20151120.csv'
 
 #binning in pt and eta
 ptBorders = [30, 40, 50, 60, 70, 80, 100, 120, 160, 210, 260, 320, 400, 500, 670]

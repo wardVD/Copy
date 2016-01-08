@@ -86,16 +86,16 @@ class _setup:
       for k in sys.keys():
         if k=='reweight':
 #          res.sys[k]=list(set(res.sys[k]+sys[k])) #Add with unique elements 
-          res.sys[k] = res.sys[k]+sys[k] #Add with unique elements 
+          res.sys[k] = res.sys[k]+sys[k] 
           if len(res.sys[k])!=len(list(set(res.sys[k]))): print "Warning! non-exclusive list of reweights: %s"% ",".join(res.sys['k'])
         else:
           res.sys[k]=sys[k]# if sys[k] else res.sys[k]
     return res
 
   def weightString(self):
-    wStr = setup.sys['weight']
-    if setup.sys['reweight']:
-      wStr += "*"+"*".join(setup.sys['reweight'])
+    wStr = self.sys['weight']
+    if self.sys['reweight']:
+      wStr += "*"+"*".join(self.sys['reweight'])
     return wStr
 
   def preselection(self, dataMC , channel='all', zWindow = 'offZ'):
