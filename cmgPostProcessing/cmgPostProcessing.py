@@ -25,7 +25,7 @@ targetLumi = 1000 #pb-1 Which lumi to normalize to
 
 defSampleStr = "SMS_T2tt_mStop200_mLSP1to125"
 
-subDir = "/afs/hephy.at/data/rschoefbeck01/cmgTuples/postProcessed_mAODv2_fix" #Output directory -> The first path should go to localInfo (e.g. 'dataPath' or something)
+subDir = "/afs/hephy.at/data/rschoefbeck01/cmgTuples/postProcessed_mAODv2" #Output directory -> The first path should go to localInfo (e.g. 'dataPath' or something)
 
 from optparse import OptionParser
 parser = OptionParser()
@@ -266,8 +266,8 @@ if options.skim.lower().startswith('dilep'):
   newVariables.extend( ['dl_pt/F', 'dl_eta/F', 'dl_phi/F', 'dl_mass/F' ] )
   newVariables.extend( ['dl_mt2ll/F', 'dl_mt2bb/F', 'dl_mt2blbl/F' ] )
 #  newVariables.extend( ['dl_mtautau/F', 'dl_alpha0/F',  'dl_alpha1/F' ] )
-  newVariables.extend( ['l1_pt/F', 'l1_eta/F', 'l1_phi/F', 'l1_mass/F', 'l1_pdgId/I', 'l1_index/I' ] )
-  newVariables.extend( ['l2_pt/F', 'l2_eta/F', 'l2_phi/F', 'l2_mass/F', 'l2_pdgId/I', 'l2_index/I' ] )
+  newVariables.extend( ['l1_pt/F', 'l1_eta/F', 'l1_phi/F', 'l1_pdgId/I', 'l1_index/I' ] )
+  newVariables.extend( ['l2_pt/F', 'l2_eta/F', 'l2_phi/F', 'l2_pdgId/I', 'l2_index/I' ] )
   newVariables.extend( ['isEE/I', 'isMuMu/I', 'isEMu/I', 'isOS/I' ] )
 if not options.skipVariations:
   for var in ['JECUp', 'JECDown', 'JER', 'JERUp', 'JERDown']:
@@ -423,13 +423,11 @@ for chunk in chunks:
           s.l1_pt  = leptons[0]['pt'] 
           s.l1_eta = leptons[0]['eta']
           s.l1_phi = leptons[0]['phi']
-          s.l1_mass   = leptons[0]['mass']
           s.l1_pdgId  = leptons[0]['pdgId']
           s.l1_index  = leptons[0]['index']
           s.l2_pt  = leptons[1]['pt'] 
           s.l2_eta = leptons[1]['eta']
           s.l2_phi = leptons[1]['phi']
-          s.l2_mass   = leptons[1]['mass']
           s.l2_pdgId  = leptons[1]['pdgId']
           s.l2_index  = leptons[1]['index']
 
