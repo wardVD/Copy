@@ -63,13 +63,13 @@ class SystematicBaseClass:
 
   def PUSystematic(self, region, channel, setup):
     ref  = self.cachedEstimate(region, channel, setup)
-    up   = self.cachedEstimate(region, channel, setup.sysClone({'reweight':['weightPUUp']}))
-    down = self.cachedEstimate(region, channel, setup.sysClone({'reweight':['weightPUDown']}))
+    up   = self.cachedEstimate(region, channel, setup.sysClone({'weight':'weightPUUp'}))
+    down = self.cachedEstimate(region, channel, setup.sysClone({'weight':'weightPUDown'}))
     return 0.5*(up-down)/ref
 
   def topPtSystematic(self, region, channel, setup):
     ref   = self.cachedEstimate(region, channel, setup)
-    up   = self.cachedEstimate(region, channel, setup.sysClone({'reweight':['topPtReweight']}))
+    up   = self.cachedEstimate(region, channel, setup.sysClone({'reweight':['reweightTopPt']}))
     return 0.5*(up-ref)/ref
  
   def JERSystematic(self, region, channel, setup):

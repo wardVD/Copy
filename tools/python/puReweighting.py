@@ -6,7 +6,7 @@ def getReweightingFunction(data="PU_2100_XSecCentral", mc="Spring15"):
   histoData.Scale(1./histoData.Integral())
   print "[puReweighting] Loaded 'pileup' from data file %s"%(fileNameData)
   if mc=='Spring15':
-    from StopsDilepton.tools.puReweightingData.spring15MCProfile import mcProfile
+    from StopsDilepton.tools.spring15MCPUProfile import mcProfile
     mcProfile.Scale(1./mcProfile.Integral()) 
     print "[puReweighting] Loaded mcProfile from $CMSSW_BASE/src/StopsDilepton/tools/data/puReweightingData/spring15MCProfile.py"
   reweightingHisto = histoData.Clone('_'.join(['reweightingHisto', data, mc])) 

@@ -48,7 +48,7 @@ def getCuts(selectionModifier=None, nBTags=(1,-1)):
 
 from StopsDilepton.analysis.setupHelpers import getZCut, loadChain
 #import json
-class _setup:
+class Setup:
   def __init__(self):
     self.verbose=False
     self.analysisOutputDir = analysisOutputDir
@@ -142,7 +142,7 @@ sys: Systematic variation, default is None. '''
       presel+="&&"+filterCut
     return presel 
 
-setup=_setup()
+setup = Setup()
 
 #define analysis regions
 from regions import regions1D, regions3D
