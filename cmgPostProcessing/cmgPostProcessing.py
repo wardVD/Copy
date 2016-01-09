@@ -288,10 +288,10 @@ if not options.skipVariations:
     newVariables.extend( ['met_pt_'+var+'/F', 'met_phi_'+var+'/F'] )
     if options.skim.lower().startswith('dilep'):
       newVariables.extend( ['dl_mt2ll_'+var+'/F', 'dl_mt2bb_'+var+'/F', 'dl_mt2blbl_'+var+'/F'] )
-  for var in btagEff_1d.btagReweights:
+  for var in btagEff_1d.btagWeightNames:
     newVariables.append('reweightBTag_'+var+'/F')
   for i in range(maxMultBTagWeight+1):
-    for var in btagEff_1b.btagReweights:#['MC', 'SF', 'SF_b_Down', 'SF_b_Up', 'SF_l_Down', 'SF_l_Up']:
+    for var in btagEff_1b.btagWeightNames:#['MC', 'SF', 'SF_b_Down', 'SF_b_Up', 'SF_l_Down', 'SF_l_Up']:
       newVariables.extend(['reweightBTag'+str(i)+'_'+var+'/F', 'reweightBTag'+str(i+1)+'p_'+var+'/F'])
 
 newVars = [readVar(v, allowRenaming=False, isWritten = True, isRead=False) for v in newVariables]
@@ -494,11 +494,11 @@ for chunk in chunks:
       if not options.skipVariations:
         for j in jets:
           btagEff_1d.addBTagEffToJet(j)
-        for var in btagEff_1d.btagReweights:
+        for var in btagEff_1d.btagWeightNames:
           setattr(s, 'reweightBTag_'+var, reduce(mul, [j['beff'][var] for j in jets], 1) )
         for j in jets:
           btagEff_1b.addBTagEffToJet(j)
-        for var in btagEff_1b.btagReweights:
+        for var in btagEff_1b.btagWeightNames:
           res = getTagWeightDict([j['beff'][var] for j in jets], maxMultBTagWeight)
           for i in range(maxMultBTagWeight+1):
             setattr(s, 'reweightBTag'+str(i)+'_'+var, res[i])

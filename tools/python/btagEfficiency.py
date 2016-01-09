@@ -122,7 +122,7 @@ class btagEfficiency:
   
 
   def addBTagEffToJet_1d(self, j):
-    j['beff'] = {sys: 1. if sys not in flavourSys_1d[abs(j['hadronFlavour'])] else self.readers[sys].eval(toFlavourKey(j['hadronFlavour']), j['eta'], j['pt'], j['btagCSV']) for sys in self.btagReweights}
+    j['beff'] = {sys: 1. if sys not in flavourSys_1d[abs(j['hadronFlavour'])] else self.readers[sys].eval(toFlavourKey(j['hadronFlavour']), j['eta'], j['pt'], j['btagCSV']) for sys in self.btagWeightNames}
 
   def __init__(self, method = '1d', WP = ROOT.BTagEntry.OP_MEDIUM, verbose=True, fastSim = False):
     self.verbose=verbose
@@ -132,9 +132,9 @@ class btagEfficiency:
       self.scaleFactorFile = sfFile_1b
       self.scaleFactorFileFS = sfFile_1b_FastSim
       self.mcEfficiencyFile = effFile
-      self.btagReweights = ['MC', 'SF', 'SF_b_Down', 'SF_b_Up', 'SF_l_Down', 'SF_l_Up']
+      self.btagWeightNames = ['MC', 'SF', 'SF_b_Down', 'SF_b_Up', 'SF_l_Down', 'SF_l_Up']
       if self.fastSim:
-        self.btagReweights += [ 'SF_FS_Up', 'SF_FS_Down']
+        self.btagWeightNames += [ 'SF_FS_Up', 'SF_FS_Down']
       print "[btagEfficiency Method %s] Loading scale factors from %s"%(self.method, os.path.expandvars(self.scaleFactorFile))
       self.calib = ROOT.BTagCalibration("csvv2", os.path.expandvars(self.scaleFactorFile))
   ## get SF
@@ -160,11 +160,11 @@ class btagEfficiency:
       self.addBTagEffToJet = self.addBTagEffToJet_1b
     elif self.method=='1d':
       assert not fastSim, "[btagEfficiency] No fastSim SF for method 1d!"
-      self.btagReweights = reduce(or_, flavourSys_1d.values())
+      self.btagWeightNames = reduce(or_, flavourSys_1d.values())
       self.scaleFactorFile = sfFile_1d
       print "[btagEfficiency Method %s] Loading scale factors from %s"%(self.method, os.path.expandvars(self.scaleFactorFile))
       self.calib = ROOT.BTagCalibration("csvv2", os.path.expandvars(self.scaleFactorFile))
-      self.readers = {sys: ROOT.BTagCalibrationReader(self.calib, ROOT.BTagEntry.OP_RESHAPING, "iterativefit", sys) for sys in self.btagReweights}
+      self.readers = {sys: ROOT.BTagCalibrationReader(self.calib, ROOT.BTagEntry.OP_RESHAPING, "iterativefit", sys) for sys in self.btagWeightNames}
       self.addBTagEffToJet = self.addBTagEffToJet_1d
     else: 
       print "[btagEfficiency] Method %s not known!"%self.method
