@@ -79,7 +79,7 @@ class btagEfficiency:
     sf_fs   = 1 if not self.fastSim else self.readerFSCentral.eval(toFlavourKey(pdgId), eta, pt_)
     sf_fs_u = 1 if not self.fastSim else self.readerFSUp.eval(toFlavourKey(pdgId), eta, pt_)
     sf_fs_d = 1 if not self.fastSim else self.readerFSDown.eval(toFlavourKey(pdgId), eta, pt_)
-    if sf_fs = 0:  # never actually happened...just for sanity
+    if sf_fs == 0:  # never actually happened...just for sanity
       sf_fs = 1
       sf_fs_u = 1
       sf_fs_d = 1

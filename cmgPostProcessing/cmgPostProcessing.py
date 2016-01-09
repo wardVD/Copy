@@ -104,7 +104,7 @@ if not options.skipVariations:
   from StopsDilepton.tools.btagEfficiency import btagEfficiency, getTagWeightDict
   btagEff_1d = btagEfficiency(method='1d')
 
-  maxMultBTagWeight = 3
+  maxMultBTagWeight = 2
   btagEff_1b = btagEfficiency(method='1b', fastSim = options.fastSim)
 
 if options.lheHTCut:
