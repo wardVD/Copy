@@ -3,8 +3,10 @@ parser = OptionParser()
 parser.add_option("--mode", dest="mode", default="doubleMu", type="string", action="store", help="doubleMu, doubleEle, muEle")
 parser.add_option("--zMode", dest="zMode", default="onZ", type="string", action="store", help="onZ, offZ, allZ")
 parser.add_option("--small", dest="small", default = False, action="store_true", help="small?")
+parser.add_option("--doTopPtReweighting", dest="doTopPtReweighting", default = False, action="store_true", help="doTopPtReweighting?")
+parser.add_option("--scaleToData", dest="scaleToData", default = False, action="store_true", help="scaleToData?")
 parser.add_option("--overwrite", dest="overwrite", default = False, action="store_true", help="overwrite?")
-parser.add_option("--isSS", dest="isSS", default = True, action="store_true", help="require SS?")
+parser.add_option("--isSS", dest="isSS", default = False, action="store_true", help="require SS?")
 
 (opts, args) = parser.parse_args()
 
@@ -100,16 +102,17 @@ for i in reversed(range(len(cuts)+1)):
       dataSample = MuonEG_Run2015D
       QCDSample = QCD_Mu5EMbcToE
 
+    w = weightMC+'*reweightTopPt' if opts.doTopPtReweighting else weightMC
+    wf = topPtReweighting if opts.doTopPtReweighting else None
     cutFunc = None
+    
     lumiScaleFac = dataSample["lumi"]/1000.
     backgrounds = [TTJets, WJetsToLNu, DY_HT_LO, singleTop, QCDSample, TTX, diBoson] 
     data = getYieldFromChain(getChain(dataSample,histname="",maxN=maxN), cutString = "&&".join([cutString, dataCut]), weight='weight') 
     bkg  = 0. 
     for s in backgrounds:
-      bkg+= getYieldFromChain(getChain(s,histname="", maxN=maxN), cutString, weight=weightMC+'*reweightTopPt')
-
+      bkg+= getYieldFromChain(getChain(s,histname="", maxN=maxN), cutString, weight=w)
     scaleFac = data/(bkg*lumiScaleFac)
-
     print "After lumiscale %3.3f there is bkg %7.1f and data %7.1f: re-normalizing scaleFac by %3.3f"%(lumiScaleFac, lumiScaleFac*bkg, data, scaleFac)
      
     ratioOps = {'yLabel':'Data/MC', 'numIndex':1, 'denIndex':0 ,'yRange':None, 'logY':False, 'color':ROOT.kBlack, 'yRange':(0.1, 2.1)}
@@ -127,18 +130,18 @@ for i in reversed(range(len(cuts)+1)):
       style_singleTop    = {'legendText':'single top',  'style':"f", 'linethickNess':0, 'errorBars':False,      'color':40, 'markerStyle':None, 'markerSize':None}
       
       data               = plot(var, binning, cut, sample=dataSample,       style=style_Data)
-      MC_TTJets          = plot(var, binning, cut, sample=TTJets,       style=style_TTJets,    weightString=weightMC, weightFunc=topPtReweighting)
-      MC_WJetsToLNu      = plot(var, binning, cut, sample=WJetsToLNu,   style=style_WJets,     weightString=weightMC, weightFunc=topPtReweighting)
-      MC_DY              = plot(var, binning, cut, sample=DY_HT_LO,           style=style_DY,  weightString=weightMC, weightFunc=topPtReweighting)
-      MC_singleTop       = plot(var, binning, cut, sample=singleTop,    style=style_singleTop, weightString=weightMC, weightFunc=topPtReweighting)
-      MC_QCD             = plot(var, binning, cut, sample=QCDSample,        style=style_QCD,   weightString=weightMC, weightFunc=topPtReweighting)
-      MC_TTX             = plot(var, binning, cut, sample=TTX,          style=style_TTX,       weightString=weightMC, weightFunc=topPtReweighting)
-      MC_diBoson         = plot(var, binning, cut, sample=diBoson,     style=style_diBoson,    weightString=weightMC, weightFunc=topPtReweighting)
+      MC_TTJets          = plot(var, binning, cut, sample=TTJets,       style=style_TTJets,    weightString=weightMC, weightFunc=wf)
+      MC_WJetsToLNu      = plot(var, binning, cut, sample=WJetsToLNu,   style=style_WJets,     weightString=weightMC, weightFunc=wf)
+      MC_DY              = plot(var, binning, cut, sample=DY_HT_LO,           style=style_DY,  weightString=weightMC, weightFunc=wf)
+      MC_singleTop       = plot(var, binning, cut, sample=singleTop,    style=style_singleTop, weightString=weightMC, weightFunc=wf)
+      MC_QCD             = plot(var, binning, cut, sample=QCDSample,        style=style_QCD,   weightString=weightMC, weightFunc=wf)
+      MC_TTX             = plot(var, binning, cut, sample=TTX,          style=style_TTX,       weightString=weightMC, weightFunc=wf)
+      MC_diBoson         = plot(var, binning, cut, sample=diBoson,     style=style_diBoson,    weightString=weightMC, weightFunc=wf)
       #FIXME triBoson
       mcStack = [MC_TTJets, MC_DY,  MC_QCD, MC_singleTop, MC_WJetsToLNu, MC_diBoson, MC_TTX]
       for s in mcStack:
     #    print s,s.sample
-        s.sample['scale'] = lumiScaleFac*scaleFac
+        s.sample['scale'] = lumiScaleFac*scaleFac if opts.scaleToData else lumiScaleFac
 
       plotLists = [mcStack, [data]]
 #      plotLists = [mcStack]
@@ -152,11 +155,11 @@ for i in reversed(range(len(cuts)+1)):
 
       if opt.has_key('ratio') and opt['ratio']:
         opt['texLines'] = [{'pos':(0.15, 0.95),'text':'CMS Preliminary', 'options':{'size':0.052}},\
-                           {'pos':(0.47, 0.95), 'text':'L='+str(dataSample['lumi'])+' pb{}^{-1} (13 TeV) Scale %3.2f'%scaleFac, 'options':{'size':0.052}}]
+                           {'pos':(0.47, 0.95), 'text':'L='+str(int(dataSample['lumi']/1)*1)+' pb{}^{-1} (13 TeV) Scale %3.2f'%scaleFac, 'options':{'size':0.052}}]
         opt['legend'] = {'coordinates':[0.55,0.90 - len(mcStack)*0.05,.98,.93],'boxed':True}
       else:
         opt['texLines'] = [{'pos':(0.16, 0.965), 'text':'CMS Preliminary',       'options':{'size':0.038}},\
-                           {'pos':(0.47, 0.965),  'text':'L='+str(dataSample['lumi'])+' pb{}^{-1} (13 TeV) Scale %3.2f'%scaleFac,'options':{'size':0.038}}]
+                           {'pos':(0.47, 0.965),  'text':'L='+str(int(dataSample['lumi']/1)*1)+' pb{}^{-1} (13 TeV) Scale %3.2f'%scaleFac,'options':{'size':0.038}}]
         opt['legend'] = {'coordinates':[0.55,0.90 - len(mcStack)*0.05,.98,.95],'boxed':True}
 
       opt.update(options)
@@ -227,14 +230,14 @@ for i in reversed(range(len(cuts)+1)):
         )
     allStacks.append(dl_mt2blbl_stack)
 
-    dl_mtautau_stack  = getStack(
-        labels={'x':'m_{#tau#tau} (GeV)','y':'Number of Events / 5 GeV'},
-    #    var={'name':'mll','func':mll, 'overFlow':'upper', 'branches':[]},
-        var={'name':'dl_mtautau','leaf':"dl_mtautau", 'overFlow':'upper', 'branches':[]},
-        binning={'binning':[20,0,400]},
-        cut={'string':cutString,'func':cutFunc,'dataCut':dataCut},
-        )
-    allStacks.append(dl_mtautau_stack)
+#    dl_mtautau_stack  = getStack(
+#        labels={'x':'m_{#tau#tau} (GeV)','y':'Number of Events / 5 GeV'},
+#    #    var={'name':'mll','func':mll, 'overFlow':'upper', 'branches':[]},
+#        var={'name':'dl_mtautau','leaf':"dl_mtautau", 'overFlow':'upper', 'branches':[]},
+#        binning={'binning':[20,0,400]},
+#        cut={'string':cutString,'func':cutFunc,'dataCut':dataCut},
+#        )
+#    allStacks.append(dl_mtautau_stack)
 
     l1_pt_stack  = getStack(
         labels={'x':'p_{T}(l_{1}) (GeV)','y':'Number of Events / 5 GeV'},

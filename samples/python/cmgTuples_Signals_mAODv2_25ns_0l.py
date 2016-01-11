@@ -1,4 +1,5 @@
-data_path = "/data/rschoefbeck/cmgTuples/T2tt_0l_151231/"
+#data_path = "/data/rschoefbeck/cmgTuples/T2tt_0l_151231/"
+data_path = "/data/rschoefbeck/cmgTuples/T2tt_0l_150109/"
 from CMGTools.RootTools.samples.samples_13TeV_signals import * 
 
 TTJetsDMSamples=[]

@@ -5,7 +5,7 @@ def getRegionsFromThresholds(var, vals):
 
 regions1D = getRegionsFromThresholds('dl_mt2ll', [140, 240])
 
-mt2llThresholds  = [0, 100, 200]
+mt2llThresholds  = [0, 140, 240]
 mt2blblThresholds= [0, 100, 200]
 mt2bbThresholds  = [70,170, 270]
 

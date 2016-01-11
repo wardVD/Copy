@@ -28,23 +28,27 @@ from systematics import jmeVariations
 def getCuts(selectionModifier=None, nBTags=(1,-1)):
   if selectionModifier: assert selectionModifier in jmeVariations, "Don't know about systematic variation %r, take one of %s"%(selectionModifier, ",".join(jmeVariations))
   sysStr="" if not selectionModifier else "_"+selectionModifier
-  nbstr = "nBTags" if not selectionModifier else "nbJets" #Correct stupid naming convention I already fixed in the postprocessing...
 
-  assert nBTags[0]>=0 and (nBTags[1]>=nBTags[0] or nBTags[1]<0), "Not a good nBTags selection: %r"%nBTags
-  nbtstr = nbstr+sysStr+">="+str(nBTags[0])
-  kstr = "nbtag"+str(nBTags[0])
-  if nBTags[1]>0: 
-    nbtstr+= "&&"+nbstr+sysStr+"<="+str(nBTags[1])
-    kstr+='-'+str(nBTags[1])
-  return [
+  clist =  [
  ("isOS", "isOS"),
  ("njet2", "nGoodJets"+sysStr+">=2"),
- (kstr, nbtstr), 
  ("mll20", "dl_mass>20"),
  ("met80", "met_pt"+sysStr+">80"),
  ("metSig5", "met_pt"+sysStr+"/sqrt(ht"+sysStr+")>5"),
  ("dPhiJet0-dPhiJet1", "cos(met_phi"+sysStr+"-Jet_phi[0])<cos(0.25)&&cos(met_phi"+sysStr+"-Jet_phi[1])<cos(0.25)"),
   ]
+  if not nBTags:
+    return clist
+  else:
+    assert nBTags[0]>=0 and (nBTags[1]>=nBTags[0] or nBTags[1]<0), "Not a good nBTags selection: %r"%nBTags
+    nbstr = "nBTags"# if not selectionModifier else "nbJets" #Correct stupid naming convention I already fixed in the postprocessing...
+    nbtstr = nbstr+sysStr+">="+str(nBTags[0])
+    kstr = "nbtag"+str(nBTags[0])
+    if nBTags[1]>0: 
+      nbtstr+= "&&"+nbstr+sysStr+"<="+str(nBTags[1])
+      kstr+='-'+str(nBTags[1])
+    clist.append( (kstr, nbtstr) )
+    return clist
 
 from StopsDilepton.analysis.setupHelpers import getZCut, loadChain
 #import json
@@ -55,7 +59,7 @@ class Setup:
     self.zMassRange   = zMassRange
     self.useTriggers=True
     self.lumi=lumi
-    self.sys          = {'weight':'weightPU', 'reweight':[], 'selectionModifier':None}
+    self.sys          = {'weight':'weightPU', 'reweight':[], 'selectionModifier':None, 'noNBTagCut':False}
 
     self.sample = {
     'DY':         {c:DYSample for c in allChannels},
@@ -78,8 +82,8 @@ class Setup:
     if sys:
       for k in sys.keys():
         if k=='reweight':
-#          res.sys[k]=list(set(res.sys[k]+sys[k])) #Add with unique elements 
-          res.sys[k] = res.sys[k]+sys[k] 
+          res.sys[k]=list(set(res.sys[k]+sys[k])) #Add with unique elements 
+#          res.sys[k] = res.sys[k]+sys[k] 
           if len(res.sys[k])!=len(list(set(res.sys[k]))): print "Warning! non-exclusive list of reweights: %s"% ",".join(res.sys['k'])
         else:
           res.sys[k]=sys[k]# if sys[k] else res.sys[k]
@@ -114,7 +118,7 @@ sys: Systematic variation, default is None. '''
     assert not (dataMC=='Data' and self.sys['selectionModifier']), "Why would you need data preselection with selectionModifier=%r? Should be None."%self.sys['selectionModifier']
 
   #basic cuts
-    cuts = getCuts(self.sys['selectionModifier'], nBTags=nBTags)
+    cuts = getCuts(self.sys['selectionModifier'], nBTags=nBTags) if not self.sys['noNBTagCut'] else getCuts(self.sys['selectionModifier'], nBTags=None)
     presel = "&&".join(c[1] for c in cuts)
   #Z window
     if zWindow in ['onZ', 'offZ']:
@@ -146,7 +150,7 @@ setup = Setup()
 
 #define analysis regions
 from regions import regions1D, regions3D
-regions =  regions1D
+regions =  regions3D
 
 from MCBasedEstimate import MCBasedEstimate
 from DataDrivenDYEstimate import DataDrivenDYEstimate

@@ -1,14 +1,4 @@
 import ROOT, pickle, itertools, os
-from operator import or_
-
-#Method 1b
-effFile             = '$CMSSW_BASE/src/StopsDilepton/tools/data/btagEfficiencyData/TTJets_DiLepton_comb_2j_2l.pkl'
-sfFile_1b           = '$CMSSW_BASE/src/StopsDilepton/tools/data/btagEfficiencyData/CSVv2.csv' 
-sfFile_1b_FastSim   = '$CMSSW_BASE/src/StopsDilepton/tools/data/btagEfficiencyData/CSV_13TEV_Combined_20_11_2015.csv'
-#Method 1d
-#https://twiki.cern.ch/twiki/bin/view/CMS/BTagShapeCalibration
-#https://twiki.cern.ch/twiki/bin/view/CMS/BTagSFMethods
-sfFile_1d = '$CMSSW_BASE/src/StopsDilepton/tools/data/btagEfficiencyData/ttH_BTV_CSVv2_13TeV_2015D_20151120.csv'
 
 #binning in pt and eta
 ptBorders = [30, 40, 50, 60, 70, 80, 100, 120, 160, 210, 260, 320, 400, 500, 670]
@@ -19,11 +9,24 @@ for i in range(len(ptBorders)-1):
 
 ptBins.append([ptBorders[-1], -1])
 
+#Method 1b
+effFile             = '$CMSSW_BASE/src/StopsDilepton/tools/data/btagEfficiencyData/TTJets_DiLepton_comb_2j_2l.pkl'
+sfFile_1b           = '$CMSSW_BASE/src/StopsDilepton/tools/data/btagEfficiencyData/CSVv2.csv' 
+sfFile_1b_FastSim   = '$CMSSW_BASE/src/StopsDilepton/tools/data/btagEfficiencyData/CSV_13TEV_Combined_20_11_2015.csv'
+btagWeightNames_1b    = ['MC', 'SF', 'SF_b_Down', 'SF_b_Up', 'SF_l_Down', 'SF_l_Up']
+btagWeightNames_FS_1b = [ 'SF_FS_Up', 'SF_FS_Down']
+
+#Method 1d
+#https://twiki.cern.ch/twiki/bin/view/CMS/BTagShapeCalibration
+#https://twiki.cern.ch/twiki/bin/view/CMS/BTagSFMethods
+sfFile_1d = '$CMSSW_BASE/src/StopsDilepton/tools/data/btagEfficiencyData/ttH_BTV_CSVv2_13TeV_2015D_20151120.csv'
 flavourSys_1d = {
   5:{'central', 'up_jes', 'down_jes', 'up_lf', 'down_lf', 'up_hfstats1', 'down_hfstats1', 'up_hfstats2', 'down_hfstats2'}, 
   4:{'central', 'up_cferr1', 'down_cferr1', 'up_cferr2', 'down_cferr2'}, 
   0:{'central', 'up_jes', 'down_jes', 'up_hf', 'down_hf', 'up_lfstats1', 'down_lfstats1', 'up_lfstats2', 'down_lfstats2'}, 
 }
+from operator import or_
+btagWeightNames_1d = reduce(or_, flavourSys_1d.values())
 
 def toFlavourKey(pdgId):
   if abs(pdgId)==5: return ROOT.BTagEntry.FLAV_B
@@ -132,9 +135,9 @@ class btagEfficiency:
       self.scaleFactorFile = sfFile_1b
       self.scaleFactorFileFS = sfFile_1b_FastSim
       self.mcEfficiencyFile = effFile
-      self.btagWeightNames = ['MC', 'SF', 'SF_b_Down', 'SF_b_Up', 'SF_l_Down', 'SF_l_Up']
+      self.btagWeightNames = btagWeightNames_1b 
       if self.fastSim:
-        self.btagWeightNames += [ 'SF_FS_Up', 'SF_FS_Down']
+        self.btagWeightNames += btagWeightNames_SF_1b
       print "[btagEfficiency Method %s] Loading scale factors from %s"%(self.method, os.path.expandvars(self.scaleFactorFile))
       self.calib = ROOT.BTagCalibration("csvv2", os.path.expandvars(self.scaleFactorFile))
   ## get SF
@@ -160,7 +163,7 @@ class btagEfficiency:
       self.addBTagEffToJet = self.addBTagEffToJet_1b
     elif self.method=='1d':
       assert not fastSim, "[btagEfficiency] No fastSim SF for method 1d!"
-      self.btagWeightNames = reduce(or_, flavourSys_1d.values())
+      self.btagWeightNames = btagWeightNames_1d 
       self.scaleFactorFile = sfFile_1d
       print "[btagEfficiency Method %s] Loading scale factors from %s"%(self.method, os.path.expandvars(self.scaleFactorFile))
       self.calib = ROOT.BTagCalibration("csvv2", os.path.expandvars(self.scaleFactorFile))

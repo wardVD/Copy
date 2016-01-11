@@ -83,3 +83,27 @@ class SystematicBaseClass:
     up   = self.cachedEstimate(region, channel, setup.sysClone({'selectionModifier':'JECUp'}))
     down = self.cachedEstimate(region, channel, setup.sysClone({'selectionModifier':'JECDown'}))
     return 0.5*(up-down)/ref 
+
+  def leptonFSSystematic(self, region, channel, setup):
+    ref  = self.cachedEstimate(region, channel, setup.sysClone({'reweight':['reweightLeptonFastSimSF']}))
+    up   = self.cachedEstimate(region, channel, setup.sysClone({'reweight':['reweightLeptonFastSimSFUp']}))
+    down = self.cachedEstimate(region, channel, setup.sysClone({'reweight':['reweightLeptonFastSimSFDown']}))
+    return 0.5*(up-down)/ref 
+
+  def btaggingSFbSystematic(self, region, channel, setup):
+    ref     = self.cachedEstimate(region, channel, setup.sysClone({'noNBTagCut':True, 'reweight':['reweightBTag1p_SF']}))     
+    up      = self.cachedEstimate(region, channel, setup.sysClone({'noNBTagCut':True, 'reweight':['reweightBTag1p_SF_b_Up']}))
+    down    = self.cachedEstimate(region, channel, setup.sysClone({'noNBTagCut':True, 'reweight':['reweightBTag1p_SF_b_Down']}))
+    return 0.5*(up-down)/ref 
+
+  def btaggingSFlSystematic(self, region, channel, setup):
+    ref     = self.cachedEstimate(region, channel, setup.sysClone({'noNBTagCut':True, 'reweight':['reweightBTag1p_SF']}))
+    up      = self.cachedEstimate(region, channel, setup.sysClone({'noNBTagCut':True, 'reweight':['reweightBTag1p_SF_l_Up']}))
+    down    = self.cachedEstimate(region, channel, setup.sysClone({'noNBTagCut':True, 'reweight':['reweightBTag1p_SF_l_Down']}))
+    return 0.5*(up-down)/ref 
+
+  def btaggingSFFSSystematic(self, region, channel, setup):
+    ref     = self.cachedEstimate(region, channel, setup.sysClone({'noNBTagCut':True, 'reweight':['reweightBTag1p_SF']}))
+    up      = self.cachedEstimate(region, channel, setup.sysClone({'noNBTagCut':True, 'reweight':['reweightBTag1p_SF_FS_Up']}))
+    down    = self.cachedEstimate(region, channel, setup.sysClone({'noNBTagCut':True, 'reweight':['reweightBTag1p_SF_FS_Down']}))
+    return 0.5*(up-down)/ref 
