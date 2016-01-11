@@ -13,6 +13,7 @@ regions_mt2ll = getRegionsFromThresholds('dl_mt2ll', mt2llThresholds)
 regions_mt2bb = getRegionsFromThresholds('dl_mt2bb', mt2bbThresholds)
 regions_mt2blbl = getRegionsFromThresholds('dl_mt2blbl', mt2blblThresholds)
 
+regionTTZ = getRegionsFromThresholds('dl_mt2ll', [0])
 
 regions3D = []
 for r1 in regions_mt2ll:
