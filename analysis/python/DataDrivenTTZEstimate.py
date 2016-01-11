@@ -17,42 +17,27 @@ class DataDrivenTTZEstimate(SystematicBaseClass):
     if channel=='all':
       return sum( [ self.cachedEstimate(region, c, channel, setup) for c in ['MuMu', 'EE', 'EMu'] ] )
 
-    #MC based for 'EMu'
-    elif channel=='EMu':
-      cut = "&&".join([region.cutString(setup.sys['selectionModifier']), setup.preselection('MC', channel=channel)])
-      if setup.verbose: 
-        print "Using cut %s and weight %s"%(cut, weight)
-      return setup.lumi[channel]/1000. * u_float( getYieldFromChain(setup.sample['TTZ'][channel]['chain'], cutString = cut, weight=weight, returnError = True) )
 
-    #Data driven for EE and MuMu
-    else:
-      assert abs(1.-setup.lumi[channel]/setup.sample['Data'][channel]['lumi'])<0.01, "Lumi specified in setup %f does not match lumi in data sample %f in channel %s"%(setup.lumi[channel], setup.sample['Data'][channel]['lumi'], channel)
-      cut_offZ_1b = "&&".join([region.cutString(setup.sys['selectionModifier']), setup.selection('MC', channel=channel, zWindow = 'offZ', nBTags= (1,-1))])
-      cut_onZ_1b  = "&&".join([region.cutString(setup.sys['selectionModifier']), setup.selection('MC', channel=channel, zWindow = 'onZ',  nBTags= (1,-1))])
-      cut_onZ_0b  = "&&".join([region.cutString(setup.sys['selectionModifier']), setup.selection('MC', channel=channel, zWindow = 'onZ',  nBTags= (0,0))])
-      cut_data_onZ_0b    = "&&".join([region.cutString(setup.sys['selectionModifier']), setup.selection('Data', channel=channel, zWindow = 'onZ',  nBTags= (0,0))])
-  #    R1 = DY-MC (offZ, 1b) / DY-MC (onZ, 1b)
-  #    R2 = DY-MC (onZ, 1b) / DY-MC (onZ, 0b) 
-  #    DY-est = R1*R2*(Data(2l, onZ, 0b) - EWK(onZ, 0b)) = DY-MC (offZ, 1b) / DY-MC (onZ, 0b) *( Data(2l, onZ, 0b) - EWK(onZ, 0b))
+    #Data driven for EE, EMu and  MuMu
+    assert abs(1.-setup.lumi[channel]/setup.sample['Data'][channel]['lumi'])<0.01, "Lumi specified in setup %f does not match lumi in data sample %f in channel %s"%(setup.lumi[channel], setup.sample['Data'][channel]['lumi'], channel)
+    selection_2l = "&&".join([region.cutString(setup.sys['selectionModifier']), setup.selection('MC', channel=channel, zWindow = 'offZ', nJets = (4,-1), nBTags= (2,-1), NumberOfLeptons = 2)])
+    selection_3l = "&&".join([region.cutString(setup.sys['selectionModifier']), setup.selection('MC', channel=channel, zWindow = 'offZ', nJets = (4,-1), nBTags= (2,-1), NumberOfLeptons = 3)])
+    data_selection_3l = "&&".join([region.cutString(setup.sys['selectionModifier']), setup.selection('Data', channel=channel, zWindow = 'offZ', nJets = (4,-1), nBTags= (2,-1), NumberOfLeptons = 3)])
+    
+    yield_2l = u_float( getYieldFromChain(setup.sample['TTZ'][channel]['chain'], cutString = selection_2l, weight=weight, returnError = True))
+    if setup.verbose: print "yield_2l: %s"%yield_2l 
+    yield_3l = u_float( getYieldFromChain(setup.sample['TTZ'][channel]['chain'], cutString = selection_3l, weight=weight, returnError = True))
+    if setup.verbose: print "yield_3l: %s"%yield_3l 
+    yield_data_3l = u_float( getYieldFromChain(setup.sample['Data'][channel]['chain'], cutString = data_selection_3l, weight=weight, returnError = True))
+    if setup.verbose: print "yield_data_3l: %s (for cut: %s \n with weight: %s)"%(yield_data_3l, data_selection_3l, weight)      
+    
+    #electroweak subtraction
+    print "\n Substracting electroweak backgrounds from data: \n"
+    yield_ewk = u_float(0., 0.) 
+    for ewk in ['TTJets' , 'singleTop' , 'DY_HT_LO' , 'diBoson', 'triBoson' , 'TTXNoZ' , 'WJetsToLNu_HT']:
+      yield_ewk+=u_float(getYieldFromChain(setup.sample[ewk][channel]['chain'], cutString = selection_3l,  weight=weight, returnError=True))
+      if setup.verbose: print "yield_ewk %s added, now: %s"%(ewk, yield_ewk)
       
-      yield_offZ_1b = u_float( getYieldFromChain(setup.sample['DY_HT_LO'][channel]['chain'], cutString = cut_offZ_1b, weight=weight, returnError = True))
-      if setup.verbose: print "yield_offZ_1b: %s"%yield_offZ_1b 
-      yield_onZ_0b  = u_float( getYieldFromChain(setup.sample['DY_HT_LO'][channel]['chain'], cutString = cut_onZ_0b,  weight=weight, returnError = True))
-      if setup.verbose: print "yield_onZ_0b: %s"%yield_onZ_0b 
-      yield_data    = u_float( getYieldFromChain(setup.sample['Data'][channel]['chain'], cutString = cut_data_onZ_0b,  weight=weight, returnError = True))
-      if setup.verbose: print "yield_data: %s (for cut: %s \n with weight: %s)"%(yield_data, cut_data_onZ_0b, weight) 
-
-      #electroweak subtraction
-      print "\n Substracting electroweak backgrounds from data: \n"
-      yield_ewk = u_float(0., 0.) 
-      for ewk in ['TTJets' , 'singleTop' , 'TTZ' , 'diBoson', 'triBoson' , 'TTXNoZ' , 'WJetsToLNu_HT']:
-        yield_ewk+=u_float(getYieldFromChain(setup.sample[ewk][channel]['chain'], cutString = cut_onZ_0b,  weight=weight, returnError=True))
-        if setup.verbose: print "yield_ewk %s added, now: %s"%(ewk, yield_ewk)
+    normRegYield = yield_data_3l - yield_ewk
+    if normRegYield.val<0: print "\n !!!Warning!!! \n Negative normalization region yield data: (%s), MC: (%s) \n"%(yield_data_3l, yield_ewk)
       
-      normRegYield = yield_data - yield_ewk
-      if normRegYield.val<0: print "\n !!!Warning!!! \n Negative normalization region yield data: (%s), MC: (%s) \n"%(yield_data, yield_ewk)
-      
-      mcRatio = yield_offZ_1b / yield_onZ_0b
-      res = mcRatio * normRegYield
-
-      return res
