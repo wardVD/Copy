@@ -1,7 +1,7 @@
 from setup import setup, regions, estimates
 #This is supposed to run the default analysis estimates
 setup.verbose = True
-for channel in ['MuMu' ,'EE', 'EMu']:
+for channel in ['MuMu']:
   for r in regions:
     for e in estimates:
       res = e.cachedEstimate(r, channel, setup)
