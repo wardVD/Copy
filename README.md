@@ -27,13 +27,15 @@ echo "/JetMETCorrections/Type1MET/" >> .git/info/sparse-checkout
 echo "/PhysicsTools/PatAlgos/" >> .git/info/sparse-checkout
 echo "/PhysicsTools/PatUtils/" >> .git/info/sparse-checkout
 git read-tree -mu HEAD
+git clone git@github.com:CMS-SUS-XPAG/PlotsSMS #X-PAG code for limit
 ```
 configure local branch
 ```
 git checkout -b CMGTools-from-CMSSW_7_4_12_LocalDevelopmentsPass2 cmg-ghent/CMGTools-from-CMSSW_7_4_12_LocalDevelopmentsPass2
 git push -u cmg-ghent CMGTools-from-CMSSW_7_4_12_LocalDevelopmentsPass2
 ```
-# for combine tool
+# for limit setting
+Make a 7_1_5 WS following the recipe at [https://twiki.cern.ch/twiki/bin/viewauth/CMS/SWGuideHiggsAnalysisCombinedLimit]
 ```
 export SCRAM_ARCH=slc6_amd64_gcc481
 cmsrel CMSSW_7_1_5 ### must be a 7_1_X release  >= 7_1_5;  (7.0.X and 7.2.X are NOT supported either) 
