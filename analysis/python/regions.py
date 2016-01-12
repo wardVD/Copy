@@ -1,5 +1,7 @@
 from region import region
 
+#Put all sets of regions that are used in the analysis, closure, tables, etc.
+
 def getRegionsFromThresholds(var, vals):
   return [region(var, (vals[i], vals[i+1])) for i in range(len(vals)-1)]+[region(var, (vals[-1], -1))]
 
@@ -12,7 +14,6 @@ mt2bbThresholds  = [70,170, 270]
 regions_mt2ll = getRegionsFromThresholds('dl_mt2ll', mt2llThresholds)
 regions_mt2bb = getRegionsFromThresholds('dl_mt2bb', mt2bbThresholds)
 regions_mt2blbl = getRegionsFromThresholds('dl_mt2blbl', mt2blblThresholds)
-
 
 regions3D = []
 for r1 in regions_mt2ll:
