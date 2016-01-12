@@ -26,6 +26,9 @@ lumi = {'EMu':MuonEG_Run2015D['lumi'], 'MuMu':DoubleMuon_Run2015D['lumi'], 'EE':
 
 from systematics import jmeVariations
 def getCuts(selectionModifier=None, nJets = (2,-1), nBTags=(1,-1)):
+
+  print "in getcuts:", nJets
+
   if selectionModifier: assert selectionModifier in jmeVariations, "Don't know about systematic variation %r, take one of %s"%(selectionModifier, ",".join(jmeVariations))
   sysStr="" if not selectionModifier else "_"+selectionModifier
   nbstr = "nBTags" if not selectionModifier else "nbJets" #Correct stupid naming convention I already fixed in the postprocessing...
@@ -112,6 +115,8 @@ sys: Systematic variation, default is None. '''
     return self.selection(dataMC, channel = channel, zWindow = zWindow, nBTags = (1,-1))
 
   def selection(self, dataMC, channel = 'all', zWindow = 'offZ', nJets = (2,-1), nBTags = (1,-1), NumberOfLeptons = 2):
+
+    print "in selection: ", nJets
 
     triggerMuMu   = "HLT_mumuIso"
     triggerEleEle = "HLT_ee_DZ"

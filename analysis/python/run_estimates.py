@@ -11,6 +11,6 @@ for channel in ['MuMu' ,'EE', 'EMu']:
       print "\n"
     print
 
-for channel in ['MuMu','EE','EMu']:
+for channel in ['MuMu']:
   res = estimateTTZ.cachedEstimate(regionTTZ[0],channel,setup)
   print "\n Result in ", channel," for estimate ", estimateTTZ.name, regionTTZ[0],":", res#, 'jer',jer, 'jec', jec
