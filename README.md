@@ -27,7 +27,7 @@ echo "/JetMETCorrections/Type1MET/" >> .git/info/sparse-checkout
 echo "/PhysicsTools/PatAlgos/" >> .git/info/sparse-checkout
 echo "/PhysicsTools/PatUtils/" >> .git/info/sparse-checkout
 git read-tree -mu HEAD
-git clone git@github.com:CMS-SUS-XPAG/PlotsSMS #X-PAG code for limit
+git clone git@github.com:GhentAnalysis/PlotsSMS #X-PAG code for limit
 ```
 configure local branch
 ```
