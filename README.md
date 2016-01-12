@@ -35,7 +35,7 @@ git checkout -b CMGTools-from-CMSSW_7_4_12_LocalDevelopmentsPass2 cmg-ghent/CMGT
 git push -u cmg-ghent CMGTools-from-CMSSW_7_4_12_LocalDevelopmentsPass2
 ```
 # for limit setting
-Make a 7_1_5 WS following the recipe at [https://twiki.cern.ch/twiki/bin/viewauth/CMS/SWGuideHiggsAnalysisCombinedLimit]
+Make a 7_1_5 WS following the recipe at [SWGuideHiggsAnalysisCombinedLimit](https://twiki.cern.ch/twiki/bin/viewauth/CMS/SWGuideHiggsAnalysisCombinedLimit)
 ```
 export SCRAM_ARCH=slc6_amd64_gcc481
 cmsrel CMSSW_7_1_5 ### must be a 7_1_X release  >= 7_1_5;  (7.0.X and 7.2.X are NOT supported either) 
