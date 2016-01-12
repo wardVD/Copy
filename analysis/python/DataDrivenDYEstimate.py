@@ -28,6 +28,9 @@ class DataDrivenDYEstimate(SystematicBaseClass):
 
     #Data driven for EE and MuMu
     else:
+      preSelection = setup.preselection('MC', channel=channel)
+      weight = preSelection['weightStr']
+
       assert abs(1.-setup.lumi[channel]/setup.sample['Data'][channel]['lumi'])<0.01, "Lumi specified in setup %f does not match lumi in data sample %f in channel %s"%(setup.lumi[channel], setup.sample['Data'][channel]['lumi'], channel)
       cut_offZ_1b = "&&".join([region.cutString(setup.sys['selectionModifier']), setup.selection('MC', channel=channel, zWindow = 'offZ', nBTags= (1,-1))['cut'] ])
       cut_onZ_1b  = "&&".join([region.cutString(setup.sys['selectionModifier']), setup.selection('MC', channel=channel, zWindow = 'onZ',  nBTags= (1,-1))['cut'] ])
@@ -37,9 +40,9 @@ class DataDrivenDYEstimate(SystematicBaseClass):
   #    R2 = DY-MC (onZ, 1b) / DY-MC (onZ, 0b) 
   #    DY-est = R1*R2*(Data(2l, onZ, 0b) - EWK(onZ, 0b)) = DY-MC (offZ, 1b) / DY-MC (onZ, 0b) *( Data(2l, onZ, 0b) - EWK(onZ, 0b))
       
-      yield_offZ_1b = u_float( getYieldFromChain(setup.sample['DY_HT_LO'][channel]['chain'], cutString = cut_offZ_1b, weight=weight, returnError = True))
+      yield_offZ_1b = u_float( getYieldFromChain(setup.sample['DY'][channel]['chain'], cutString = cut_offZ_1b, weight=weight, returnError = True))
       if setup.verbose: print "yield_offZ_1b: %s"%yield_offZ_1b 
-      yield_onZ_0b  = u_float( getYieldFromChain(setup.sample['DY_HT_LO'][channel]['chain'], cutString = cut_onZ_0b,  weight=weight, returnError = True))
+      yield_onZ_0b  = u_float( getYieldFromChain(setup.sample['DY'][channel]['chain'], cutString = cut_onZ_0b,  weight=weight, returnError = True))
       if setup.verbose: print "yield_onZ_0b: %s"%yield_onZ_0b 
       yield_data    = u_float( getYieldFromChain(setup.sample['Data'][channel]['chain'], cutString = cut_data_onZ_0b,  weight=weight, returnError = True))
       if setup.verbose: print "yield_data: %s (for cut: %s \n with weight: %s)"%(yield_data, cut_data_onZ_0b, weight) 

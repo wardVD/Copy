@@ -9,7 +9,7 @@ class DataDrivenTTZEstimate(SystematicBaseClass):
     super(DataDrivenTTZEstimate, self).__init__(name, cacheDir=cacheDir)
 #Concrete implementation of abstract method 'estimate' as defined in Systematic
   def _estimate(self, region, channel, setup):
-    printHeader("DD TTZ prediction for %s channel %s" %(self.name, channel))
+    printHeader("DD TTZ prediction for '%s' channel %s" %(self.name, channel))
 
     #Sum of all channels for 'all'
     if channel=='all':
@@ -22,7 +22,7 @@ class DataDrivenTTZEstimate(SystematicBaseClass):
       #check lumi consistency
       assert abs(1.-setup.lumi[channel]/setup.sample['Data'][channel]['lumi'])<0.01, "Lumi specified in setup %f does not match lumi in data sample %f in channel %s"%(setup.lumi[channel], setup.sample['Data'][channel]['lumi'], channel)
       
-      selection_2l = "&&".join([region.cutString(setup.sys['selectionModifier']), setup.selection('MC', channel=channel, zWindow = 'offZ', nJets = (4,-1), nBTags= (2,-1))])
+      selection_2l = "&&".join([region.cutString(setup.sys['selectionModifier']), setup.selection('MC', channel=channel, zWindow = 'offZ', nJets = (4,-1), nBTags= (2,-1))['cut']])
       threeLeptonSel = "nGoodMuons+nGoodElectrons==3" #use whatever
       selection_3l = "&&".join([
   #      region.cutString(setup.sys['selectionModifier']), ??? is this not a bug? Why the region
@@ -53,4 +53,6 @@ class DataDrivenTTZEstimate(SystematicBaseClass):
         
       normRegYield = yield_data_3l - yield_other
       if normRegYield.val<0: print "\n !!!Warning!!! \n Negative normalization region yield data: (%s), MC: (%s) \n"%(yield_data_3l, yield_other)
-        
+
+      print  "normRegYield", normRegYield
+      return u_float(0., 0.) 
