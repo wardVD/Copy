@@ -9,7 +9,7 @@ if os.environ['USER'] in ['didar']:
   dataDir = "~/eos/cms/store/cmst3/group/susy/schoef/postProcessed_Phys14V3_diLep" #needs EOS mount on lxplus at ~/eos 
 if os.environ['USER'] in ['schoef', 'rschoefbeck', 'schoefbeck']:
   plotDir = "/afs/hephy.at/user/r/rschoefbeck/www/"
-  dataDir = "/afs/hephy.at/data/rschoefbeck01/cmgTuples/postProcessed_mAODv2/dilep" 
+  dataDir = "/afs/hephy.at/data/rschoefbeck01/cmgTuples/postProcessed_mAODv2_fix/dilepTiny" 
   analysisOutputDir = '/afs/hephy.at/data/rschoefbeck01/StopsDilepton/results' #Path to analysis results
 if os.environ['USER'] in ['sigamani']:
   plotDir = "/afs/cern.ch/user/s/sigamani/www/php-plots/2LeptonStops13TeV/"

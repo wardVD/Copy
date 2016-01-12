@@ -11,8 +11,8 @@ from StopsDilepton.samples.cmgTuples_Spring15_mAODv2_25ns_1l_postProcessed impor
 #choices for specific samples
 #DYSample      = DY #NLO M10t050 + M50
 DYSample      = DY_HT_LO #LO, HT binned including a low HT bin starting from zero from the inclusive sample
-TTJetsSample  = TTJets #NLO
-#TTJetsSample  = TTJets_Lep #LO, very large dilep + single lep samples
+#TTJetsSample  = TTJets #NLO
+TTJetsSample  = TTJets_Lep #LO, very large dilep + single lep samples
 otherEWKBkgs   = combineSamples([singleTop, diBoson, triBoson, TTXNoZ, WJetsToLNu_HT])
 otherEWKBkgs['name'] = 'otherBkgs'
 otherEWKBkgs['texName'] = 'other bkgs.'
@@ -25,67 +25,29 @@ lumi = {'EMu':MuonEG_Run2015D['lumi'], 'MuMu':DoubleMuon_Run2015D['lumi'], 'EE':
 #lumi = {c:10000 for c in allChannels}
 
 from systematics import jmeVariations
-def getCuts(selectionModifier=None, nJets = (2,-1), nBTags=(1,-1)):
-
-  print "in getcuts:", nJets
-
-  if selectionModifier: assert selectionModifier in jmeVariations, "Don't know about systematic variation %r, take one of %s"%(selectionModifier, ",".join(jmeVariations))
-  sysStr="" if not selectionModifier else "_"+selectionModifier
-  nbstr = "nBTags" if not selectionModifier else "nbJets" #Correct stupid naming convention I already fixed in the postprocessing...
-
-  assert nJets[0]>=0 and (nJets[1]>=nJets[0] or nJets[1]<0), "Not a good nJets selection: %r"%nBTags
-  assert nBTags[0]>=0 and (nBTags[1]>=nBTags[0] or nBTags[1]<0), "Not a good nBTags selection: %r"%nBTags
-  njetsstr = "nGoodJets"+sysStr+">="+str(nJets[0])
-  nbtstr = nbstr+sysStr+">="+str(nBTags[0])
-  lstr = "nJets"+str(nJets[0])
-  kstr = "nbtag"+str(nBTags[0])
-  if nJets[1]>=0: 
-    njetsstr+= "&&"+"nGoodJets"+sysStr+"<="+str(nJets[1])
-    lstr+='-'+str(nJets[1])
-  if nBTags[1]>=0: 
-    nbtstr+= "&&"+nbstr+sysStr+"<="+str(nBTags[1])
-    kstr+='-'+str(nBTags[1])
-  return [
- ("isOS", "isOS"),
- #("njet2", "nGoodJets"+sysStr+">=2"),
- (lstr, njetsstr),
- (kstr, nbtstr), 
- #("mll20", "dl_mass>20"),
- #("met80", "met_pt"+sysStr+">80"),
- #("metSig5", "met_pt"+sysStr+"/sqrt(ht"+sysStr+")>5"),
- #("dPhiJet0-dPhiJet1", "cos(met_phi"+sysStr+"-Jet_phi[0])<cos(0.25)&&cos(met_phi"+sysStr+"-Jet_phi[1])<cos(0.25)"),
-  ]
-
 from StopsDilepton.analysis.setupHelpers import getZCut, loadChain
-#import json
-class _setup:
+
+class Setup:
   def __init__(self):
     self.verbose=False
     self.analysisOutputDir = analysisOutputDir
     self.zMassRange   = zMassRange
     self.useTriggers=True
     self.lumi=lumi
-    self.sys          = {'weight':'weight', 'reweight':[], 'selectionModifier':None}
+    self.sys          = {'weight':'weightPU', 'reweight':[], 'selectionModifier':None, 'useBTagWeights':None}
 
     self.sample = {
     'DY':         {c:DYSample for c in allChannels},
-    'DY_HT_LO':   {c:DY_HT_LO for c in allChannels},
     'TTJets' :    {c:TTJetsSample for c in allChannels},
-    'TTZ'    :    {c:TTZ for c in allChannels},
-    'singleTop' : {c:singleTop for c in allChannels},
-    'diBoson':    {c:diBoson for c in allChannels},
-    'triBoson' :  {c:triBoson for c in allChannels},
-    'TTXNoZ'   :  {c:TTXNoZ for c in allChannels},
-    'WJetsToLNu_HT' : {c: WJetsToLNu_HT for c in allChannels} ,
-    'QCD'    :    {'MuMu':QCD_Mu5, 'EE': QCD_EMbcToE, 'EMu':QCD_Mu5EMbcToE, 'all':QCD_Mu5EMbcToE},
+    'TTZ' :       {c:TTZ for c in allChannels},
     'other'  :    {'MuMu':combineSamples([otherEWKBkgs, QCD_Mu5]), 'EE': combineSamples([otherEWKBkgs,QCD_EMbcToE]), 'EMu':combineSamples([otherEWKBkgs, QCD_Mu5EMbcToE]), 
                    'all': combineSamples([otherEWKBkgs, QCD_Mu5EMbcToE])},
     'Data'   :    {'MuMu':DoubleMuon_Run2015D, 'EE': DoubleEG_Run2015D, 'EMu':MuonEG_Run2015D},
     }
     for s in sum([s.values() for s in self.sample.values()],[]):
       loadChain(s)# if not type(s)==type([]) else [loadChain(t) for t in s]
-    self.prefix = '-'.join(c[0] for c in getCuts())
-    self.cacheDir = os.path.join(self.analysisOutputDir, 'cacheFiles', self.prefix)
+
+    self.cacheDir = os.path.join(self.analysisOutputDir, 'cacheFiles', self.preselection('MC')['prefix'])
 
   #Clone the setup and optinally modify the systematic variation
   def sysClone(self, sys=None):
@@ -95,87 +57,146 @@ class _setup:
     if sys:
       for k in sys.keys():
         if k=='reweight':
-#          res.sys[k]=list(set(res.sys[k]+sys[k])) #Add with unique elements 
-          res.sys[k] = res.sys[k]+sys[k] 
+          res.sys[k]=list(set(res.sys[k]+sys[k])) #Add with unique elements 
+#          res.sys[k] = res.sys[k]+sys[k] 
           if len(res.sys[k])!=len(list(set(res.sys[k]))): print "Warning! non-exclusive list of reweights: %s"% ",".join(res.sys['k'])
         else:
           res.sys[k]=sys[k]# if sys[k] else res.sys[k]
     return res
 
-  def weightString(self):
-    wStr = self.sys['weight']
-    if self.sys['reweight']:
-      wStr += "*"+"*".join(self.sys['reweight'])
-    return wStr
-
+#  def weightString(self):
+#    wStr = self.sys['weight']
+#    if self.sys['reweight']:
+#      wStr += "*"+"*".join(self.sys['reweight'])
+#    return wStr
   def preselection(self, dataMC , channel='all', zWindow = 'offZ'):
     '''Get preselection  cutstring.
-Arguments: dataMC: 'Data' or 'MC'
-sys: Systematic variation, default is None. '''
-    return self.selection(dataMC, channel = channel, zWindow = zWindow, nBTags = (1,-1))
+'''
+    return self.selection(dataMC, channel = channel, zWindow = zWindow, mllMin=20, metMin=80, metSigMin=5, dPhiJetMet=0.25, nJets = (2,-1), nBTags = (1,-1), leptonCharges = "isOS", hadronicSelection = False)
 
-  def selection(self, dataMC, channel = 'all', zWindow = 'offZ', nJets = (2,-1), nBTags = (1,-1), NumberOfLeptons = 2):
+  def selection(self, dataMC, channel = 'all', zWindow = 'offZ', mllMin = 20, metMin=80, metSigMin=5, dPhiJetMet=0.25, nJets = (2,-1), nBTags = (1,-1), leptonCharges = "isOS", hadronicSelection = False):
+    '''Define full selection
+dataMC: 'Data' or 'MC'
+channel: onZ, offZ, allZ
+zWindow: offZ, onZ, or allZ
+mllMin: lower threshold on dilepton invariant mass
+leptonCharges: isOS, isSS or None
+metMin: minimum MET requirement
+metSigMin: minimum requirement on MET significance
+dPhiJetMet: delta-phi cut on Jet_1,2 and MET.
+nJets: jet multiplicity bin
+nBTags: btag multiplicity  bin
+hadronicSelection: whether to return only the hadronic selection
+ '''
+    #Consistency checks
+    assert dataMC in ['Data','MC'], "dataMC = Data or MC, got %r."%dataMC
+    assert not (dataMC=='Data' and self.sys['selectionModifier']), "Why would you need data preselection with selectionModifier=%r? Should be None."%self.sys['selectionModifier']
+    if self.sys['selectionModifier']: assert self.sys['selectionModifier'] in jmeVariations, "Don't know about systematic variation %r, take one of %s"%(self.sys['selectionModifier'], ",".join(jmeVariations))
+    assert not leptonCharges or leptonCharges in ["isOS", "isSS"], "Don't understand leptonCharges %r. Should take isOS or isSS."%leptonCharges
 
-    print "in selection: ", nJets
+    #postfix for variables     
+    sysStr="" if not self.sys['selectionModifier'] else "_"+self.sys['selectionModifier']
 
-    triggerMuMu   = "HLT_mumuIso"
-    triggerEleEle = "HLT_ee_DZ"
-    triggerMuEle  = "HLT_mue"
-    if (NumberOfLeptons == 2):
+    res={'cuts':[], 'prefixes':[], 'reweight':self.sys['reweight'] if self.sys['reweight'] else [] }
+
+    if leptonCharges and not hadronicSelection:
+     res['cuts'].append(leptonCharges)
+     res['prefixes'].append(leptonCharges)
+
+    if nJets and not ( nJets[0]==0 and nJets[1]<0):
+      assert nJets[0]>=0 and (nJets[1]>=nJets[0] or nJets[1]<0), "Not a good nJets selection: %r"%nJets
+      njetsstr = "nGoodJets"+sysStr+">="+str(nJets[0])
+      lstr = "nJets"+str(nJets[0])
+      if nJets[1]>=0: 
+        njetsstr+= "&&"+"nGoodJets"+sysStr+"<="+str(nJets[1])
+        if nJets[1]!=nJets[0]: lstr+=str(nJets[1])
+      else:
+        lstr+='p'
+      res['cuts'].append(njetsstr)
+      res['prefixes'].append(lstr)
+
+    if nBTags and not ( nBTags[0]==0 and nBTags[1]<0):
+      assert not (self.sys['selectionModifier'] and self.sys['useBTagWeights']), "Can't use both, selectionModifier and useBTagWeights!"
+      #btag prefix string
+      bPrefix = "nbtag"+str(nBTags[0])
+      if nBTags[1]>0: 
+        if nBTags[1]!=nBTags[0]: bPrefix+=str(nBTags[1]) 
+      if nBTags[1]<0: bPrefix+='p'
+      res['prefixes'].append(bPrefix)
+      #if we're using cuts... 
+      if not self.sys['useBTagWeights']: 
+        assert nBTags[0]>=0 and (nBTags[1]>=nBTags[0] or nBTags[1]<0), "Not a good nBTags selection: %r, useBTagWeights %s"%(nBTags, self.sys['useBTagWeights'])
+        nbtstr = "nBTags"+sysStr+">="+str(nBTags[0])
+        if nBTags[1]>0: 
+          nbtstr+= "&&nBTags"+sysStr+"<="+str(nBTags[1])
+        res['cuts'].append(nbtstr)
+      else: #if we're using weights (-> no cuts)
+        assert self.sys['useBTagWeights'] in ['MC', 'SF', 'SF_b_Up', 'SF_b_Down', 'SF_l_Up', 'SF_l_Down', 'SF_FS_Up', 'SF_FS_Down'], 'Unknown b-tag weight: %r'%self.sys['useBTagWeights']
+        assert nBTags[0]>=0 and (nBTags[1]==nBTags[0] or nBTags[1]<0),    "Not a good nBTags selection: %r, useBTagWeights %s"%(nBTags, self.sys['useBTagWeights'])
+        rwstr = "reweightBTag"+str(nBTags[0])
+        if nBTags[1]<0: rwstr+='p'
+        rwstr += '_'+self.sys['useBTagWeights'] #append b-tag weight
+        res['reweight'].append(rwstr)
+
+    if metMin and metMin>0:
+     res['cuts'].append('met_pt'+sysStr+'>='+str(metMin))
+     res['prefixes'].append('met'+str(metMin))
+    if metSigMin and metSigMin>0:
+     res['cuts'].append('met_pt'+sysStr+'/sqrt(ht)'+sysStr+'>='+str(metSigMin))
+     res['prefixes'].append('metSig'+str(metSigMin))
+    if dPhiJetMet>=0.:
+     res['cuts'].append('cos(met_phi'+sysStr+'-Jet_phi[0])<cos('+str(dPhiJetMet)+')&&cos(met_phi'+sysStr+'-Jet_phi[1])<cos('+str(dPhiJetMet)+')')
+     res['prefixes'].append('dPhiJet0-dPhiJet')
+
+    if not hadronicSelection:
+      if mllMin and mllMin>0:
+       res['cuts'].append('dl_mass>='+str(mllMin))
+       res['prefixes'].append('mll'+str(mllMin))
+
+      triggerMuMu   = "HLT_mumuIso"
+      triggerEleEle = "HLT_ee_DZ"
+      triggerMuEle  = "HLT_mue"
       preselMuMu = "isMuMu==1&&nGoodMuons==2&&nGoodElectrons==0"
       preselEE   = "isEE==1&&nGoodMuons==0&&nGoodElectrons==2"
       preselEMu  = "isEMu==1&&nGoodMuons==1&&nGoodElectrons==1"
-    elif (NumberOfLeptons == 3):
-      preselMuMu = "isMuMu==1&&nGoodMuons>=2"
-      preselEE   = "isEE==1&&nGoodElectrons>=2"
-      preselEMu  = "isEMu==1&&nGoodMuons>=1&&nGoodElectrons>=1"
-      
-    filterCut = "(Flag_HBHENoiseFilter&&Flag_goodVertices&&Flag_CSCTightHaloFilter&&Flag_eeBadScFilter&&weight>0)"
 
-    assert dataMC in ['Data','MC'], "dataMC = Data or MC, got %r."%dataMC
-    assert channel in allChannels, "channel must be one of "+",".join(allChannels)+". Got %r."%channel
-    assert zWindow in ['offZ', 'onZ', 'allZ'], "zWindow must be one of onZ, offZ, allZ. Got %r"%zWindow
-    if self.sys['selectionModifier']: assert self.sys['selectionModifier'] in jmeVariations, "Don't know about systematic variation %r, take one of %s"%(self.sys['selectionModifier'], ",".join(jmeVariations))
-    assert not (dataMC=='Data' and self.sys['selectionModifier']), "Why would you need data preselection with selectionModifier=%r? Should be None."%self.sys['selectionModifier']
+      #Z window
+      assert zWindow in ['offZ', 'onZ', 'allZ'], "zWindow must be one of onZ, offZ, allZ. Got %r"%zWindow
+#      res['prefixes'] = zWindow + res['prefixes']
+      if zWindow in ['onZ', 'offZ']:
+         res['cuts'].append(getZCut(zWindow, self.zMassRange))
 
-  #basic cuts
-    cuts = getCuts(self.sys['selectionModifier'], nJets=nJets, nBTags=nBTags)
-    presel = "&&".join(c[1] for c in cuts)
-  #Z window
-    if zWindow in ['onZ', 'offZ']:
-       presel+="&&"+getZCut(zWindow, self.zMassRange)
-  #triggers
-    if self.useTriggers:
-      pMuMu = preselMuMu + "&&" + triggerMuMu
-      pEE   = preselEE  + "&&" + triggerEleEle 
-      pEMu  = preselEMu + "&&" + triggerMuEle
-    else:
-      pMuMu = preselMuMu 
-      pEE   = preselEE  
-      pEMu  = preselEMu 
-  # dilepton channels    
-    if channel=="MuMu":
-      presel+="&&"+pMuMu
-    if channel=="EE":
-      presel+="&&"+pEE
-    if channel=="EMu":
-      presel+="&&"+pEMu
-    if channel=="all":
-      presel+="&&("+pMuMu+'||'+pEE+'||'+pEMu+')'
-
-  # trilepton channels
-    if (NumberOfLeptons == 3):
-      presel+="&&Sum$(LepGood_pt>10)==3" 
-
+      #lepton channel
+      assert channel in allChannels, "channel must be one of "+",".join(allChannels)+". Got %r."%channel
+#      res['prefixes'] = channel + res['prefixes']
+      if self.useTriggers:
+        pMuMu = preselMuMu + "&&" + triggerMuMu
+        pEE   = preselEE  + "&&" + triggerEleEle 
+        pEMu  = preselEMu + "&&" + triggerMuEle
+      else:
+        pMuMu = preselMuMu 
+        pEE   = preselEE  
+        pEMu  = preselEMu 
+      if channel=="MuMu":
+        chStr=pMuMu
+      if channel=="EE":
+        chStr=pEE
+      if channel=="EMu":
+        chStr=pEMu
+      if channel=="all":
+        chStr = "("+pMuMu+'||'+pEE+'||'+pEMu+')'
+      res['cuts'].append(chStr) 
     if dataMC=='Data':
-      presel+="&&"+filterCut
-    return presel 
+      filterCut = "(Flag_HBHENoiseFilter&&Flag_goodVertices&&Flag_CSCTightHaloFilter&&Flag_eeBadScFilter&&weight>0)"
+      res['cuts'].append(filterCut)
 
-setup=_setup()
+    return {'cut':"&&".join(res['cuts']), 'prefix':'-'.join(res['prefixes']), 'weightStr':"*".join([self.sys['weight']]+res['reweight'])} 
+
+setup = Setup()
 
 #define analysis regions
-from regions import regions1D, regions3D, regionTTZ
-regions = regions1D
+from regions import regions1D, regions3D
+regions =  regions3D
 
 from MCBasedEstimate import MCBasedEstimate
 from DataDrivenDYEstimate import DataDrivenDYEstimate
@@ -184,14 +205,11 @@ from DataDrivenTTZEstimate import DataDrivenTTZEstimate
 estimates = [
    #DataDrivenDYEstimate(name='DY-DD', cacheDir=setup.cacheDir),
 
-   #MCBasedEstimate(name='DY',          sample=setup.sample['DY'], cacheDir=setup.cacheDir),
-   #MCBasedEstimate(name='TTJets',      sample=setup.sample['TTJets'], cacheDir=setup.cacheDir),
-   #MCBasedEstimate(name='TTZ',         sample=setup.sample['TTZ'], cacheDir=setup.cacheDir),
-   #MCBasedEstimate(name='other',       sample=setup.sample['other'], cacheDir=setup.cacheDir),
+   MCBasedEstimate(name='DY',          sample=setup.sample['DY'], cacheDir=setup.cacheDir),
+   MCBasedEstimate(name='TTJets',      sample=setup.sample['TTJets'], cacheDir=setup.cacheDir),
+   MCBasedEstimate(name='TTZ',         sample=setup.sample['TTZ'], cacheDir=setup.cacheDir),
+   MCBasedEstimate(name='other',       sample=setup.sample['other'], cacheDir=setup.cacheDir),
 ]
-
-estimateTTZ = DataDrivenTTZEstimate(name='TTZ-DD', cacheDir=setup.cacheDir)
-
 
 nList = [e.name for e in estimates]
 assert len(list(set(nList))) == len(nList), "Names of estimates are not unique: %s"%",".join(nList)

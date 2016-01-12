@@ -1,6 +1,7 @@
 class cardFileWriter:
   def __init__(self):
-    self.bins = [] 
+    self.bins = []
+    self.muted = {} 
     self.uncertainties = []
     self.uncertaintyVal = {}
     self.uncertaintyString = {}
@@ -31,6 +32,7 @@ class cardFileWriter:
         return 
     self.niceNames[name]=niceName
     self.bins.append(name)
+    self.muted[name]=False
     self.processes[name] = ["signal"]+processes
 
   def addUncertainty(self, name, t, n=0):
@@ -127,40 +129,46 @@ class cardFileWriter:
     numberID = {}
     i=1
     for b in self.bins:
-      for p in self.processes[b]:
-        if not p in allProcesses and not p=='signal':
-          allProcesses.append(p)
-          numberID[p] = i
-          i+=1
-
+      if not self.muted[b]:
+        for p in self.processes[b]:
+          if not p in allProcesses and not p=='signal':
+            allProcesses.append(p)
+            numberID[p] = i
+            i+=1
+    unmutedBins = [b for b in self.bins if not self.muted[b]]
+    nBins = len(unmutedBins)
     numberID['signal'] = 0
     lspace = (self.maxUncStrWidth + self.maxUncNameWidth + 2)
     if not os.path.exists(os.path.dirname(fname)):
       os.makedirs(os.path.dirname(fname))
     outfile = file(fname, 'w')
     outfile.write('#cardFileWriter, %s'%datetime.datetime.now().strftime("%I:%M%p on %B %d, %Y")+'\n')
-    outfile.write('imax %i'%len(self.bins)+'\n')
+    outfile.write('imax %i'%nBins+'\n')
     outfile.write('jmax *\n')
     outfile.write('kmax *\n')
     outfile.write('\n')
-    #observation
+
     for b in self.bins:
-      outfile.write( '# '+b+': '+self.niceNames[b]+'\n')
+      if not self.muted[b]:
+        outfile.write( '# '+b+': '+self.niceNames[b]+'\n')
+      else:
+        outfile.write( '#Muted: '+b+': '+self.niceNames[b]+'\n')
     outfile.write( '\n')
-    outfile.write( 'bin'.ljust(lspace)              +(' '.join([b.rjust(self.defWidth) for b in self.bins] ) ) +'\n')
-    outfile.write( 'observation'.ljust(lspace)      +(' '.join([str(self.observation[b]).rjust(self.defWidth) for b in self.bins]) )+'\n')
+
+    outfile.write( 'bin'.ljust(lspace)              +(' '.join([b.rjust(self.defWidth) for b in unmutedBins] ) ) +'\n')
+    outfile.write( 'observation'.ljust(lspace)      +(' '.join([str(self.observation[b]).rjust(self.defWidth) for b in unmutedBins]) )+'\n')
     if self.hasContamination:
-      outfile.write( 'contamination'.ljust(lspace)  +(' '.join([str(self.contamination[b]).rjust(self.defWidth) for b in self.bins]) )+'\n')
+      outfile.write( 'contamination'.ljust(lspace)  +(' '.join([str(self.contamination[b]).rjust(self.defWidth) for b in unmutedBins]) )+'\n')
     outfile.write('\n')
-    outfile.write( 'bin'.ljust(lspace)              +(' '.join( [' '.join([b.rjust(self.defWidth) for p in self.processes[b]] ) for b in self.bins]) ) +'\n')
-    outfile.write( 'process'.ljust(lspace)          +(' '.join( [' '.join([p.rjust(self.defWidth) for p in self.processes[b]] ) for b in self.bins]) ) +'\n')
-    outfile.write( 'process'.ljust(lspace)          +(' '.join( [' '.join([str(numberID[p]).rjust(self.defWidth) for p in self.processes[b]] ) for b in self.bins]) ) +'\n')
-    outfile.write( 'rate'.ljust(lspace)             +(' '.join( [' '.join([self.mfs(self.expectation[(b,p)]).rjust(self.defWidth) for p in self.processes[b]] ) for b in self.bins]) )+'\n')
+    outfile.write( 'bin'.ljust(lspace)              +(' '.join( [' '.join([b.rjust(self.defWidth) for p in self.processes[b]] ) for b in unmutedBins]) ) +'\n')
+    outfile.write( 'process'.ljust(lspace)          +(' '.join( [' '.join([p.rjust(self.defWidth) for p in self.processes[b]] ) for b in unmutedBins]) ) +'\n')
+    outfile.write( 'process'.ljust(lspace)          +(' '.join( [' '.join([str(numberID[p]).rjust(self.defWidth) for p in self.processes[b]] ) for b in unmutedBins]) ) +'\n')
+    outfile.write( 'rate'.ljust(lspace)             +(' '.join( [' '.join([self.mfs(self.expectation[(b,p)]).rjust(self.defWidth) for p in self.processes[b]] ) for b in unmutedBins]) )+'\n')
     outfile.write('\n')
 
     for u in self.uncertainties:
       outfile.write( u.ljust(self.maxUncNameWidth)+' '+self.uncertaintyString[u].ljust(self.maxUncStrWidth)+' '+
-                     ' '.join( [' '.join([self.getUncertaintyString((u,b,p)).rjust(self.defWidth) for p in self.processes[b]] ) for b in self.bins]) +'\n')
+                     ' '.join( [' '.join([self.getUncertaintyString((u,b,p)).rjust(self.defWidth) for p in self.processes[b]] ) for b in unmutedBins]) +'\n')
       
     outfile.close()
     print "[cardFileWrite] Written card file %s"%fname

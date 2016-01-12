@@ -1,5 +1,5 @@
-from setup import setup, regions, regionTTZ, estimates, estimateTTZ
-
+from setup import setup, regions, estimates
+#This is supposed to run the default analysis estimates
 setup.verbose = True
 for channel in ['MuMu' ,'EE', 'EMu']:
   for r in regions:
@@ -11,6 +11,3 @@ for channel in ['MuMu' ,'EE', 'EMu']:
       print "\n"
     print
 
-for channel in ['MuMu']:
-  res = estimateTTZ.cachedEstimate(regionTTZ[0],channel,setup)
-  print "\n Result in ", channel," for estimate ", estimateTTZ.name, regionTTZ[0],":", res#, 'jer',jer, 'jec', jec

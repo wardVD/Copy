@@ -4,6 +4,7 @@ from array import array
 ROOT.gROOT.LoadMacro("$CMSSW_BASE/src/StopsDilepton/tools/scripts/tdrstyle.C")
 ROOT.setTDRStyle()
 
+from StopsDilepton.tools.convertHelpers import wrapStr, printHeader
 
 def deltaPhi(phi1, phi2):
   dphi = phi2-phi1

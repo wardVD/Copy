@@ -13,6 +13,7 @@ mt2Calc = mt2Calculator()
 from StopsDilepton.tools.helpers import getChain, getChunks, getObjDict, writeObjToFile,  getEList, getVarValue, checkRootFile, getYieldFromChain
 from StopsDilepton.tools.objectSelection import getLeptons, getMuons, getElectrons, getGoodMuons, getGoodElectrons, getGoodLeptons, getJets, getGoodBJets, getGoodJets, isBJet, jetVars, jetId, isBJet 
 from StopsDilepton.tools.addJERScaling import addJERScaling
+from StopsDilepton.tools.leptonFastSimSF import leptonFastSimSF as leptonFastSimSF_
 from StopsDilepton.tools.localInfo import *
 from cmgPostProcessingHelpers import getTreeFromChunk 
 
@@ -24,8 +25,9 @@ ROOT.AutoLibraryLoader.enable()
 targetLumi = 1000 #pb-1 Which lumi to normalize to
 
 defSampleStr = "SMS_T2tt_mStop200_mLSP1to125"
+#defSampleStr = "TTJets"
 
-subDir = "/afs/hephy.at/data/rschoefbeck01/cmgTuples/postProcessed_mAODv2" #Output directory -> The first path should go to localInfo (e.g. 'dataPath' or something)
+subDir = "/afs/hephy.at/data/rschoefbeck01/cmgTuples/postProcessed_mAODv2_fix" #Output directory -> The first path should go to localInfo (e.g. 'dataPath' or something)
 
 from optparse import OptionParser
 parser = OptionParser()
@@ -34,6 +36,7 @@ parser.add_option("--inputTreeName", dest="inputTreeName", default="treeProducer
 parser.add_option("--targetDir", dest="targetDir", default=subDir, type="string", action="store", help="target directory.")
 parser.add_option("--skim", dest="skim", default="dilep", type="string", action="store", help="any skim condition?")
 parser.add_option("--small", dest="small", default = False, action="store_true", help="Just do a small subset.")
+parser.add_option("--fastSim", dest="fastSim", default = False, action="store_true", help="FastSim?")
 parser.add_option("--keepPhotons", dest="keepPhotons", default = False, action="store_true", help="keep photons?")
 parser.add_option("--overwrite", dest="overwrite", default = False, action="store_true", help="Overwrite?")
 parser.add_option("--lheHTCut", dest="lheHTCut", default="", type="string", action="store", help="upper cut on lheHTIncoming")
@@ -48,6 +51,7 @@ if interactive:
   options.small=True
   options.signal=True
   options.overwrite=True
+  options.fastSim=True  
 
 #Loading samples
 if options.signal:
@@ -93,9 +97,15 @@ if doTopPtReweighting:
   print "Sample %s will have top pt reweights!"% sample.name
 topPtReweightingFunc = getUnscaledTopPairPtReweightungFunction() if doTopPtReweighting else None
 
+if options.fastSim:
+  leptonFastSimSF = leptonFastSimSF_()
+ 
 if not options.skipVariations:
-  from StopsDilepton.tools.btagEfficiency import btagEfficiency, btagMethod1DSystematics
-  btagEff = btagEfficiency(method='1d')
+  from StopsDilepton.tools.btagEfficiency import btagEfficiency, getTagWeightDict
+  btagEff_1d = btagEfficiency(method='1d')
+
+  maxMultBTagWeight = 2
+  btagEff_1b = btagEfficiency(method='1b', fastSim = options.fastSim)
 
 if options.lheHTCut:
   try:
@@ -137,10 +147,10 @@ if options.signal:
   if not os.path.exists(signalDir):
     os.makedirs(signalDir)
 if doTopPtReweighting:
+  print "Computing top pt average weight...",
   c = ROOT.TChain("tree")
   for chunk in chunks:
     c.Add(chunk['file'])
-  print "Computing top pt average weight...",
 #  print getTopPtDrawString()
   topScaleF = getYieldFromChain(c, cutString = "(1)", weight=getTopPtDrawString())
   topScaleF/=c.GetEntries()
@@ -245,7 +255,7 @@ else:
   branchKeepStrings = branchKeepStrings_DATAMC + branchKeepStrings_MC
   jetMCInfo = ['mcMatchFlav/I', 'partonId/I', 'mcPt/F', 'corr/F', 'corr_JECUp/F', 'corr_JECDown/F', 'hadronFlavour/I']
 
-readVariables = ['met_pt/F', 'met_phi/F', 'run/I', 'lumi/I', 'evt/l']
+readVariables = ['met_pt/F', 'met_phi/F', 'run/I', 'lumi/I', 'evt/l', 'nVert/I']
 if allMC: readVariables+= ['nTrueInt/I']
 newVariables = ['weight/F','weightPU/F','weightPUUp/F','weightPUDown/F', 'reweightTopPt/F']
 newVariables.extend( ['nGoodJets/I', 'nBTags/I', 'ht/F'] )
@@ -255,6 +265,9 @@ if options.signal:
   readVariables += ['GenSusyMScan1/I', 'GenSusyMScan2/I']
   newVariables  += ['reweightXSecUp/F', 'reweightXSecDown/F']
   signalMassPoints = set()
+if options.fastSim:
+  newVariables  += ['reweightLeptonFastSimSF/F', 'reweightLeptonFastSimSFUp/F', 'reweightLeptonFastSimSFDown/F']
+
 readVectors = [\
   {'prefix':'LepGood',  'nMax':8, 'vars':['pt/F', 'eta/F', 'phi/F', 'pdgId/I', 'charge/I', 'relIso03/F', 'tightId/I', 'miniRelIso/F','mass/F','sip3d/F','mediumMuonId/I', 'mvaIdSpring15/F','lostHits/I', 'convVeto/I', 'dxy/F', 'dz/F']},
   {'prefix':'Jet',  'nMax':100, 'vars':['pt/F', 'eta/F', 'phi/F', 'id/I','btagCSV/F'] + jetMCInfo}]
@@ -275,12 +288,15 @@ if not options.skipVariations:
     newVariables.extend( ['met_pt_'+var+'/F', 'met_phi_'+var+'/F'] )
     if options.skim.lower().startswith('dilep'):
       newVariables.extend( ['dl_mt2ll_'+var+'/F', 'dl_mt2bb_'+var+'/F', 'dl_mt2blbl_'+var+'/F'] )
-  for var in btagMethod1DSystematics:
+  for var in btagEff_1d.btagWeightNames:
     newVariables.append('reweightBTag_'+var+'/F')
+  for i in range(maxMultBTagWeight+1):
+    for var in btagEff_1b.btagWeightNames:#['MC', 'SF', 'SF_b_Down', 'SF_b_Up', 'SF_l_Down', 'SF_l_Up']:
+      newVariables.extend(['reweightBTag'+str(i)+'_'+var+'/F', 'reweightBTag'+str(i+1)+'p_'+var+'/F'])
 
 newVars = [readVar(v, allowRenaming=False, isWritten = True, isRead=False) for v in newVariables]
-
 readVars = [readVar(v, allowRenaming=False, isWritten=False, isRead=True) for v in readVariables]
+
 for v in readVectors:
   readVars.append(readVar('n'+v['prefix']+'/I', allowRenaming=False, isWritten=False, isRead=True))
   v['vars'] = [readVar(v['prefix']+'_'+vvar, allowRenaming=False, isWritten=False, isRead=True) for vvar in v['vars']]
@@ -415,6 +431,13 @@ for chunk in chunks:
 
       if options.skim.lower().startswith('dilep'):
         leptons = getGoodLeptons(r)
+        if options.fastSim:
+          s.reweightLeptonFastSimSF     = reduce(mul, [leptonFastSimSF.get3DSF(pdgId=l['pdgId'], pt=l['pt'], eta=l['eta'] , nvtx = r.nVert) for l in leptons], 1)
+          s.reweightLeptonFastSimSFUp   = reduce(mul, [leptonFastSimSF.get3DSF(pdgId=l['pdgId'], pt=l['pt'], eta=l['eta'] , nvtx = r.nVert, sigma = +1) for l in leptons], 1)
+          s.reweightLeptonFastSimSFDown = reduce(mul, [leptonFastSimSF.get3DSF(pdgId=l['pdgId'], pt=l['pt'], eta=l['eta'] , nvtx = r.nVert, sigma = -1) for l in leptons], 1)
+#          if s.reweightLeptonFastSimSF==0:
+#            print [leptonFastSimSF.get3DSF(pdgId=l['pdgId'], pt=l['pt'], eta=l['eta'] , nvtx = r.nVert) for l in leptons], leptons
+
         s.nGoodMuons      = len(filter( lambda l:abs(l['pdgId'])==13, leptons))
         s.nGoodElectrons  = len(filter( lambda l:abs(l['pdgId'])==11, leptons))
 #          print "Leptons", leptons 
@@ -470,10 +493,16 @@ for chunk in chunks:
 
       if not options.skipVariations:
         for j in jets:
-          btagEff.addBTagEffToJet(j)
-        for var in btagMethod1DSystematics:
+          btagEff_1d.addBTagEffToJet(j)
+        for var in btagEff_1d.btagWeightNames:
           setattr(s, 'reweightBTag_'+var, reduce(mul, [j['beff'][var] for j in jets], 1) )
-
+        for j in jets:
+          btagEff_1b.addBTagEffToJet(j)
+        for var in btagEff_1b.btagWeightNames:
+          res = getTagWeightDict([j['beff'][var] for j in jets], maxMultBTagWeight)
+          for i in range(maxMultBTagWeight+1):
+            setattr(s, 'reweightBTag'+str(i)+'_'+var, res[i])
+            setattr(s, 'reweightBTag'+str(i+1)+'p_'+var, 1-sum([res[j] for j in range(i+1)]))
       for v in newVars:
         v['branch'].Fill()
     filesForHadd.append(newFileName)

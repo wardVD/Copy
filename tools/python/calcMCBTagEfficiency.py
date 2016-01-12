@@ -36,5 +36,5 @@ res=  getBTagMCTruthEfficiencies(c,
 print "Efficiencies:"
 print res
 pickle.dump(res, \
-  file(os.path.expandvars('/afs/hephy.at/data/rschoefbeck01/StopsDilepton/btagEfficiencyData/TTJets_DiLepton_comb_2j_2l.pkl'), 'w')
+  file(os.path.expandvars('$CMSSW_BASE/src/StopsDilepton/tools/data/btagEfficiencyData/TTJets_DiLepton_comb_2j_2l.pkl'), 'w')
 )
