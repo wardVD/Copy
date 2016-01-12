@@ -2,7 +2,7 @@ from StopsDilepton.tools.helpers import getYieldFromChain
 from setupHelpers import loadChain
 from u_float import u_float 
 from systematics import SystematicBaseClass
-from StopsDilepton.tools.convertHelpers import printHeader
+from StopsDilepton.tools.helpers import printHeader
 
 class MCBasedEstimate(SystematicBaseClass):
   def __init__(self, name, sample, cacheDir=None):

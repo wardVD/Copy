@@ -2,15 +2,15 @@ from StopsDilepton.tools.helpers import getYieldFromChain
 from math import sqrt
 from systematics import SystematicBaseClass
 from u_float import u_float
+from StopsDilepton.tools.helpers import printHeader
+
 class DataDrivenDYEstimate(SystematicBaseClass):
   def __init__(self, name, cacheDir=None):
     super(DataDrivenDYEstimate, self).__init__(name, cacheDir=cacheDir)
 #Concrete implementation of abstract method 'estimate' as defined in Systematic
   def _estimate(self, region, channel, setup):
-    print   "\n" \
-          + "********************************* \n" \
-          + "Starting Data Driven DY printouts \n" \
-          + "********************************* \n" 
+
+    printHeader("DD DY prediction for %s channel %s" %(self.name, channel))
 
     #Sum of all channels for 'all'
     if channel=='all':
@@ -46,13 +46,13 @@ class DataDrivenDYEstimate(SystematicBaseClass):
 
       #electroweak subtraction
       print "\n Substracting electroweak backgrounds from data: \n"
-      yield_ewk = u_float(0., 0.) 
-      for ewk in ['TTJets' , 'singleTop' , 'TTZ' , 'diBoson', 'triBoson' , 'TTXNoZ' , 'WJetsToLNu_HT']:
-        yield_ewk+=u_float(getYieldFromChain(setup.sample[ewk][channel]['chain'], cutString = cut_onZ_0b,  weight=weight, returnError=True))
-        if setup.verbose: print "yield_ewk_onZ_0b %s added, now: %s"%(ewk, yield_ewk)
+      yield_other = u_float(0., 0.) 
+      for s in ['TTJets' , 'TTZ' , 'other']:
+        yield_other+=u_float(getYieldFromChain(setup.sample[s][channel]['chain'], cutString = cut_onZ_0b,  weight=weight, returnError=True))
+        if setup.verbose: print "yield_other_onZ_0b %s added, now: %s"%(s, yield_other)
       
-      normRegYield = yield_data - yield_ewk
-      if normRegYield.val<0: print "\n !!!Warning!!! \n Negative normalization region yield data: (%s), MC: (%s) \n"%(yield_data, yield_ewk)
+      normRegYield = yield_data - yield_other
+      if normRegYield.val<0: print "\n !!!Warning!!! \n Negative normalization region yield data: (%s), MC: (%s) \n"%(yield_data, yield_other)
       
       mcRatio = yield_offZ_1b / yield_onZ_0b
       res = mcRatio * normRegYield

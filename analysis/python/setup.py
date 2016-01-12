@@ -38,15 +38,8 @@ class Setup:
 
     self.sample = {
     'DY':         {c:DYSample for c in allChannels},
-    'DY_HT_LO':   {c:DY_HT_LO for c in allChannels},
     'TTJets' :    {c:TTJetsSample for c in allChannels},
-    'TTZ'    :    {c:TTZ for c in allChannels},
-    'singleTop' : {c:singleTop for c in allChannels},
-    'diBoson':    {c:diBoson for c in allChannels},
-    'triBoson' :  {c:triBoson for c in allChannels},
-    'TTXNoZ'   :  {c:TTXNoZ for c in allChannels},
-    'WJetsToLNu_HT' : {c: WJetsToLNu_HT for c in allChannels} ,
-    'QCD'    :    {'MuMu':QCD_Mu5, 'EE': QCD_EMbcToE, 'EMu':QCD_Mu5EMbcToE, 'all':QCD_Mu5EMbcToE},
+    'TTZ' :       {c:TTZ for c in allChannels},
     'other'  :    {'MuMu':combineSamples([otherEWKBkgs, QCD_Mu5]), 'EE': combineSamples([otherEWKBkgs,QCD_EMbcToE]), 'EMu':combineSamples([otherEWKBkgs, QCD_Mu5EMbcToE]), 
                    'all': combineSamples([otherEWKBkgs, QCD_Mu5EMbcToE])},
     'Data'   :    {'MuMu':DoubleMuon_Run2015D, 'EE': DoubleEG_Run2015D, 'EMu':MuonEG_Run2015D},
