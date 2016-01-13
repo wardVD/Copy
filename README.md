@@ -5,6 +5,7 @@ cd CMSSW_7_4_12_patch4/src
 cmsenv
 git cms-init
 git clone https://github.com/GhentAnalysis/StopsDilepton
+git clone git@github.com:GhentAnalysis/PlotsSMS StopsDilepton/PlotsSMS #X-PAG code for limit
 scram b -j9
 ```
 
@@ -33,7 +34,8 @@ configure local branch
 git checkout -b CMGTools-from-CMSSW_7_4_12_LocalDevelopmentsPass2 cmg-ghent/CMGTools-from-CMSSW_7_4_12_LocalDevelopmentsPass2
 git push -u cmg-ghent CMGTools-from-CMSSW_7_4_12_LocalDevelopmentsPass2
 ```
-# for combine tool
+# for limit setting
+Make a 7_1_5 WS following the recipe at [SWGuideHiggsAnalysisCombinedLimit](https://twiki.cern.ch/twiki/bin/viewauth/CMS/SWGuideHiggsAnalysisCombinedLimit)
 ```
 export SCRAM_ARCH=slc6_amd64_gcc481
 cmsrel CMSSW_7_1_5 ### must be a 7_1_X release  >= 7_1_5;  (7.0.X and 7.2.X are NOT supported either) 

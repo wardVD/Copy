@@ -1,5 +1,9 @@
 from StopsDilepton.tools.localInfo import analysisOutputDir
 import copy
+
+#List some prefixes
+prefixes = []
+
 #Numerical constants
 zMassRange=15
 
@@ -16,13 +20,12 @@ TTJetsSample  = TTJets_Lep #LO, very large dilep + single lep samples
 otherEWKBkgs   = combineSamples([singleTop, diBoson, triBoson, TTXNoZ, WJetsToLNu_HT])
 otherEWKBkgs['name'] = 'otherBkgs'
 otherEWKBkgs['texName'] = 'other bkgs.'
-
 allChannels = ['all', 'EE', 'MuMu', 'EMu']
 
 #to run on data
-lumi = {'EMu':MuonEG_Run2015D['lumi'], 'MuMu':DoubleMuon_Run2015D['lumi'], 'EE':DoubleEG_Run2015D['lumi']}
+#lumi = {'EMu':MuonEG_Run2015D['lumi'], 'MuMu':DoubleMuon_Run2015D['lumi'], 'EE':DoubleEG_Run2015D['lumi']}
 #10/fb to run on MC
-#lumi = {c:10000 for c in allChannels}
+lumi = {c:10000 for c in allChannels}
 
 from systematics import jmeVariations
 from StopsDilepton.analysis.setupHelpers import getZCut, loadChain
@@ -35,7 +38,7 @@ class Setup:
     self.useTriggers=True
     self.lumi=lumi
     self.sys          = {'weight':'weightPU', 'reweight':[], 'selectionModifier':None, 'useBTagWeights':None}
-
+    self.prefixes = prefixes
     self.sample = {
     'DY':         {c:DYSample for c in allChannels},
     'TTJets' :    {c:TTJetsSample for c in allChannels},
@@ -47,7 +50,10 @@ class Setup:
     for s in sum([s.values() for s in self.sample.values()],[]):
       loadChain(s)# if not type(s)==type([]) else [loadChain(t) for t in s]
 
-    self.cacheDir = os.path.join(self.analysisOutputDir, 'cacheFiles', self.preselection('MC')['prefix'])
+    self.cacheDir = os.path.join(self.analysisOutputDir, self.prefix(), 'cacheFiles')
+
+  def prefix(self):
+    return '_'.join(self.prefixes+[self.preselection('MC')['prefix']])
 
   #Clone the setup and optinally modify the systematic variation
   def sysClone(self, sys=None):

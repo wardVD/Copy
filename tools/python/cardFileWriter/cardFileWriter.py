@@ -1,5 +1,9 @@
 class cardFileWriter:
   def __init__(self):
+    self.reset()
+    self.releaseLocation = "." #by default, use this releasee
+
+  def reset(self):
     self.bins = []
     self.muted = {} 
     self.uncertainties = []
@@ -15,9 +19,6 @@ class cardFileWriter:
     self.maxUncNameWidth = 30
     self.maxUncStrWidth = 30
     self.hasContamination=False
-
-  def reset(self):
-    self.__init__()	
 
   def addBin(self, name, processes, niceName=""):
     if len(name)>30:
@@ -84,7 +85,13 @@ class cardFileWriter:
     if p not in self.processes[b]:
       print "Process ", p," is not in bin",b,". Available for ", b,":",self.processes[b]
       return
-    self.uncertaintyVal[(u,b,p)] = val
+    if val<0:
+      assert self.expectation[(b, p)]<0.1, "Found negative uncertainty %f for yield %f in %r."%(val, self.expectation[(b, p)], (u,b,p))
+      print "Warning! Found negative uncertainty %f for yield %f in %r. Replacing with 1.0 under the assumption that it is irrelevant (check!)."%(val, self.expectation[(b, p)], (u,b,p))
+      _val=1.0
+    else:
+      _val = val
+    self.uncertaintyVal[(u,b,p)] = _val
 
   def getUncertaintyString(self, k):
     u, b, p = k
@@ -172,6 +179,7 @@ class cardFileWriter:
       
     outfile.close()
     print "[cardFileWrite] Written card file %s"%fname
+    return fname
 
   def readResFile(self, fname):
     import ROOT
@@ -199,8 +207,9 @@ class cardFileWriter:
       fname = str(uuid.uuid4())+".txt"
       self.writeToFile(uniqueDirname+"/"+fname)
     else:
-      self.writeToFile(fname)
-    os.system("cd "+uniqueDirname+";combine --saveWorkspace -M Asymptotic "+fname)
+      assert os.path.exists(fname), "File not found: %s"%fname 
+    print "pushd "+self.releaseLocation+";eval `scramv1 runtime -sh`;popd;cd "+uniqueDirname+";combine --saveWorkspace -M Asymptotic "+fname
+    os.system("pushd "+self.releaseLocation+";eval `scramv1 runtime -sh`;popd;cd "+uniqueDirname+";combine --saveWorkspace -M Asymptotic "+fname)
     try:
       res= self.readResFile(uniqueDirname+"/higgsCombineTest.Asymptotic.mH120.root")
     except:
@@ -211,7 +220,6 @@ class cardFileWriter:
        os.system("rm -rf "+uniqueDirname)
     else:
       if res:
-        print res
         os.system("cp higgsCombineTest.Asymptotic.mH120.root "+fname.replace('.txt','')+'.root')
     
     return res
@@ -229,7 +237,7 @@ class cardFileWriter:
       self.writeToFile(uniqueDirname+"/"+fname)
     else:
       self.writeToFile(fname)
-    os.system("cd "+uniqueDirname+";combine --saveWorkspace  -M ProfileLikelihood --significance "+fname+" -t -1 --expectSignal=1 ")
+    os.system("pushd "+self.releaseLocation+";eval `scramv1 runtime -sh`;popd;cd "+uniqueDirname+";"+self.combineStr+" --saveWorkspace  -M ProfileLikelihood --significance "+fname+" -t -1 --expectSignal=1 ")
     try:
       res= self.readResFile(uniqueDirname+"/higgsCombineTest.ProfileLikelihood.mH120.root")
     except:
@@ -240,7 +248,6 @@ class cardFileWriter:
        os.system("rm -rf "+uniqueDirname)
     else:
       if res:
-        print res
         os.system("cp higgsCombineTest.ProfileLikelihood.mH120.root "+fname.replace('.txt','')+'.root')
 
     return res
