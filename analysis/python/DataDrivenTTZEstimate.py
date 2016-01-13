@@ -5,10 +5,10 @@ from u_float import u_float
 from StopsDilepton.tools.helpers import printHeader
 
 class DataDrivenTTZEstimate(SystematicBaseClass):
-  def __init__(self, name, nJets, nBTags, cacheDir=None):
+  def __init__(self, name, cacheDir=None):
     super(DataDrivenTTZEstimate, self).__init__(name, cacheDir=cacheDir)
-    self.nJets = nJets
-    self.nBTags = nBTags
+    self.nJets = (4,-1) #jet selection
+    self.nBTags = (2,-1) #bjet selection
 #Concrete implementation of abstract method 'estimate' as defined in Systematic
   def _estimate(self, region, channel, setup):
     printHeader("DD TTZ prediction for '%s' channel %s" %(self.name, channel))
@@ -35,7 +35,7 @@ class DataDrivenTTZEstimate(SystematicBaseClass):
       if setup.useTriggers: MuMuMuSelection += '&&HLT_3mu'
       #e_e_e
       EEESelection = "nGoodElectrons>=2" + '&&' + electronSelection_loosePt + "==3"
-     if setup.useTriggers: EEESelection += '&&HLT_3e'
+      if setup.useTriggers: EEESelection += '&&HLT_3e'
       #e_e_mu
       EEMuSelection = "(nGoodMuons+nGoodElectrons)>=2" + "&&" + electronSelection_loosePt + "==2&&" + muonSelection_loosePt + "==1" 
       if setup.useTriggers: EEMuSelection += '&&HLT_2e1mu'
@@ -43,8 +43,8 @@ class DataDrivenTTZEstimate(SystematicBaseClass):
       MuMuESelection = "(nGoodMuons+nGoodElectrons)>=2" + "&&" + electronSelection_loosePt + "==1&&" + muonSelection_loosePt + "==2" 
       if setup.useTriggers: MuMuESelection += '&&HLT_2mu1e'
       
-      MC_hadronSelection = setup.selection('MC', metMin = 0., metSigMin=0., dPhiJetMet=0.25, nJets = self.nJets, nBTags= self.nBTags, hadronicSelection = True)['cut']
-      data_hadronSelection = setup.selection('Data', metMin = 0., metSigMin=0., dPhiJetMet=0.25, nJets = self.nJets, nBTags= self.nBTags, hadronicSelection = True)['cut']
+      MC_hadronSelection = setup.selection('MC', metMin = 50., metSigMin=0., dPhiJetMet=0.25, nJets = self.nJets, nBTags= self.nBTags, hadronicSelection = True)['cut']
+      data_hadronSelection = setup.selection('Data', metMin = 50., metSigMin=0., dPhiJetMet=0.25, nJets = self.nJets, nBTags= self.nBTags, hadronicSelection = True)['cut']
 
       MC_MuMuMu = "&&".join([ ####STILL NEED SOMETHING TO LOOK AT Z-PEAK-> GET Z_PT FROM 3 LEPTONS
         MC_hadronSelection,
@@ -63,7 +63,7 @@ class DataDrivenTTZEstimate(SystematicBaseClass):
         MuMuESelection
       ])
 
-      MC_3l = "("+MuMuMuSelection+")||("+EEESelection+")||("+EEMuSelection+")||("+MuMuESelection+")"
+      MC_3l = "(("+MC_MuMuMu+")||("+MC_EEE+")||("+MC_EEMu+")||("+MC_MuMuE+"))"
       
       data_MuMuMu = "&&".join([ ####STILL NEED SOMETHING TO LOOK AT Z-PEAK-> GET Z_PT FROM 3 LEPTONS
         data_hadronSelection,
@@ -90,7 +90,7 @@ class DataDrivenTTZEstimate(SystematicBaseClass):
       if setup.verbose: print "yield_data_looseSelection_MuMuMu: %s"%yield_data_MuMuMu
       yield_data_EEE = u_float( getYieldFromChain(setup.sample['Data']['EE']['chain'], cutString = data_EEE, weight=weight, returnError = True))
       if setup.verbose: print "yield_data_looseSelection_EEE: %s"%yield_data_EEE
-      yield_data_EMu = u_float( getYieldFromChain(setup.sample['Data']['EMu']['chain'], cutString = "("+data_MuMuE+'||'+data_EEMu+')', weight=weight, returnError = True))
+      yield_data_EMu = u_float( getYieldFromChain(setup.sample['Data']['EMu']['chain'], cutString = "(("+data_MuMuE+')||('+data_EEMu+'))', weight=weight, returnError = True))
       if setup.verbose: print "yield_data_looseSelection_EMu: %s"%yield_data_EMu
       
       yield_data_3l = yield_data_MuMuMu+yield_data_EEE+yield_data_EMu
@@ -107,5 +107,7 @@ class DataDrivenTTZEstimate(SystematicBaseClass):
       if normRegYield.val<0: print "\n !!!Warning!!! \n Negative normalization region yield data: (%s), MC: (%s) \n"%(yield_data_3l, yield_other)
 
       print  "normRegYield", normRegYield
-      return u_float(0., 0.) 
+      print "\n Control Region predicts ", normRegYield, " TTZ events in data; ", yield_MC_3l, " TTZ events in MC. Ratio ---> ", (normRegYield/yield_MC_3l)
+      print "DD-TTZ ---> ", (normRegYield/yield_MC_3l)*yield_MC_2l
+      return (normRegYield/yield_MC_3l)*yield_MC_2l
       

@@ -204,7 +204,7 @@ from DataDrivenTTZEstimate import DataDrivenTTZEstimate
 #from collections import OrderedDict
 estimates = [
    #DataDrivenDYEstimate(name='DY-DD', cacheDir=setup.cacheDir),
-   DataDrivenTTZEstimate(name='TTZ-DD', nJets=(4,-1), nBTags = (2,-1), cacheDir=setup.cacheDir),
+   DataDrivenTTZEstimate(name='TTZ-DD', cacheDir=setup.cacheDir),
 
    #MCBasedEstimate(name='DY',          sample=setup.sample['DY'], cacheDir=setup.cacheDir),
    #MCBasedEstimate(name='TTJets',      sample=setup.sample['TTJets'], cacheDir=setup.cacheDir),
