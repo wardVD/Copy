@@ -10,7 +10,8 @@ if os.environ['USER'] in ['didar']:
 if os.environ['USER'] in ['schoef', 'rschoefbeck', 'schoefbeck']:
   plotDir = "/afs/hephy.at/user/r/rschoefbeck/www/"
   dataDir = "/afs/hephy.at/data/rschoefbeck01/cmgTuples/postProcessed_mAODv2_fix/dilepTiny" 
-  analysisOutputDir = '/afs/hephy.at/data/rschoefbeck01/StopsDilepton/results' #Path to analysis results
+  analysisOutputDir = '/afs/hephy.at/data/rschoefbeck01/StopsDilepton/results/test' #Path to analysis results
+  releaseLocation71XC = '/afs/hephy.at/work/r/rschoefbeck/CMS/tmp/CMSSW_7_1_5/src'
 if os.environ['USER'] in ['sigamani']:
   plotDir = "/afs/cern.ch/user/s/sigamani/www/php-plots/2LeptonStops13TeV/"
   dataDir = "/afs/cern.ch/work/w/wvandrie/public/STOPS/ANALYSIS_new2/CMSSW_7_4_12_patch4/src/StopsDilepton/samplesCopyWard_Spring15_new/"

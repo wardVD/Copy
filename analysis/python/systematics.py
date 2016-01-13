@@ -45,14 +45,14 @@ class SystematicBaseClass:
   def uniqueKey(self, region, channel, setup):
     return region, channel, json.dumps(setup.lumi, sort_keys=True), json.dumps(setup.sys, sort_keys=True)
 
-  def cachedEstimate(self, region, channel, setup):
+  def cachedEstimate(self, region, channel, setup, save=True):
     key =  self.uniqueKey(region, channel, setup)
     if self.cache and self.cache.contains(key):
       res = self.cache.get(key)
       if setup.verbose: print "Loading cached %s result for %r : %r"%(self.name, key, res)
       return res
     elif self.cache:
-      return self.cache.add( key, self._estimate( region, channel, setup))
+      return self.cache.add( key, self._estimate( region, channel, setup), save=save)
     else:
       return self._estimate( region, channel, setup)
 
@@ -107,3 +107,33 @@ class SystematicBaseClass:
     up      = self.cachedEstimate(region, channel, setup.sysClone({'useBTagWeights':'SF_FS_Up'}))
     down    = self.cachedEstimate(region, channel, setup.sysClone({'useBTagWeights':'SF_FS_Down'}))
     return 0.5*(up-down)/ref 
+
+  def getAllSysJobs(self, region, channel, setup):
+    return [
+      (region, channel, setup.sysClone({'weight':'weightPUUp'})),
+      (region, channel, setup.sysClone({'weight':'weightPUDown'})),
+
+      (region, channel, setup.sysClone({'reweight':['reweightTopPt']})),
+   
+      (region, channel, setup.sysClone({'selectionModifier':'JERUp'})),
+      (region, channel, setup.sysClone({'selectionModifier':'JERDown'})),
+
+      (region, channel, setup.sysClone({'selectionModifier':'JECUp'})),
+      (region, channel, setup.sysClone({'selectionModifier':'JECDown'})),
+
+#      (region, channel, setup.sysClone({'reweight':['reweightLeptonFastSimSF']})),
+#      (region, channel, setup.sysClone({'reweight':['reweightLeptonFastSimSFUp']})),
+#      (region, channel, setup.sysClone({'reweight':['reweightLeptonFastSimSFDown']})),
+
+      (region, channel, setup.sysClone({'useBTagWeights':'SF'})),
+      (region, channel, setup.sysClone({'useBTagWeights':'SF_b_Up'})),
+      (region, channel, setup.sysClone({'useBTagWeights':'SF_b_Down'})),
+
+      (region, channel, setup.sysClone({'useBTagWeights':'SF'})),
+      (region, channel, setup.sysClone({'useBTagWeights':'SF_l_Up'})),
+      (region, channel, setup.sysClone({'useBTagWeights':'SF_l_Down'})),
+
+      (region, channel, setup.sysClone({'useBTagWeights':'SF'})),
+#      (region, channel, setup.sysClone({'useBTagWeights':'SF_FS_Up'})),
+#      (region, channel, setup.sysClone({'useBTagWeights':'SF_FS_Down'})),
+    ]

@@ -23,18 +23,18 @@ class DataDrivenTTZEstimate(SystematicBaseClass):
       assert abs(1.-setup.lumi[channel]/setup.sample['Data'][channel]['lumi'])<0.01, "Lumi specified in setup %f does not match lumi in data sample %f in channel %s"%(setup.lumi[channel], setup.sample['Data'][channel]['lumi'], channel)
       
       selection_2l = "&&".join([region.cutString(setup.sys['selectionModifier']), setup.selection('MC', channel=channel, zWindow = 'offZ', nJets = (4,-1), nBTags= (2,-1))['cut']])
-      threeLeptonSel = "nGoodMuons+nGoodElectrons==3" #use whatever
+      threeLeptonCut = "nGoodMuons+nGoodElectrons==3" #use whatever
       selection_3l = "&&".join([
   #      region.cutString(setup.sys['selectionModifier']), ??? is this not a bug? Why the region
         setup.selection('MC', channel=channel, zWindow = 'offZ', nJets = (4,-1), nBTags= (2,-1), hadronicSelection = True)['cut'],
-        threeLeptonSel
+        threeLeptonCut
       ])
 
       #continue similarly
       data_selection_3l = "&&".join([
   #      region.cutString(setup.sys['selectionModifier']), ??? is this not a bug? Why the region
         setup.selection('Data', channel=channel, zWindow = 'offZ', nJets = (4,-1), nBTags= (2,-1), hadronicSelection = True)['cut'],
-        threeLeptonSel
+        threeLeptonCut
       ])
       
       yield_2l = u_float( getYieldFromChain(setup.sample['TTZ'][channel]['chain'], cutString = selection_2l, weight=weight, returnError = True))

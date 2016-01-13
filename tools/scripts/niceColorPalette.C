@@ -2,7 +2,7 @@
 #include "TColor.h"
 #include "TStyle.h"
 
-void useNiceColorPalette( Int_t NCont = 255 ) {
+void niceColorPalette( Int_t NCont = 255 ) {
  const Int_t NRGBs = 5;
  Double_t stops[NRGBs] = { 0.00, 0.34, 0.61, 0.84, 1.00 };
  Double_t red[NRGBs]   = { 0.00, 0.00, 0.87, 1.00, 0.51 };
