@@ -3,6 +3,8 @@ from math import sqrt
 from systematics import SystematicBaseClass
 from u_float import u_float
 from StopsDilepton.tools.helpers import printHeader
+from StopsDilepton.tools.objectSelection import looseMuIDString,looseEleIDString
+
 
 class DataDrivenTTZEstimate(SystematicBaseClass):
   def __init__(self, name, cacheDir=None):
@@ -27,8 +29,8 @@ class DataDrivenTTZEstimate(SystematicBaseClass):
       yield_MC_2l =  setup.lumi[channel]/1000.*u_float(getYieldFromChain(setup.sample['TTZ'][channel]['chain'], cutString = selection_MC_2l, weight=weight, returnError = True) )
       if setup.verbose: print "yield_MC_2l: %s"%yield_MC_2l 
       
-      electronSelection_loosePt = "Sum$(LepGood_pt>=10&&abs(LepGood_eta)<2.4&&abs(LepGood_pdgId)==11&&LepGood_miniRelIso<0.2&&LepGood_convVeto&&LepGood_lostHits==0&&LepGood_sip3d<4.0&&abs(LepGood_dxy)<0.05&&abs(LepGood_dz)<0.1&&((abs(LepGood_eta)>=0.&&abs(LepGood_eta)<0.8&&LepGood_mvaIdSpring15>0.87)||(abs(LepGood_eta)>=0.8&&abs(LepGood_eta)<1.479&&LepGood_mvaIdSpring15>0.60)||(abs(LepGood_eta)>=1.57&&abs(LepGood_eta)<999.&&LepGood_mvaIdSpring15>0.17)))"
-      muonSelection_loosePt = "Sum$(LepGood_pt>=10&&abs(LepGood_eta)<2.4&&abs(LepGood_pdgId)==13&&LepGood_miniRelIso<0.2&&LepGood_sip3d<4.0&&abs(LepGood_dxy)<0.05&&abs(LepGood_dz)<0.1&&LepGood_mediumMuonId==1)"
+      muonSelection_loosePt = looseMuIDString(ptCut=10)
+      electronSelection_loosePt = looseEleIDString(ptCut=10)
       
       #mu_mu_mu
       MuMuMuSelection = "nGoodMuons>=2" + '&&' + muonSelection_loosePt + "==3"
