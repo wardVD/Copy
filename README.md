@@ -5,6 +5,8 @@ cd CMSSW_7_4_12_patch4/src
 cmsenv
 git cms-init
 git clone https://github.com/GhentAnalysis/StopsDilepton
+cd $CMSSW_BASE/src/StopsDilepton
+git clone git@github.com:GhentAnalysis/PlotsSMS #X-PAG code for limit
 scram b -j9
 ```
 
@@ -27,7 +29,6 @@ echo "/JetMETCorrections/Type1MET/" >> .git/info/sparse-checkout
 echo "/PhysicsTools/PatAlgos/" >> .git/info/sparse-checkout
 echo "/PhysicsTools/PatUtils/" >> .git/info/sparse-checkout
 git read-tree -mu HEAD
-git clone git@github.com:GhentAnalysis/PlotsSMS #X-PAG code for limit
 ```
 configure local branch
 ```
