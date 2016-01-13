@@ -210,12 +210,12 @@ from DataDrivenTTZEstimate import DataDrivenTTZEstimate
 #from collections import OrderedDict
 estimates = [
    #DataDrivenDYEstimate(name='DY-DD', cacheDir=setup.cacheDir),
-   DataDrivenTTZEstimate(name='TTZ-DD', cacheDir=setup.cacheDir),
+   #DataDrivenTTZEstimate(name='TTZ-DD', cacheDir=setup.cacheDir),
 
-   #MCBasedEstimate(name='DY',          sample=setup.sample['DY'], cacheDir=setup.cacheDir),
-   #MCBasedEstimate(name='TTJets',      sample=setup.sample['TTJets'], cacheDir=setup.cacheDir),
-   #MCBasedEstimate(name='TTZ',         sample=setup.sample['TTZ'], cacheDir=setup.cacheDir),
-   #MCBasedEstimate(name='other',       sample=setup.sample['other'], cacheDir=setup.cacheDir),
+   MCBasedEstimate(name='DY',          sample=setup.sample['DY'], cacheDir=setup.cacheDir),
+   MCBasedEstimate(name='TTJets',      sample=setup.sample['TTJets'], cacheDir=setup.cacheDir),
+   MCBasedEstimate(name='TTZ',         sample=setup.sample['TTZ'], cacheDir=setup.cacheDir),
+   MCBasedEstimate(name='other',       sample=setup.sample['other'], cacheDir=setup.cacheDir),
 ]
 
 nList = [e.name for e in estimates]
