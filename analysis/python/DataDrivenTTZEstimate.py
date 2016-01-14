@@ -1,7 +1,7 @@
 from StopsDilepton.tools.helpers import getYieldFromChain
 from math import sqrt
-from systematics import SystematicBaseClass
-from u_float import u_float
+from StopsDilepton.analysis.systematics import SystematicBaseClass
+from StopsDilepton.analysis.u_float import u_float
 from StopsDilepton.tools.helpers import printHeader
 
 class DataDrivenTTZEstimate(SystematicBaseClass):

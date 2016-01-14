@@ -1,5 +1,5 @@
 allowedVars = ["dl_mt2ll", "dl_mt2blbl", "dl_mt2bb"]
-from systematics import jmeVariations
+from StopsDilepton.analysis.systematics import jmeVariations
 class region:
   def __init__(self, var, val):
     assert type(val)==type(()) and len(val)==2, "Don't know how to make region with this val argument: %r."%val

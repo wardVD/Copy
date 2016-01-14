@@ -15,7 +15,7 @@ class cardFileWriter:
     self.contamination = {} 
     self.niceNames = {}
     self.defWidth = 12
-    self.precision = 3
+    self.precision = 5
     self.maxUncNameWidth = 30
     self.maxUncStrWidth = 30
     self.hasContamination=False

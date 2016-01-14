@@ -27,7 +27,7 @@ allChannels = ['all', 'EE', 'MuMu', 'EMu']
 #10/fb to run on MC
 lumi = {c:10000 for c in allChannels}
 
-from systematics import jmeVariations
+from StopsDilepton.analysis.systematics import jmeVariations
 from StopsDilepton.analysis.setupHelpers import getZCut, loadChain
 
 class Setup:
@@ -50,10 +50,12 @@ class Setup:
     for s in sum([s.values() for s in self.sample.values()],[]):
       loadChain(s)# if not type(s)==type([]) else [loadChain(t) for t in s]
 
-    self.cacheDir = os.path.join(self.analysisOutputDir, self.prefix(), 'cacheFiles')
 
   def prefix(self):
     return '_'.join(self.prefixes+[self.preselection('MC')['prefix']])
+
+  def getDefaultCacheDir(self):
+    return os.path.join(self.analysisOutputDir, self.prefix(), 'cacheFiles')
 
   #Clone the setup and optinally modify the systematic variation
   def sysClone(self, sys=None):
@@ -201,20 +203,20 @@ hadronicSelection: whether to return only the hadronic selection
 setup = Setup()
 
 #define analysis regions
-from regions import regions1D, regions3D
+from StopsDilepton.analysis.regions import regions1D, regions3D
 regions =  regions3D
 
-from MCBasedEstimate import MCBasedEstimate
-from DataDrivenDYEstimate import DataDrivenDYEstimate
-from DataDrivenTTZEstimate import DataDrivenTTZEstimate
+from StopsDilepton.analysis.MCBasedEstimate import MCBasedEstimate
+from StopsDilepton.analysis.DataDrivenDYEstimate import DataDrivenDYEstimate
+from StopsDilepton.analysis.DataDrivenTTZEstimate import DataDrivenTTZEstimate
 #from collections import OrderedDict
 estimates = [
    #DataDrivenDYEstimate(name='DY-DD', cacheDir=setup.cacheDir),
 
-   MCBasedEstimate(name='DY',          sample=setup.sample['DY'], cacheDir=setup.cacheDir),
-   MCBasedEstimate(name='TTJets',      sample=setup.sample['TTJets'], cacheDir=setup.cacheDir),
-   MCBasedEstimate(name='TTZ',         sample=setup.sample['TTZ'], cacheDir=setup.cacheDir),
-   MCBasedEstimate(name='other',       sample=setup.sample['other'], cacheDir=setup.cacheDir),
+   MCBasedEstimate(name='DY',          sample=setup.sample['DY'], cacheDir=setup.getDefaultCacheDir()),
+   MCBasedEstimate(name='TTJets',      sample=setup.sample['TTJets'], cacheDir=setup.getDefaultCacheDir()),
+   MCBasedEstimate(name='TTZ',         sample=setup.sample['TTZ'], cacheDir=setup.getDefaultCacheDir()),
+   MCBasedEstimate(name='other',       sample=setup.sample['other'], cacheDir=setup.getDefaultCacheDir()),
 ]
 
 nList = [e.name for e in estimates]

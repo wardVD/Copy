@@ -1,4 +1,4 @@
-from region import region
+from StopsDilepton.analysis.region import region
 
 #Put all sets of regions that are used in the analysis, closure, tables, etc.
 

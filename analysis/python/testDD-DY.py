@@ -1,8 +1,8 @@
-from region import region
-from setup import setup
+from StopsDilepton.analysis.region import region
+from StopsDilepton.analysis.setup import setup
 #regionTTZ = getRegionsFromThresholds('dl_mt2ll', [0])  ##intention was to not use this stupid func outside. 
 
-from DataDrivenDYEstimate import DataDrivenDYEstimate
+from StopsDilepton.analysis.DataDrivenDYEstimate import DataDrivenDYEstimate
 estimateDY = DataDrivenDYEstimate(name='DY-DD', cacheDir=setup.cacheDir)
 
 regionDY = region('dl_mt2ll', (140,-1))

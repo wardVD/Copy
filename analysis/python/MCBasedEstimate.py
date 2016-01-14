@@ -1,7 +1,8 @@
 from StopsDilepton.tools.helpers import getYieldFromChain
-from setupHelpers import loadChain
-from u_float import u_float 
-from systematics import SystematicBaseClass
+from StopsDilepton.analysis.setupHelpers import loadChain
+from StopsDilepton.analysis.region import region
+from StopsDilepton.analysis.u_float import u_float 
+from StopsDilepton.analysis.systematics import SystematicBaseClass
 from StopsDilepton.tools.helpers import printHeader
 
 class MCBasedEstimate(SystematicBaseClass):
@@ -10,7 +11,7 @@ class MCBasedEstimate(SystematicBaseClass):
     self.sample=sample
 #Concrete implementation of abstract method 'estimate' as defined in Systematic
   def _estimate(self, region, channel, setup):
-    printHeader("MC prediction for %s channel %s" %(self.name, channel))
+    if setup.verbose: printHeader("MC prediction for %s channel %s" %(self.name, channel))
 
     if channel=='all':
       return sum( [ self.cachedEstimate(region, c, setup) for c in ['MuMu', 'EE', 'EMu'] ], u_float(0., 0.) )

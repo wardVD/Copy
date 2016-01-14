@@ -26,7 +26,7 @@ btagVariationWeights = [
 import os
 import abc
 from math import sqrt
-from cache import cache
+from StopsDilepton.analysis.cache import cache
 import json
 class SystematicBaseClass:
   __metaclass__ = abc.ABCMeta
@@ -108,7 +108,7 @@ class SystematicBaseClass:
     down    = self.cachedEstimate(region, channel, setup.sysClone({'useBTagWeights':'SF_FS_Down'}))
     return 0.5*(up-down)/ref 
 
-  def getAllSysJobs(self, region, channel, setup):
+  def getBkgSysJobs(self, region, channel, setup):
     return [
       (region, channel, setup.sysClone({'weight':'weightPUUp'})),
       (region, channel, setup.sysClone({'weight':'weightPUDown'})),
@@ -136,4 +136,14 @@ class SystematicBaseClass:
       (region, channel, setup.sysClone({'useBTagWeights':'SF'})),
 #      (region, channel, setup.sysClone({'useBTagWeights':'SF_FS_Up'})),
 #      (region, channel, setup.sysClone({'useBTagWeights':'SF_FS_Down'})),
+    ]
+  def getSigSysJobs(self, region, channel, setup):
+    return [
+
+      (region, channel, setup.sysClone({'reweight':['reweightLeptonFastSimSF']})),
+      (region, channel, setup.sysClone({'reweight':['reweightLeptonFastSimSFUp']})),
+      (region, channel, setup.sysClone({'reweight':['reweightLeptonFastSimSFDown']})),
+
+      (region, channel, setup.sysClone({'useBTagWeights':'SF_FS_Up'})),
+      (region, channel, setup.sysClone({'useBTagWeights':'SF_FS_Down'})),
     ]
