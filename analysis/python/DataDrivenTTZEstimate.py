@@ -10,7 +10,8 @@ class DataDrivenTTZEstimate(SystematicBaseClass):
   def __init__(self, name, cacheDir=None):
     super(DataDrivenTTZEstimate, self).__init__(name, cacheDir=cacheDir)
     self.nJets = (4,-1) #jet selection
-    self.nBTags = (2,-1) #bjet selection
+    self.nMediumBTags = (1,-1) #bjet selection
+    self.nLooseBTags = (2,-1) #loose bjet selection
 #Concrete implementation of abstract method 'estimate' as defined in Systematic
   def _estimate(self, region, channel, setup):
     printHeader("DD TTZ prediction for '%s' channel %s" %(self.name, channel))
@@ -46,11 +47,15 @@ class DataDrivenTTZEstimate(SystematicBaseClass):
       if setup.parameters['useTriggers']: MuMuESelection += '&&HLT_2mu1e'
       
       MC_hadronSelection    = setup.selection('MC', hadronicSelection = True, 
-          **setup.defaultParameters(update={'nJets': self.nJets, 'nBTags':self.nBTags, 'metMin': 50., 'metSigMin':0., 'dPhiJetMet':0.25 })
+          **setup.defaultParameters(update={'nJets': self.nJets, 'nBTags':self.nMediumBTags, 'metMin': 50., 'metSigMin':0., 'dPhiJetMet':0.25 })
         )['cut']
-      data_hadronSelection  = setup.selection('Data', **setup.defaultParameters(
-        update={'nJets': self.nJets, 'nBTags':self.nBTags, 'metMin': 50., 'metSigMin':0., 'dPhiJetMet':0.25 })
+      data_hadronSelection  = setup.selection('Data', hadronicSelection = True, 
+          **setup.defaultParameters(update={'nJets': self.nJets, 'nBTags':self.nMediumBTags, 'metMin': 50., 'metSigMin':0., 'dPhiJetMet':0.25 })
         )['cut']
+
+      #loose bjet selection added here
+      MC_hadronSelection += '&&Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id&&Jet_btagCSV>0.605)'
+      data_hadronSelection += '&&Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id&&Jet_btagCSV>0.605)'
 
       MC_MuMuMu = "&&".join([ ####STILL NEED SOMETHING TO LOOK AT Z-PEAK-> GET Z_PT FROM 3 LEPTONS
         MC_hadronSelection,
@@ -89,7 +94,7 @@ class DataDrivenTTZEstimate(SystematicBaseClass):
       ])
 
 
-      ######IS THIS THE RIGHT LUMI????
+      ######yield_MC_3l computed for ALL channels but lumi changes slightly here depending on channel
       yield_MC_3l = setup.lumi[channel]/1000.*u_float( getYieldFromChain(setup.sample['TTZ'][channel]['chain'], cutString = MC_3l, weight=weight, returnError = True))
       if setup.verbose: print "yield_MC_looseSelection_3l: %s"%yield_MC_3l 
       yield_data_MuMuMu = u_float( getYieldFromChain(setup.sample['Data']['MuMu']['chain'], cutString = data_MuMuMu, weight=weight, returnError = True))
@@ -113,7 +118,7 @@ class DataDrivenTTZEstimate(SystematicBaseClass):
       if normRegYield.val<0: print "\n !!!Warning!!! \n Negative normalization region yield data: (%s), MC: (%s) \n"%(yield_data_3l, yield_other)
 
       print  "normRegYield", normRegYield
-      print "\n Control Region predicts ", normRegYield, " TTZ events in data; ", yield_MC_3l, " TTZ events in MC. Ratio ---> ", (normRegYield/yield_MC_3l)
+      print "\n Control Region predictys ", normRegYield, " TTZ events in data; ", yield_MC_3l, " TTZ events in MC. Ratio ---> ", (normRegYield/yield_MC_3l)
       print "DD-TTZ ---> ", (normRegYield/yield_MC_3l)*yield_MC_2l
       return (normRegYield/yield_MC_3l)*yield_MC_2l
       
