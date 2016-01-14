@@ -86,7 +86,7 @@ class Setup:
           res.sys[k]=sys[k]# if sys[k] else res.sys[k]
     return res
 
-  def defaultParameters(self, update):
+  def defaultParameters(self, update={}):
     assert type(update)==type({}), "Update arguments with key arg dictionary. Got this: %r"%update
     res = copy.deepcopy(self.parameters)
     res.update(update)
