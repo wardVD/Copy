@@ -29,16 +29,29 @@ from StopsDilepton.analysis.SetupHelpers import getZCut, loadChain, allChannels
 #10/fb to run on MC
 lumi = {c:10000 for c in allChannels}
 
+#Define defaults here
+default_mllMin = 20
+default_metMin = 80
+default_metSigMin = 5
+default_dPhiJetMet = 0.25
+default_nJets = (2, -1)
+default_nBTags = (1, -1)
+default_leptonCharges = "isOS"
+default_useTriggers = True
+
 
 class Setup:
   def __init__(self):
     self.verbose=False
     self.analysisOutputDir = analysisOutputDir
     self.zMassRange   = zMassRange
-    self.useTriggers=True
-    self.lumi=lumi
-    self.sys          = {'weight':'weightPU', 'reweight':[], 'selectionModifier':None, 'useBTagWeights':None}
     self.prefixes = prefixes
+
+    #Default cuts and requirements. Those three things below are used to determine the key in the cache!
+    self.default      = {'mllMin':default_mllMin, 'metMin':default_metMin, 'metSigMin':default_metSigMin, 'dPhiJetMet':default_dPhiJetMet, 'nJets': default_nJets, 'nBTags': default_nBTags, 'leptonCharges': default_leptonCharges, 'useTriggers':True}
+    self.sys          = {'weight':'weightPU', 'reweight':[], 'selectionModifier':None, 'useBTagWeights':None}
+    self.lumi=lumi
+
     self.sample = {
     'DY':         {c:DYSample for c in allChannels},
     'TTJets' :    {c:TTJetsSample for c in allChannels},
@@ -74,11 +87,13 @@ class Setup:
     return res
 
   def preselection(self, dataMC , channel='all', zWindow = 'offZ'):
-    '''Get preselection  cutstring.
-'''
-    return self.selection(dataMC, channel = channel, zWindow = zWindow, mllMin=20, metMin=80, metSigMin=5, dPhiJetMet=0.25, nJets = (2,-1), nBTags = (1,-1), leptonCharges = "isOS", hadronicSelection = False)
+    '''Get preselection  cutstring.'''
+    return self.selection(dataMC, channel = channel, zWindow = zWindow, hadronicSelection = False, **self.default)
 
-  def selection(self, dataMC, channel = 'all', zWindow = 'offZ', mllMin = 20, metMin=80, metSigMin=5, dPhiJetMet=0.25, nJets = (2,-1), nBTags = (1,-1), leptonCharges = "isOS", hadronicSelection = False):
+  def selection(self, dataMC, channel = 'all', zWindow = 'offZ', 
+                mllMin=default_mllMin, metMin=default_metMin, metSigMin=default_metSigMin, dPhiJetMet = default_dPhiJetMet, 
+                nJets=default_nJets, nBTags = default_nBTags, leptonCharges=default_leptonCharges, useTriggers = True, 
+                hadronicSelection = False):
     '''Define full selection
 dataMC: 'Data' or 'MC'
 channel: EE, MuMu or EMu
@@ -173,7 +188,7 @@ hadronicSelection: whether to return only the hadronic selection
       #lepton channel
       assert channel in allChannels, "channel must be one of "+",".join(allChannels)+". Got %r."%channel
 #      res['prefixes'] = channel + res['prefixes']
-      if self.useTriggers:
+      if useTriggers:
         pMuMu = preselMuMu + "&&" + triggerMuMu
         pEE   = preselEE  + "&&" + triggerEleEle 
         pEMu  = preselEMu + "&&" + triggerMuEle

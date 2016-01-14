@@ -34,16 +34,16 @@ class DataDrivenTTZEstimate(SystematicBaseClass):
       
       #mu_mu_mu
       MuMuMuSelection = "nGoodMuons>=2" + '&&' + muonSelection_loosePt + "==3"
-      if setup.useTriggers: MuMuMuSelection += '&&HLT_3mu'
+      if setup.default['useTriggers']: MuMuMuSelection += '&&HLT_3mu'
       #e_e_e
       EEESelection = "nGoodElectrons>=2" + '&&' + electronSelection_loosePt + "==3"
-      if setup.useTriggers: EEESelection += '&&HLT_3e'
+      if setup.default['useTriggers']: EEESelection += '&&HLT_3e'
       #e_e_mu
       EEMuSelection = "(nGoodMuons+nGoodElectrons)>=2" + "&&" + electronSelection_loosePt + "==2&&" + muonSelection_loosePt + "==1" 
-      if setup.useTriggers: EEMuSelection += '&&HLT_2e1mu'
+      if setup.default['useTriggers']: EEMuSelection += '&&HLT_2e1mu'
       #mu_mu_e
       MuMuESelection = "(nGoodMuons+nGoodElectrons)>=2" + "&&" + electronSelection_loosePt + "==1&&" + muonSelection_loosePt + "==2" 
-      if setup.useTriggers: MuMuESelection += '&&HLT_2mu1e'
+      if setup.default['useTriggers']: MuMuESelection += '&&HLT_2mu1e'
       
       MC_hadronSelection = setup.selection('MC', metMin = 50., metSigMin=0., dPhiJetMet=0.25, nJets = self.nJets, nBTags= self.nBTags, hadronicSelection = True)['cut']
       data_hadronSelection = setup.selection('Data', metMin = 50., metSigMin=0., dPhiJetMet=0.25, nJets = self.nJets, nBTags= self.nBTags, hadronicSelection = True)['cut']
