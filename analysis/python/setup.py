@@ -85,7 +85,7 @@ class Setup:
   def selection(self, dataMC, channel = 'all', zWindow = 'offZ', mllMin = 20, metMin=80, metSigMin=5, dPhiJetMet=0.25, nJets = (2,-1), nBTags = (1,-1), leptonCharges = "isOS", hadronicSelection = False):
     '''Define full selection
 dataMC: 'Data' or 'MC'
-channel: onZ, offZ, allZ
+channel: EE, MuMu or EMu
 zWindow: offZ, onZ, or allZ
 mllMin: lower threshold on dilepton invariant mass
 leptonCharges: isOS, isSS or None
@@ -212,6 +212,7 @@ from StopsDilepton.analysis.DataDrivenTTZEstimate import DataDrivenTTZEstimate
 #from collections import OrderedDict
 estimates = [
    #DataDrivenDYEstimate(name='DY-DD', cacheDir=setup.cacheDir),
+   #DataDrivenTTZEstimate(name='TTZ-DD', cacheDir=setup.cacheDir),
 
    MCBasedEstimate(name='DY',          sample=setup.sample['DY'], cacheDir=setup.getDefaultCacheDir()),
    MCBasedEstimate(name='TTJets',      sample=setup.sample['TTJets'], cacheDir=setup.getDefaultCacheDir()),

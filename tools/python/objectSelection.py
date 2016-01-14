@@ -29,39 +29,91 @@ def getGenParts(c):
 def getGenPartsAll(c):
   return [getObjDict(c, 'genPartAll_', ['eta','pt','phi','charge', 'status', 'pdgId', 'motherId', 'grandmotherId','daughterIndex1','daughterIndex2'], i) for i in range(int(getVarValue(c, 'ngenPartAll')))]
 
+Muon_pdgId = 13
+Muon_mediumMuonId = 1
+Muon_miniRelIso = 0.2
+Muon_sip3d = 4.0
+Muon_dxy = 0.05
+Muon_dz = 0.1
+
 def looseMuID(l, ptCut=20, absEtaCut=2.4):
   return \
     l["pt"]>=ptCut\
-    and abs(l["pdgId"])==13\
+    and abs(l["pdgId"])==Muon_pdgId\
     and abs(l["eta"])<absEtaCut\
-    and l["mediumMuonId"]==1 \
-    and l["miniRelIso"]<0.2 \
-    and l["sip3d"]<4.0\
-    and abs(l["dxy"])<0.05\
-    and abs(l["dz"])<0.1\
+    and l["mediumMuonId"]==Muon_mediumMuonId \
+    and l["miniRelIso"]<Muon_miniRelIso \
+    and l["sip3d"]<Muon_sip3d\
+    and abs(l["dxy"])<Muon_dxy\
+    and abs(l["dz"])<Muon_dz\
+
+def looseMuIDString(ptCut=20, absEtaCut=2.4):
+  string = []
+  LepString = "LepGood_"
+  string.append(LepString+"pt>="+str(ptCut))
+  string.append("abs("+LepString+"pdgId)=="+str(Muon_pdgId))
+  string.append("abs("+LepString+"eta)<"+str(absEtaCut))
+  string.append(LepString+"mediumMuonId=="+str(Muon_mediumMuonId))
+  string.append(LepString+"miniRelIso<"+str(Muon_miniRelIso))
+  string.append(LepString+"sip3d<"+str(Muon_sip3d))
+  string.append("abs("+LepString+"dxy)<"+str(Muon_dxy))
+  string.append("abs("+LepString+"dz)<"+str(Muon_dz))
+  string = 'Sum$('+'&&'.join(string)+')'
+  return string
 
 def cmgMVAEleID(l,mva_cuts):
   aeta = abs(l["eta"])
   for abs_e, mva in mva_cuts.iteritems():
     if aeta>=abs_e[0] and aeta<abs_e[1] and l["mvaIdSpring15"] >mva: return True
   return False
+
+def cmgMVAEleIDString(mva_cuts):
+  aeta = "abs(LepGood_eta)"
+  string = []
+  for abs_e, mva in mva_cuts.iteritems():
+    string.append("("+aeta+">="+str(abs_e[0])+"&&"+aeta+"<"+str(abs_e[1])+"&&LepGood_mvaIdSpring15>"+str(mva)+")")
+  string = "("+'||'.join(string)+')'
+  return string
   
 ele_MVAID_cuts_vloose = {(0,0.8):-0.16 , (0.8, 1.479):-0.65, (1.57, 999): -0.74}
 #ele_MVAID_cuts_loose = {(0,0.8):0.35 , (0.8, 1.479):0.20, (1.57, 999): -0.52}
 ele_MVAID_cuts_tight = {(0,0.8):0.87 , (0.8, 1.479):0.60, (1.57, 999):  0.17}
 
+Ele_pdgId = 11
+Ele_miniRelIso = 0.2
+Ele_lostHits = 0
+Ele_sip3d = 4.0
+Ele_dxy = 0.05
+Ele_dz = 0.1
+
 def looseEleID(l, ptCut=20, absEtaCut=2.4):
   return \
     l["pt"]>=ptCut\
     and abs(l["eta"])<absEtaCut\
-    and abs(l["pdgId"])==11\
+    and abs(l["pdgId"])==Ele_pdgId\
     and cmgMVAEleID(l, ele_MVAID_cuts_tight)\
-    and l["miniRelIso"]<0.2\
+    and l["miniRelIso"]<Ele_miniRelIso\
     and l["convVeto"]\
-    and l["lostHits"]==0\
-    and l["sip3d"] < 4.0\
-    and abs(l["dxy"]) < 0.05\
-    and abs(l["dz"]) < 0.1\
+    and l["lostHits"]==Ele_lostHits\
+    and l["sip3d"] < Ele_sip3d\
+    and abs(l["dxy"]) < Ele_dxy\
+    and abs(l["dz"]) < Ele_dz\
+
+def looseEleIDString(ptCut=20, absEtaCut=2.4):
+  string = []
+  LepString = "LepGood_"
+  string.append(LepString+"pt>="+str(ptCut))
+  string.append("abs("+LepString+"eta)<"+str(absEtaCut))
+  string.append("abs("+LepString+"pdgId)=="+str(Ele_pdgId))
+  string.append(cmgMVAEleIDString(ele_MVAID_cuts_tight))
+  string.append(LepString+"miniRelIso<"+str(Ele_miniRelIso))
+  string.append(LepString+"convVeto")
+  string.append(LepString+"lostHits=="+str(Ele_lostHits))
+  string.append(LepString+"sip3d<"+str(Ele_sip3d))
+  string.append("abs("+LepString+"dxy)<"+str(Ele_dxy))
+  string.append("abs("+LepString+"dz)<"+str(Ele_dz))
+  string = 'Sum$('+'&&'.join(string)+')'
+  return string
 
 #leptonVars=['eta','pt','phi','mass','charge', 'dxy', 'dz', 'relIso03','tightId', 'pdgId', 'mediumMuonId', 'miniRelIso', 'sip3d', 'mvaIdSpring15', 'convVeto', 'lostHits']
 leptonVars=['eta','pt','phi','dxy', 'dz','tightId', 'pdgId', 'mediumMuonId', 'miniRelIso', 'sip3d', 'mvaIdSpring15', 'convVeto', 'lostHits']
