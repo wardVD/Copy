@@ -187,6 +187,7 @@ if options.skim.lower().count('tiny'):
                        "puppiMet_pt","puppiMet_phi",  
                        "Flag_HBHENoiseFilter", "Flag_HBHENoiseIsoFilter", "Flag_goodVertices", "Flag_CSCTightHaloFilter", "Flag_eeBadScFilter",
                        "HLT_mumuIso", "HLT_ee_DZ", "HLT_mue",
+                       "HLT_3mu", "HLT_3e", "HLT_2e1mu", "HLT_2mu1e",
                        'LepGood_eta','LepGood_pt','LepGood_phi', 'LepGood_dxy', 'LepGood_dz','LepGood_tightId', 'LepGood_pdgId', 'LepGood_mediumMuonId', 'LepGood_miniRelIso', 'LepGood_sip3d', 'LepGood_mvaIdSpring15', 'LepGood_convVeto', 'LepGood_lostHits',
                        'Jet_eta','Jet_pt','Jet_phi','Jet_btagCSV', 'Jet_id' ,
 #                       "nLepGood", "LepGood_*", 
