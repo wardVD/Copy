@@ -9,7 +9,7 @@ from StopsDilepton.analysis.MCBasedEstimate import MCBasedEstimate
 from StopsDilepton.analysis.DataDrivenDYEstimate import DataDrivenDYEstimate
 from StopsDilepton.analysis.DataDrivenTTZEstimate import DataDrivenTTZEstimate
 #from collections import OrderedDict
-estimates = [
+bkgEstimators = [
    #DataDrivenDYEstimate(name='DY-DD', cacheDir=setup.cacheDir),
    #DataDrivenTTZEstimate(name='TTZ-DD', cacheDir=setup.cacheDir),
 
@@ -19,5 +19,5 @@ estimates = [
    MCBasedEstimate(name='other',       sample=setup.sample['other'], cacheDir=setup.getDefaultCacheDir()),
 ]
 
-nList = [e.name for e in estimates]
-assert len(list(set(nList))) == len(nList), "Names of estimates are not unique: %s"%",".join(nList)
+nList = [e.name for e in bkgEstimators]
+assert len(list(set(nList))) == len(nList), "Names of bkgEstimators are not unique: %s"%",".join(nList)
