@@ -29,7 +29,6 @@ def getGenParts(c):
 def getGenPartsAll(c):
   return [getObjDict(c, 'genPartAll_', ['eta','pt','phi','charge', 'status', 'pdgId', 'motherId', 'grandmotherId','daughterIndex1','daughterIndex2'], i) for i in range(int(getVarValue(c, 'ngenPartAll')))]
 
-Muon_pdgId = 13
 Muon_mediumMuonId = 1
 Muon_miniRelIso = 0.2
 Muon_sip3d = 4.0
@@ -39,7 +38,7 @@ Muon_dz = 0.1
 def looseMuID(l, ptCut=20, absEtaCut=2.4):
   return \
     l["pt"]>=ptCut\
-    and abs(l["pdgId"])==Muon_pdgId\
+    and abs(l["pdgId"])==13\
     and abs(l["eta"])<absEtaCut\
     and l["mediumMuonId"]==Muon_mediumMuonId \
     and l["miniRelIso"]<Muon_miniRelIso \
@@ -79,7 +78,6 @@ ele_MVAID_cuts_vloose = {(0,0.8):-0.16 , (0.8, 1.479):-0.65, (1.57, 999): -0.74}
 #ele_MVAID_cuts_loose = {(0,0.8):0.35 , (0.8, 1.479):0.20, (1.57, 999): -0.52}
 ele_MVAID_cuts_tight = {(0,0.8):0.87 , (0.8, 1.479):0.60, (1.57, 999):  0.17}
 
-Ele_pdgId = 11
 Ele_miniRelIso = 0.2
 Ele_lostHits = 0
 Ele_sip3d = 4.0
@@ -90,7 +88,7 @@ def looseEleID(l, ptCut=20, absEtaCut=2.4):
   return \
     l["pt"]>=ptCut\
     and abs(l["eta"])<absEtaCut\
-    and abs(l["pdgId"])==Ele_pdgId\
+    and abs(l["pdgId"])==11\
     and cmgMVAEleID(l, ele_MVAID_cuts_tight)\
     and l["miniRelIso"]<Ele_miniRelIso\
     and l["convVeto"]\
