@@ -35,7 +35,7 @@ class DataDrivenDYEstimate(SystematicBaseClass):
       cut_offZ_1b = "&&".join([region.cutString(setup.sys['selectionModifier']), setup.selection('MC', channel=channel, zWindow = 'offZ', **setup.defaultParameters(update={'nBTags':(1,-1)}))['cut'] ])
       cut_onZ_1b  = "&&".join([region.cutString(setup.sys['selectionModifier']), setup.selection('MC', channel=channel, zWindow = 'onZ',  **setup.defaultParameters(update={'nBTags':(1,-1)}))['cut'] ])
       cut_onZ_0b  = "&&".join([region.cutString(setup.sys['selectionModifier']), setup.selection('MC', channel=channel, zWindow = 'onZ',  **setup.defaultParameters(update={'nBTags':(0,0)}))['cut'] ])
-      cut_data_onZ_0b    = "&&".join([region.cutString(setup.sys['selectionModifier']), setup.selection('Data', channel=channel, zWindow = 'onZ',  **setup.defaultParameters(update={'nBTags':(0,0)}))['cut'] ])
+      cut_data_onZ_0b    = "&&".join([region.cutString(setup.sys['selectionModifier']), setup.selection('Data', channel=channel, zWindow = 'onZ',  **setup.defaultParameters(update={'nBTags':(0,0)}) )['cut'] ])
   #    R1 = DY-MC (offZ, 1b) / DY-MC (onZ, 1b)
   #    R2 = DY-MC (onZ, 1b) / DY-MC (onZ, 0b) 
   #    DY-est = R1*R2*(Data(2l, onZ, 0b) - EWK(onZ, 0b)) = DY-MC (offZ, 1b) / DY-MC (onZ, 0b) *( Data(2l, onZ, 0b) - EWK(onZ, 0b))

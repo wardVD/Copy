@@ -45,8 +45,12 @@ class DataDrivenTTZEstimate(SystematicBaseClass):
       MuMuESelection = "(nGoodMuons+nGoodElectrons)>=2" + "&&" + electronSelection_loosePt + "==1&&" + muonSelection_loosePt + "==2" 
       if setup.parameters['useTriggers']: MuMuESelection += '&&HLT_2mu1e'
       
-      MC_hadronSelection    = setup.selection('MC', hadronicSelection = True, **setup.defaultParameters(update={'nJets': self.nJets, 'nBTags':self.nBTags, 'metMin': 50., 'metSigMin':0., 'dPhiJetMet':0.25 }))['cut']
-      data_hadronSelection  = setup.selection('Data', **setup.defaultParameters(update={'nJets': self.nJets, 'nBTags':self.nBTags, 'metMin': 50., 'metSigMin':0., 'dPhiJetMet':0.25 }))['cut']
+      MC_hadronSelection    = setup.selection('MC', hadronicSelection = True, 
+          **setup.defaultParameters(update={'nJets': self.nJets, 'nBTags':self.nBTags, 'metMin': 50., 'metSigMin':0., 'dPhiJetMet':0.25 })
+        )['cut']
+      data_hadronSelection  = setup.selection('Data', **setup.defaultParameters(
+        update={'nJets': self.nJets, 'nBTags':self.nBTags, 'metMin': 50., 'metSigMin':0., 'dPhiJetMet':0.25 })
+        )['cut']
 
       MC_MuMuMu = "&&".join([ ####STILL NEED SOMETHING TO LOOK AT Z-PEAK-> GET Z_PT FROM 3 LEPTONS
         MC_hadronSelection,
