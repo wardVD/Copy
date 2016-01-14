@@ -3,6 +3,9 @@ from setup import setup
 #regionTTZ = getRegionsFromThresholds('dl_mt2ll', [0])  ##intention was to not use this stupid func outside. 
 
 from DataDrivenTTZEstimate import DataDrivenTTZEstimate
+
+setup.verbose = True
+
 estimateTTZ = DataDrivenTTZEstimate(name='TTZ-DD', cacheDir=None)
 
 regionTTZ = region('dl_mt2ll', (0,-1))
