@@ -50,7 +50,7 @@ def looseMuIDString(ptCut=20, absEtaCut=2.4):
   string = []
   LepString = "LepGood_"
   string.append(LepString+"pt>="+str(ptCut))
-  string.append("abs("+LepString+"pdgId)=="+str(Muon_pdgId))
+  string.append("abs("+LepString+"pdgId)==13")
   string.append("abs("+LepString+"eta)<"+str(absEtaCut))
   string.append(LepString+"mediumMuonId=="+str(Muon_mediumMuonId))
   string.append(LepString+"miniRelIso<"+str(Muon_miniRelIso))
@@ -102,7 +102,7 @@ def looseEleIDString(ptCut=20, absEtaCut=2.4):
   LepString = "LepGood_"
   string.append(LepString+"pt>="+str(ptCut))
   string.append("abs("+LepString+"eta)<"+str(absEtaCut))
-  string.append("abs("+LepString+"pdgId)=="+str(Ele_pdgId))
+  string.append("abs("+LepString+"pdgId)==11")
   string.append(cmgMVAEleIDString(ele_MVAID_cuts_tight))
   string.append(LepString+"miniRelIso<"+str(Ele_miniRelIso))
   string.append(LepString+"convVeto")
