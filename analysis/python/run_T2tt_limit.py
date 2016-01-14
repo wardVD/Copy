@@ -1,5 +1,6 @@
 import os
-from StopsDilepton.analysis.setup import setup, regions, estimates, allChannels
+from StopsDilepton.analysis.SetupHelpers import allChannels
+from StopsDilepton.analysis.defaultAnalysis import setup, regions, estimates
 setup.verbose = False
 from StopsDilepton.samples.cmgTuples_FastSimT2tt_mAODv2_25ns_1l_postProcessed import *
 from StopsDilepton.analysis.MCBasedEstimate import MCBasedEstimate
@@ -29,7 +30,7 @@ def wrapper(s):
   c.addUncertainty('SFFS', 'lnN')
   c.addUncertainty('leptonSF', 'lnN')
 
-  eSignal = MCBasedEstimate(name=s['name'],    sample={channel:s for channel in allChannels}, cacheDir=setup.cacheDir )
+  eSignal = MCBasedEstimate(name=s['name'],    sample={channel:s for channel in allChannels}, cacheDir=setup.getDefaultCacheDir() )
   outfileName = os.path.join(setup.analysisOutputDir,  setup.prefix(), 'cardFiles', limitPrefix, s['name']+'.txt')
   if not os.path.exists(outfileName) or overWrite:
     for r in regions:

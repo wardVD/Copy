@@ -1,4 +1,5 @@
-from StopsDilepton.analysis.setup import setup, regions, allChannels, estimates
+from StopsDilepton.analysis.SetupHelpers import allChannels
+from StopsDilepton.analysis.setup import setup, regions, estimates
 #from multi_estimate import multi_estimate
 from MCBasedEstimate import MCBasedEstimate
 from StopsDilepton.samples.cmgTuples_FastSimT2tt_mAODv2_25ns_1l_postProcessed import *

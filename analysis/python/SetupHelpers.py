@@ -1,5 +1,7 @@
 from StopsDilepton.tools.helpers import getChain
 
+allChannels = ['all', 'EE', 'MuMu', 'EMu']
+
 def loadChain(s, verbose=False):
   '''Use this function to add the chain to the sample dictionary.
 Will not load again if has already loaded'''

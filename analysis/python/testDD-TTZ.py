@@ -1,6 +1,9 @@
 from StopsDilepton.analysis.region import region
-from StopsDilepton.analysis.setup import setup
-#regionTTZ = getRegionsFromThresholds('dl_mt2ll', [0])  ##intention was to not use this stupid func outside. 
+from StopsDilepton.analysis.defaultAnalysis import setup
+
+#Always taking data lumi
+setup.lumi = {channel:setup.sample['Data'][channel]['lumi'] for channel in setup.sample['Data'].keys()}
+setup.loadChains()
 
 from StopsDilepton.analysis.DataDrivenTTZEstimate import DataDrivenTTZEstimate
 setup.verbose = True

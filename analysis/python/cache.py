@@ -1,4 +1,3 @@
-from StopsDilepton.analysis.region import region
 import pickle, os
 class cache:
   def __init__(self, filename, verbosity=0, overwrite=False):

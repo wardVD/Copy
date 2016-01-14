@@ -1,6 +1,6 @@
 
 from StopsDilepton.tools.helpers import getYieldFromChain
-from StopsDilepton.analysis.setupHelpers import loadChain
+from StopsDilepton.analysis.SetupHelpers import loadChain
 from StopsDilepton.analysis.region import region
 from StopsDilepton.analysis.u_float import u_float 
 from StopsDilepton.analysis.systematics import SystematicBaseClass

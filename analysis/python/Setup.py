@@ -20,15 +20,15 @@ TTJetsSample  = TTJets_Lep #LO, very large dilep + single lep samples
 otherEWKBkgs   = combineSamples([singleTop, diBoson, triBoson, TTXNoZ, WJetsToLNu_HT])
 otherEWKBkgs['name'] = 'otherBkgs'
 otherEWKBkgs['texName'] = 'other bkgs.'
-allChannels = ['all', 'EE', 'MuMu', 'EMu']
+
+from StopsDilepton.analysis.systematics import jmeVariations
+from StopsDilepton.analysis.SetupHelpers import getZCut, loadChain, allChannels
 
 #to run on data
 #lumi = {'EMu':MuonEG_Run2015D['lumi'], 'MuMu':DoubleMuon_Run2015D['lumi'], 'EE':DoubleEG_Run2015D['lumi']}
 #10/fb to run on MC
 lumi = {c:10000 for c in allChannels}
 
-from StopsDilepton.analysis.systematics import jmeVariations
-from StopsDilepton.analysis.setupHelpers import getZCut, loadChain
 
 class Setup:
   def __init__(self):
@@ -47,9 +47,10 @@ class Setup:
                    'all': combineSamples([otherEWKBkgs, QCD_Mu5EMbcToE])},
     'Data'   :    {'MuMu':DoubleMuon_Run2015D, 'EE': DoubleEG_Run2015D, 'EMu':MuonEG_Run2015D},
     }
+
+  def loadChains(self):
     for s in sum([s.values() for s in self.sample.values()],[]):
       loadChain(s)# if not type(s)==type([]) else [loadChain(t) for t in s]
-
 
   def prefix(self):
     return '_'.join(self.prefixes+[self.preselection('MC')['prefix']])
@@ -72,11 +73,6 @@ class Setup:
           res.sys[k]=sys[k]# if sys[k] else res.sys[k]
     return res
 
-#  def weightString(self):
-#    wStr = self.sys['weight']
-#    if self.sys['reweight']:
-#      wStr += "*"+"*".join(self.sys['reweight'])
-#    return wStr
   def preselection(self, dataMC , channel='all', zWindow = 'offZ'):
     '''Get preselection  cutstring.
 '''
@@ -200,25 +196,3 @@ hadronicSelection: whether to return only the hadronic selection
 
     return {'cut':"&&".join(res['cuts']), 'prefix':'-'.join(res['prefixes']), 'weightStr':"*".join([self.sys['weight']]+res['reweight'])} 
 
-setup = Setup()
-
-#define analysis regions
-from StopsDilepton.analysis.regions import regions1D, regions3D
-regions =  regions3D
-
-from StopsDilepton.analysis.MCBasedEstimate import MCBasedEstimate
-from StopsDilepton.analysis.DataDrivenDYEstimate import DataDrivenDYEstimate
-from StopsDilepton.analysis.DataDrivenTTZEstimate import DataDrivenTTZEstimate
-#from collections import OrderedDict
-estimates = [
-   #DataDrivenDYEstimate(name='DY-DD', cacheDir=setup.cacheDir),
-   #DataDrivenTTZEstimate(name='TTZ-DD', cacheDir=setup.cacheDir),
-
-   MCBasedEstimate(name='DY',          sample=setup.sample['DY'], cacheDir=setup.getDefaultCacheDir()),
-   MCBasedEstimate(name='TTJets',      sample=setup.sample['TTJets'], cacheDir=setup.getDefaultCacheDir()),
-   MCBasedEstimate(name='TTZ',         sample=setup.sample['TTZ'], cacheDir=setup.getDefaultCacheDir()),
-   MCBasedEstimate(name='other',       sample=setup.sample['other'], cacheDir=setup.getDefaultCacheDir()),
-]
-
-nList = [e.name for e in estimates]
-assert len(list(set(nList))) == len(nList), "Names of estimates are not unique: %s"%",".join(nList)
