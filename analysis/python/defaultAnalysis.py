@@ -13,10 +13,10 @@ bkgEstimators = [
    #DataDrivenDYEstimate(name='DY-DD', cacheDir=setup.cacheDir),
    #DataDrivenTTZEstimate(name='TTZ-DD', cacheDir=setup.cacheDir),
 
-   MCBasedEstimate(name='DY',          sample=setup.sample['DY'], cacheDir=setup.getDefaultCacheDir()),
-   MCBasedEstimate(name='TTJets',      sample=setup.sample['TTJets'], cacheDir=setup.getDefaultCacheDir()),
-   MCBasedEstimate(name='TTZ',         sample=setup.sample['TTZ'], cacheDir=setup.getDefaultCacheDir()),
-   MCBasedEstimate(name='other',       sample=setup.sample['other'], cacheDir=setup.getDefaultCacheDir()),
+   MCBasedEstimate(name='DY',          sample=setup.sample['DY'],     cacheDir = None ),#setup.defaultCacheDir()),
+   MCBasedEstimate(name='TTJets',      sample=setup.sample['TTJets'], cacheDir = None ),#setup.defaultCacheDir()),
+   MCBasedEstimate(name='TTZ',         sample=setup.sample['TTZ'],    cacheDir = None ),#setup.defaultCacheDir()),
+   MCBasedEstimate(name='other',       sample=setup.sample['other'],  cacheDir = None ),#setup.defaultCacheDir()),
 ]
 
 nList = [e.name for e in bkgEstimators]

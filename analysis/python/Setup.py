@@ -39,7 +39,6 @@ default_nBTags = (1, -1)
 default_leptonCharges = "isOS"
 default_useTriggers = True
 
-
 class Setup:
   def __init__(self):
     self.verbose=False
@@ -68,7 +67,7 @@ class Setup:
   def prefix(self):
     return '_'.join(self.prefixes+[self.preselection('MC')['prefix']])
 
-  def getDefaultCacheDir(self):
+  def defaultCacheDir(self):
     return os.path.join(self.analysisOutputDir, self.prefix(), 'cacheFiles')
 
   #Clone the setup and optinally modify the systematic variation

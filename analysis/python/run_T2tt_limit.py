@@ -30,7 +30,7 @@ def wrapper(s):
   c.addUncertainty('SFFS', 'lnN')
   c.addUncertainty('leptonSF', 'lnN')
 
-  eSignal = MCBasedEstimate(name=s['name'],    sample={channel:s for channel in allChannels}, cacheDir=setup.getDefaultCacheDir() )
+  eSignal = MCBasedEstimate(name=s['name'],    sample={channel:s for channel in allChannels}, cacheDir=setup.defaultCacheDir() )
   outfileName = os.path.join(setup.analysisOutputDir,  setup.prefix(), 'cardFiles', limitPrefix, s['name']+'.txt')
   if not os.path.exists(outfileName) or overWrite:
     for r in regions:

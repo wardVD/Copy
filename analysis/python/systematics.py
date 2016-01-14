@@ -33,6 +33,9 @@ class SystematicBaseClass:
 
   def __init__(self, name, cacheDir=None):
     self.name = name
+    self.initCache(cacheDir)
+
+  def initCache(self, cacheDir):
     if cacheDir:
       self.cacheDir=cacheDir
       cacheFileName = os.path.join(cacheDir, self.name+'.pkl')

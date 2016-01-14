@@ -6,7 +6,7 @@ setup.lumi = {channel:setup.sample['Data'][channel]['lumi'] for channel in setup
 setup.loadChains()
 
 from StopsDilepton.analysis.DataDrivenDYEstimate import DataDrivenDYEstimate
-estimateDY = DataDrivenDYEstimate(name='DY-DD', cacheDir=setup.getDefaultCacheDir())
+estimateDY = DataDrivenDYEstimate(name='DY-DD', cacheDir=setup.defaultCacheDir())
 
 regionDY = region('dl_mt2ll', (140,-1))
 
