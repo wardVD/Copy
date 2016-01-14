@@ -48,7 +48,7 @@ class Setup:
     self.prefixes = prefixes
 
     #Default cuts and requirements. Those three things below are used to determine the key in the cache!
-    self.default      = {'mllMin':default_mllMin, 'metMin':default_metMin, 'metSigMin':default_metSigMin, 'dPhiJetMet':default_dPhiJetMet, 'nJets': default_nJets, 'nBTags': default_nBTags, 'leptonCharges': default_leptonCharges, 'useTriggers':True}
+    self.parameters      = {'mllMin':default_mllMin, 'metMin':default_metMin, 'metSigMin':default_metSigMin, 'dPhiJetMet':default_dPhiJetMet, 'nJets': default_nJets, 'nBTags': default_nBTags, 'leptonCharges': default_leptonCharges, 'useTriggers':True}
     self.sys          = {'weight':'weightPU', 'reweight':[], 'selectionModifier':None, 'useBTagWeights':None}
     self.lumi=lumi
 
@@ -86,25 +86,25 @@ class Setup:
           res.sys[k]=sys[k]# if sys[k] else res.sys[k]
     return res
 
+  def defaultParameters(self, update):
+    assert type(update)==type({}), "Update arguments with key arg dictionary. Got this: %r"%update
+    res = copy.deepcopy(self.parameters)
+    res.update(update)
+    return res
+      
+
   def preselection(self, dataMC , channel='all', zWindow = 'offZ'):
     '''Get preselection  cutstring.'''
-    return self.selection(dataMC, channel = channel, zWindow = zWindow, hadronicSelection = False, **self.default)
+    return self.selection(dataMC, channel = channel, zWindow = zWindow, hadronicSelection = False, **self.parameters)
 
-  def selection(self, dataMC, channel = 'all', zWindow = 'offZ', 
-                mllMin=default_mllMin, metMin=default_metMin, metSigMin=default_metSigMin, dPhiJetMet = default_dPhiJetMet, 
-                nJets=default_nJets, nBTags = default_nBTags, leptonCharges=default_leptonCharges, useTriggers = True, 
-                hadronicSelection = False):
+  def selection(self, dataMC,  
+                mllMin, metMin, metSigMin, dPhiJetMet, 
+                nJets, nBTags, leptonCharges, useTriggers, 
+                channel = 'all', zWindow = 'offZ', hadronicSelection = False):
     '''Define full selection
 dataMC: 'Data' or 'MC'
 channel: EE, MuMu or EMu
 zWindow: offZ, onZ, or allZ
-mllMin: lower threshold on dilepton invariant mass
-leptonCharges: isOS, isSS or None
-metMin: minimum MET requirement
-metSigMin: minimum requirement on MET significance
-dPhiJetMet: delta-phi cut on Jet_1,2 and MET.
-nJets: jet multiplicity bin
-nBTags: btag multiplicity  bin
 hadronicSelection: whether to return only the hadronic selection
  '''
     #Consistency checks
