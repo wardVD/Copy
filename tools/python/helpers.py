@@ -3,7 +3,7 @@ from math import pi, sqrt, cos, sin, sinh, log, cosh
 from array import array
 ROOT.gROOT.LoadMacro("$CMSSW_BASE/src/StopsDilepton/tools/scripts/tdrstyle.C")
 ROOT.setTDRStyle()
-
+mZ=91.2
 from StopsDilepton.tools.convertHelpers import wrapStr, printHeader
 
 def deltaPhi(phi1, phi2):
@@ -27,6 +27,15 @@ def getFileList(dir, histname='histo', maxN=-1):
   if maxN>=0:
     filelist = filelist[:maxN]
   return filelist
+
+import itertools
+def closestOSDLMassToMZ(leptons):
+  inds = [i for i in range(len(leptons))]
+  vecs = [ROOT.TLorentzVector() for i in range(len(leptons))]
+  for i, v in enumerate(vecs):
+    v.SetPtEtaPhiM(leptons[i]['pt'], leptons[i]['eta'], leptons[i]['phi'], 0.)
+  dlMasses = [(vecs[comb[0]] + vecs[comb[1]]).M()  for comb in itertools.combinations(inds, 2) if leptons[comb[0]]['pdgId']*leptons[comb[1]]['pdgId'] < 0 and abs(leptons[comb[0]]['pdgId']) == abs(leptons[comb[1]]['pdgId']) ]
+  return min(dlMasses, key=lambda m:abs(m-mZ)) if len(dlMasses)>0 else float('nan') 
 
 def getChain(sampleList, histname='', maxN=-1, treeName="Events"):
   if not type(sampleList)==type([]):

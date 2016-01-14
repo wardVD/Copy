@@ -1,6 +1,6 @@
 import os
 from StopsDilepton.analysis.SetupHelpers import allChannels
-from StopsDilepton.analysis.defaultAnalysis import setup, regions, estimates
+from StopsDilepton.analysis.defaultAnalysis import setup, regions, bkgEstimators
 setup.verbose = False
 from StopsDilepton.samples.cmgTuples_FastSimT2tt_mAODv2_25ns_1l_postProcessed import *
 from StopsDilepton.analysis.MCBasedEstimate import MCBasedEstimate
@@ -40,8 +40,8 @@ def wrapper(s):
         binname = 'Bin'+str(counter)
         counter += 1
         total_exp_bkg = 0
-        c.addBin(binname, [e.name for e in estimates], niceName)
-        for e in estimates:
+        c.addBin(binname, [e.name for e in bkgEstimators], niceName)
+        for e in bkgEstimators:
           expected = e.cachedEstimate(r, channel, setup)
           total_exp_bkg += expected.val
           c.specifyExpectation(binname, e.name, expected.val )

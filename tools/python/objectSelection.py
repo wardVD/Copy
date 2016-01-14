@@ -1,7 +1,5 @@
-from StopsDilepton.tools.helpers import getVarValue, getObjDict
+from StopsDilepton.tools.helpers import mZ, getVarValue, getObjDict
 from math import *
-
-mZ=91.2
 
 jetVars = ['eta','pt','phi','btagCSV', 'id']
 

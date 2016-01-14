@@ -10,7 +10,7 @@ from StopsDilepton.tools.topPtReweighting import getUnscaledTopPairPtReweightung
 from StopsDilepton.tools.vetoList import vetoList
 mt2Calc = mt2Calculator()
 #from StopsDilepton.tools.mtautau import mtautau as mtautau_
-from StopsDilepton.tools.helpers import getChain, getChunks, getObjDict, writeObjToFile,  getEList, getVarValue, checkRootFile, getYieldFromChain
+from StopsDilepton.tools.helpers import getChain, getChunks, getObjDict, writeObjToFile,  getEList, getVarValue, checkRootFile, getYieldFromChain, closestOSDLMassToMZ
 from StopsDilepton.tools.objectSelection import getLeptons, getMuons, getElectrons, getGoodMuons, getGoodElectrons, getGoodLeptons, getJets, getGoodBJets, getGoodJets, isBJet, jetVars, jetId, isBJet 
 from StopsDilepton.tools.addJERScaling import addJERScaling
 from StopsDilepton.tools.leptonFastSimSF import leptonFastSimSF as leptonFastSimSF_
@@ -24,10 +24,10 @@ ROOT.AutoLibraryLoader.enable()
 
 targetLumi = 1000 #pb-1 Which lumi to normalize to
 
-defSampleStr = "SMS_T2tt_mStop200_mLSP1to125"
-#defSampleStr = "TTJets"
+#defSampleStr = "SMS_T2tt_mStop200_mLSP1to125"
+defSampleStr = "DYJetsToLL_M50"
 
-subDir = "/afs/hephy.at/data/rschoefbeck01/cmgTuples/postProcessed_mAODv2_fix" #Output directory -> The first path should go to localInfo (e.g. 'dataPath' or something)
+subDir = "/afs/hephy.at/data/rschoefbeck01/cmgTuples/postProcessed_mAODv2" #Output directory -> The first path should go to localInfo (e.g. 'dataPath' or something)
 
 from optparse import OptionParser
 parser = OptionParser()
@@ -49,9 +49,9 @@ skimCond = "(1)"
 interactive = sys.argv[0].count('ipython')
 if interactive:
   options.small=True
-  options.signal=True
-  options.overwrite=True
-  options.fastSim=True  
+  options.signal=False
+  options.overwrite=False
+  options.fastSim=False  
 
 #Loading samples
 if options.signal:
@@ -187,6 +187,7 @@ if options.skim.lower().count('tiny'):
                        "puppiMet_pt","puppiMet_phi",  
                        "Flag_HBHENoiseFilter", "Flag_HBHENoiseIsoFilter", "Flag_goodVertices", "Flag_CSCTightHaloFilter", "Flag_eeBadScFilter",
                        "HLT_mumuIso", "HLT_ee_DZ", "HLT_mue",
+                       "HLT_3mu", "HLT_3e", "HLT_2e1mu", "HLT_2mu1e",
                        'LepGood_eta','LepGood_pt','LepGood_phi', 'LepGood_dxy', 'LepGood_dz','LepGood_tightId', 'LepGood_pdgId', 'LepGood_mediumMuonId', 'LepGood_miniRelIso', 'LepGood_sip3d', 'LepGood_mvaIdSpring15', 'LepGood_convVeto', 'LepGood_lostHits',
                        'Jet_eta','Jet_pt','Jet_phi','Jet_btagCSV', 'Jet_id' ,
 #                       "nLepGood", "LepGood_*", 
@@ -276,7 +277,7 @@ if not sample.isData:
   aliases.extend(['genMet:met_genPt', 'genMetPhi:met_genPhi'])
 if options.skim.lower().startswith('dilep'):
   newVariables.extend( ['nGoodMuons/I', 'nGoodElectrons/I' ] )
-  newVariables.extend( ['dl_pt/F', 'dl_eta/F', 'dl_phi/F', 'dl_mass/F' ] )
+  newVariables.extend( ['dl_pt/F', 'dl_eta/F', 'dl_phi/F', 'dl_mass/F' , 'mlmZ_mass/F'] )
   newVariables.extend( ['dl_mt2ll/F', 'dl_mt2bb/F', 'dl_mt2blbl/F' ] )
 #  newVariables.extend( ['dl_mtautau/F', 'dl_alpha0/F',  'dl_alpha1/F' ] )
   newVariables.extend( ['l1_pt/F', 'l1_eta/F', 'l1_phi/F', 'l1_pdgId/I', 'l1_index/I' ] )
@@ -430,7 +431,8 @@ for chunk in chunks:
           setattr(s, "nBTags_"+var, len(bJets_[var])) 
 
       if options.skim.lower().startswith('dilep'):
-        leptons = getGoodLeptons(r)
+        leptons_pt10 = getGoodLeptons(r, ptCut=10)
+        leptons      = filter(lambda l:l['pt']>20, leptons_pt10) 
         if options.fastSim:
           s.reweightLeptonFastSimSF     = reduce(mul, [leptonFastSimSF.get3DSF(pdgId=l['pdgId'], pt=l['pt'], eta=l['eta'] , nvtx = r.nVert) for l in leptons], 1)
           s.reweightLeptonFastSimSFUp   = reduce(mul, [leptonFastSimSF.get3DSF(pdgId=l['pdgId'], pt=l['pt'], eta=l['eta'] , nvtx = r.nVert, sigma = +1) for l in leptons], 1)
@@ -469,7 +471,8 @@ for chunk in chunks:
           s.dl_pt  = dl.Pt()
           s.dl_eta = dl.Eta()
           s.dl_phi = dl.Phi()
-          s.dl_mass   = dl.M() 
+          s.dl_mass   = dl.M()
+          s.mlmZ_mass = closestOSDLMassToMZ(leptons_pt10)
           mt2Calc.setLeptons(s.l1_pt, s.l1_eta, s.l1_phi, s.l2_pt, s.l2_eta, s.l2_phi)
           mt2Calc.setMet(r.met_pt,r.met_phi)
           s.dl_mt2ll = mt2Calc.mt2ll()
@@ -524,7 +527,7 @@ for chunk in chunks:
 
 print "Event loop end. Vetoed %i events."%nVetoEvents
 
-if not options.small or interactive: 
+if not options.small: 
   size=0
   counter=0
   files=[]

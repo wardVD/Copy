@@ -137,7 +137,7 @@ class btagEfficiency:
       self.mcEfficiencyFile = effFile
       self.btagWeightNames = btagWeightNames_1b 
       if self.fastSim:
-        self.btagWeightNames += btagWeightNames_SF_1b
+        self.btagWeightNames += btagWeightNames_FS_1b
       print "[btagEfficiency Method %s] Loading scale factors from %s"%(self.method, os.path.expandvars(self.scaleFactorFile))
       self.calib = ROOT.BTagCalibration("csvv2", os.path.expandvars(self.scaleFactorFile))
   ## get SF
