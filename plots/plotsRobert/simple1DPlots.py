@@ -75,9 +75,9 @@ for i in reversed(range(len(cuts)+1)):
 #for i in [len(cuts)]:
   for comb in itertools.combinations(cuts,i):
     if opts.isSS:
-      presel = [("isSS","l1_pdgId==l2_pdgId"), ("mRelIso01", "LepGood_miniRelIso[l1_index]<0.1&&LepGood_miniRelIso[l2_index]<0.1")]
+      presel = [("isSS","l1_pdgId==l2_pdgId"),]# ("mRelIso01", "LepGood_miniRelIso[l1_index]<0.1&&LepGood_miniRelIso[l2_index]<0.1")]
     else:
-      presel = [("isOS","isOS"), ("mRelIso01", "LepGood_miniRelIso[l1_index]<0.1&&LepGood_miniRelIso[l2_index]<0.1")]
+      presel = [("isOS","isOS"),              ]# ("mRelIso01", "LepGood_miniRelIso[l1_index]<0.1&&LepGood_miniRelIso[l2_index]<0.1")]
     presel.extend( comb )
 
     prefix = '_'.join(preprefixes+[opts.mode, opts.zMode, '-'.join([p[0] for p in presel])]) 

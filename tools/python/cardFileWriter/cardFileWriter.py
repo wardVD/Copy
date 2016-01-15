@@ -86,8 +86,8 @@ class cardFileWriter:
       print "Process ", p," is not in bin",b,". Available for ", b,":",self.processes[b]
       return
     if val<0:
-      assert self.expectation[(b, p)]<0.1, "Found negative uncertainty %f for yield %f in %r."%(val, self.expectation[(b, p)], (u,b,p))
-      print "Warning! Found negative uncertainty %f for yield %f in %r. Replacing with 1.0 under the assumption that it is irrelevant (check!)."%(val, self.expectation[(b, p)], (u,b,p))
+#      assert self.expectation[(b, p)]<0.1, "Found negative uncertainty %f for yield %f in %r."%(val, self.expectation[(b, p)], (u,b,p))
+      print "Warning! Found negative uncertainty %f for yield %f in %r. Reversing sign under the assumption that the correlation pattern is irrelevant (check!)."%(val, self.expectation[(b, p)], (u,b,p))
       _val=1.0
     else:
       _val = val

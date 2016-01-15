@@ -1,7 +1,20 @@
 import os
+from optparse import OptionParser
+parser = OptionParser()
+parser.add_option("--metSigMin", dest="metSigMin", default=5, type="int", action="store", help="metSigMin?")
+parser.add_option("--metMin", dest="metMin", default=80, type="int", action="store", help="metMin?")
+(options, args) = parser.parse_args()
+
 from StopsDilepton.analysis.SetupHelpers import allChannels
 from StopsDilepton.analysis.defaultAnalysis import setup, regions, bkgEstimators
 setup.verbose = False
+setup.analysisOutputDir='/afs/hephy.at/data/rschoefbeck01/StopsDilepton/results/test3'
+setup.parameters['metMin'] = options.metMin
+setup.parameters['metSigMin'] = options.metSigMin
+
+for e in bkgEstimators:
+  e.initCache(setup.defaultCacheDir())
+
 from StopsDilepton.samples.cmgTuples_FastSimT2tt_mAODv2_25ns_1l_postProcessed import *
 from StopsDilepton.analysis.MCBasedEstimate import MCBasedEstimate
 from StopsDilepton.analysis.u_float import u_float
@@ -116,17 +129,22 @@ def wrapper(s):
     print "File %s found. Reusing."%outfileName
   res = c.calcLimit(outfileName)
   mStop, mNeu = s['mStop'], s['mNeu']
-  if res: print "Result: mStop %i mNeu %i obs %5.3f exp %5.3f -1sigma %5.3f +1sigma %5.3f"%(mStop, mNeu, res['-1.000'], res['0.500'], res['0.160'], res['0.840'])
+  try:
+    if res: print "Result: mStop %i mNeu %i obs %5.3f exp %5.3f -1sigma %5.3f +1sigma %5.3f"%(mStop, mNeu, res['-1.000'], res['0.500'], res['0.160'], res['0.840'])
+  except:
+    print "Something wrong with the limit: %r"%res
   return mStop, mNeu, res
 
 #jobs = [T2tt_400_0, T2tt_400_50, T2tt_650_250]
 jobs = signals_T2tt
 
-from multiprocessing import Pool
-pool = Pool(processes=1)
-results = pool.map(wrapper, jobs)
-pool.close()
-pool.join()
+#from multiprocessing import Pool
+#pool = Pool(processes=1)
+#results = pool.map(wrapper, jobs)
+#pool.close()
+#pool.join()
+
+results = map(wrapper, jobs)
 
 T2tt_exp      = ROOT.TH2F("T2tt_exp", "T2tt_exp", 1000/25, 0, 1000, 1000/25, 0, 1000)
 T2tt_exp_down = T2tt_exp.Clone("T2tt_exp_down")
@@ -155,7 +173,6 @@ for r in results:
 ofileName = os.path.join(os.path.join(analysisOutputDir, setup.prefix(), 'limits', limitPrefix,'T2tt_limitResults.root'))
 if not os.path.exists(os.path.dirname(ofileName)):
   os.makedirs(os.path.dirname(ofileName))
- 
 
 outfile = ROOT.TFile(ofileName, "recreate")
 T2tt_exp      .Write()
