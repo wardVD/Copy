@@ -1,6 +1,6 @@
 from optparse import OptionParser
 parser = OptionParser()
-parser.add_option("--skipExistingCacheFiles", dest="skipExistingCacheFiles", default = True, action="store_false", help="skipExistingCacheFiles?")
+parser.add_option("--skipIfCachefileExists", dest="skipIfCachefileExists", default = True, action="store_false", help="skipIfCachefileExists?")
 parser.add_option("--metSigMin", dest="metSigMin", default=5, type="int", action="store", help="metSigMin?")
 parser.add_option("--metMin", dest="metMin", default=80, type="int", action="store", help="metMin?")
 parser.add_option("--multiIsoWP", dest="multiIsoWP", default="", type="string", action="store", help="multiIsoWP?")
@@ -24,7 +24,7 @@ for e in bkgEstimators:
 
 setup.verbose=True
 #from multi_estimate import multi_estimate
-from MCBasedEstimate import MCBasedEstimate
+from StopsDilepton.analysis.MCBasedEstimate import MCBasedEstimate
 from StopsDilepton.samples.cmgTuples_FastSimT2tt_mAODv2_25ns_1l_postProcessed import *
 signalEstimators = [ MCBasedEstimate(name=s['name'],    sample={channel:s for channel in allChannels}, cacheDir=setup.defaultCacheDir() ) for s in signals_T2tt ]
 
@@ -43,7 +43,7 @@ def wrapper(args):
 
 for isSignal, bkgEstimators_ in [ [ True, signalEstimators ], [ False, bkgEstimators ] ]:
   for estimate in bkgEstimators_:
-    if options.skipExistingCacheFiles and estimate.cache.cacheFileLoaded: 
+    if options.skipIfCachefileExists and estimate.cache.cacheFileLoaded: 
       print "Cache file %s was loaded -> Skipping."%estimate.cache.filename
       continue
     jobs=[]

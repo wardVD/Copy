@@ -1,5 +1,5 @@
 import pickle, os
-class cache:
+class Cache:
   def __init__(self, filename=None, verbosity=0, overwrite=False):
     self.verbosity=verbosity
     self.cacheFileLoaded = False
