@@ -1,9 +1,6 @@
 from StopsDilepton.tools.localInfo import analysisOutputDir
 import copy
 
-#List some prefixes
-prefixes = []
-
 #Numerical constants
 zMassRange=15
 
@@ -44,7 +41,8 @@ class Setup:
     self.verbose=False
     self.analysisOutputDir = analysisOutputDir
     self.zMassRange   = zMassRange
-    self.prefixes = prefixes
+    self.prefixes = [] 
+    self.externalCuts = [] 
 
     #Default cuts and requirements. Those three things below are used to determine the key in the cache!
     self.parameters      = {'mllMin':default_mllMin, 'metMin':default_metMin, 'metSigMin':default_metSigMin, 'dPhiJetMet':default_dPhiJetMet, 'nJets': default_nJets, 'nBTags': default_nBTags, 'leptonCharges': default_leptonCharges, 'useTriggers':True}
@@ -208,5 +206,6 @@ hadronicSelection: whether to return only the hadronic selection
       filterCut = "(Flag_HBHENoiseFilter&&Flag_goodVertices&&Flag_CSCTightHaloFilter&&Flag_eeBadScFilter&&weight>0)"
       res['cuts'].append(filterCut)
 
+    res['cuts'].extend(self.externalCuts)
     return {'cut':"&&".join(res['cuts']), 'prefix':'-'.join(res['prefixes']), 'weightStr':"*".join([self.sys['weight']]+res['reweight'])} 
 

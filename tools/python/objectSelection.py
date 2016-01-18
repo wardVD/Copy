@@ -57,18 +57,19 @@ def looseMuIDString(ptCut=20, absEtaCut=2.4):
   string = 'Sum$('+'&&'.join(string)+')'
   return string
 
-multiIsoWP = {'VL':{'mRelIso':0.25, 'ptRatioV2':0.67, 'ptRelV2':4.4},
-              'L' :{'mRelIso':0.20, 'ptRatioV2':0.69, 'ptRelV2':6.0},
-              'M' :{'mRelIso':0.16, 'ptRatioV2':0.76, 'ptRelV2':7.2},
-              'T' :{'mRelIso':0.12, 'ptRatioV2':0.80, 'ptRelV2':7.2},
-              'VT':{'mRelIso':0.09, 'ptRatioV2':0.84, 'ptRelV2':7.2},
+multiIsoWP = {'VL':{'mRelIso':0.25, 'ptRatiov2':0.67, 'ptRelv2':4.4},
+              'L' :{'mRelIso':0.20, 'ptRatiov2':0.69, 'ptRelv2':6.0},
+              'M' :{'mRelIso':0.16, 'ptRatiov2':0.76, 'ptRelv2':7.2},
+              'T' :{'mRelIso':0.12, 'ptRatiov2':0.80, 'ptRelv2':7.2},
+              'VT':{'mRelIso':0.09, 'ptRatiov2':0.84, 'ptRelv2':7.2},
               }
 def multiIsoLepString(wp, i):
   assert wp in multiIsoWP.keys(), "Unknown MultiIso WP. Use one of %s"%",".join(multiIsoWP.keys())
   if type(i)==type(()) or type(i)==type([]):
     return "&&".join([multiIsoLepString(wp,j) for j in i])
-  return "LepGood_miniRelIso["+str(i)+"]<"+str(multiIsoWP[wp]['mRelIso'])+"&&"\
-        +"(LepGood_jetPtRatioV2["+str(i)+"]>"+str(multiIsoWP[wp]['ptRatioV2'])+"||LepGood_jetPtRelV2["+str(i)+"]>"+str(multiIsoWP[wp]['ptRelV2'])+")"
+  stri = str(i) if type(i)==type("") else i
+  return "LepGood_miniRelIso["+stri+"]<"+str(multiIsoWP[wp]['mRelIso'])+"&&"\
+        +"(LepGood_jetPtRatiov2["+stri+"]>"+str(multiIsoWP[wp]['ptRatiov2'])+"||LepGood_jetPtRelv2["+stri+"]>"+str(multiIsoWP[wp]['ptRelv2'])+")"
 
 def cmgMVAEleID(l,mva_cuts):
   aeta = abs(l["eta"])

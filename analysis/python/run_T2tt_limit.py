@@ -3,6 +3,7 @@ from optparse import OptionParser
 parser = OptionParser()
 parser.add_option("--metSigMin", dest="metSigMin", default=5, type="int", action="store", help="metSigMin?")
 parser.add_option("--metMin", dest="metMin", default=80, type="int", action="store", help="metMin?")
+parser.add_option("--multiIsoWP", dest="multiIsoWP", default="", type="string", action="store", help="multiIsoWP?")
 (options, args) = parser.parse_args()
 
 from StopsDilepton.analysis.SetupHelpers import allChannels
@@ -11,6 +12,12 @@ setup.verbose = False
 setup.analysisOutputDir='/afs/hephy.at/data/rschoefbeck01/StopsDilepton/results/test3'
 setup.parameters['metMin'] = options.metMin
 setup.parameters['metSigMin'] = options.metSigMin
+if options.multiIsoWP!="":
+  multiIsoWPs = ['VL', 'L', 'M', 'T', 'VT']
+  assert options.multiIsoWP in multiIsoWPs, "MultiIsoWP not defined. Use one of %s"%",".join(multiIsoWPs)
+  from StopsDilepton.tools.objectSelection import multiIsoLepString
+  setup.externalCuts.append(multiIsoLepString(options.multiIsoWP, ('l1_index','l2_index')))
+  setup.prefixes.append('multiIso'+options.multiIsoWP)
 
 for e in bkgEstimators:
   e.initCache(setup.defaultCacheDir())
@@ -21,7 +28,7 @@ from StopsDilepton.analysis.u_float import u_float
 from math import sqrt
 ##https://twiki.cern.ch/twiki/bin/viewauth/CMS/SUSYSignalSystematicsRun2
 from StopsDilepton.tools.btagEfficiency import btagWeightNames_FS_1b, btagWeightNames_1b
-from StopsDilepton.tools.localInfo import releaseLocation71XC, analysisOutputDir 
+from StopsDilepton.tools.localInfo import releaseLocation71XC 
 from StopsDilepton.tools.cardFileWriter import cardFileWriter
 
 limitPrefix = 'flavSplit_almostAllReg'
@@ -44,8 +51,8 @@ def wrapper(s):
   c.addUncertainty('leptonSF', 'lnN')
 
   eSignal = MCBasedEstimate(name=s['name'],    sample={channel:s for channel in allChannels}, cacheDir=setup.defaultCacheDir() )
-  outfileName = os.path.join(setup.analysisOutputDir,  setup.prefix(), 'cardFiles', limitPrefix, s['name']+'.txt')
-  if not os.path.exists(outfileName) or overWrite:
+  cardFileName = os.path.join(setup.analysisOutputDir,  setup.prefix(), 'cardFiles', limitPrefix, s['name']+'.txt')
+  if not os.path.exists(cardFileName) or overWrite:
     for r in regions:
       for channel in ['MuMu', 'EE', 'EMu']:
 #      for channel in ['all']:
@@ -124,10 +131,10 @@ def wrapper(s):
     #
     c.addUncertainty('Lumi', 'lnN')
     c.specifyFlatUncertainty('Lumi', 1.046)
-    outfileName = c.writeToFile(outfileName)
+    cardFileName = c.writeToFile(cardFileName)
   else:
-    print "File %s found. Reusing."%outfileName
-  res = c.calcLimit(outfileName)
+    print "File %s found. Reusing."%cardFileName
+  res = c.calcLimit(cardFileName)
   mStop, mNeu = s['mStop'], s['mNeu']
   try:
     if res: print "Result: mStop %i mNeu %i obs %5.3f exp %5.3f -1sigma %5.3f +1sigma %5.3f"%(mStop, mNeu, res['-1.000'], res['0.500'], res['0.160'], res['0.840'])
@@ -139,7 +146,7 @@ def wrapper(s):
 jobs = signals_T2tt
 
 #from multiprocessing import Pool
-#pool = Pool(processes=1)
+#pool = Pool(processes=2)
 #results = pool.map(wrapper, jobs)
 #pool.close()
 #pool.join()
@@ -170,14 +177,14 @@ for r in results:
   except:
     print "Something failed for mStop %i mNeu %i"%(mStop, mNeu)
 
-ofileName = os.path.join(os.path.join(analysisOutputDir, setup.prefix(), 'limits', limitPrefix,'T2tt_limitResults.root'))
-if not os.path.exists(os.path.dirname(ofileName)):
-  os.makedirs(os.path.dirname(ofileName))
+limitResultsFilename = os.path.join(os.path.join(setup.analysisOutputDir, setup.prefix(), 'limits', limitPrefix,'T2tt_limitResults.root'))
+if not os.path.exists(os.path.dirname(limitResultsFilename)):
+  os.makedirs(os.path.dirname(limitResultsFilename))
 
-outfile = ROOT.TFile(ofileName, "recreate")
+outfile = ROOT.TFile(limitResultsFilename, "recreate")
 T2tt_exp      .Write()
 T2tt_exp_down .Write() 
 T2tt_exp_up   .Write() 
 T2tt_obs      .Write() 
 outfile.Close()
-print "Written %s"%ofileName
+print "Written %s"%limitResultsFilename

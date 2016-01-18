@@ -3,6 +3,7 @@ parser = OptionParser()
 parser.add_option("--skipExistingCacheFiles", dest="skipExistingCacheFiles", default = True, action="store_false", help="skipExistingCacheFiles?")
 parser.add_option("--metSigMin", dest="metSigMin", default=5, type="int", action="store", help="metSigMin?")
 parser.add_option("--metMin", dest="metMin", default=80, type="int", action="store", help="metMin?")
+parser.add_option("--multiIsoWP", dest="multiIsoWP", default="", type="string", action="store", help="multiIsoWP?")
 (options, args) = parser.parse_args()
 
 from StopsDilepton.analysis.SetupHelpers import allChannels
@@ -10,6 +11,13 @@ from StopsDilepton.analysis.defaultAnalysis import setup, regions, bkgEstimators
 setup.analysisOutputDir='/afs/hephy.at/data/rschoefbeck01/StopsDilepton/results/test3'
 setup.parameters['metMin'] = options.metMin
 setup.parameters['metSigMin'] = options.metSigMin
+
+if options.multiIsoWP!="":
+  multiIsoWPs = ['VL', 'L', 'M', 'T', 'VT']
+  assert options.multiIsoWP in multiIsoWPs, "MultiIsoWP not defined. Use one of %s"%",".join(multiIsoWPs)
+  from StopsDilepton.tools.objectSelection import multiIsoLepString
+  setup.externalCuts.append(multiIsoLepString(options.multiIsoWP, ('l1_index','l2_index')))
+  setup.prefixes.append('multiIso'+options.multiIsoWP)
 
 for e in bkgEstimators:
   e.initCache(setup.defaultCacheDir())
