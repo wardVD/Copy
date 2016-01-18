@@ -1,6 +1,6 @@
 allowedVars = ["dl_mt2ll", "dl_mt2blbl", "dl_mt2bb"]
 from StopsDilepton.analysis.systematics import jmeVariations
-class region:
+class Region:
   def __init__(self, var, val):
     assert type(val)==type(()) and len(val)==2, "Don't know how to make region with this val argument: %r."%val
 #    assert type(var)==type(""), "Argument 'var' must be string"
@@ -36,7 +36,7 @@ class region:
     return self.cutString()
   def __repr__(self):
 #    return self.cutString()
-    return "+".join([ "region('%s', %r)"%(v, self.vals[v]) for v in self.variables()])
+    return "+".join([ "Region('%s', %r)"%(v, self.vals[v]) for v in self.variables()])
   def __hash__(self):
     return hash(repr(self))
   def __eq__(self, other):

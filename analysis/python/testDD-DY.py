@@ -1,4 +1,4 @@
-from StopsDilepton.analysis.region import region
+from StopsDilepton.analysis.Region import Region
 from StopsDilepton.analysis.defaultAnalysis import setup
 
 #Always taking data lumi
@@ -8,7 +8,7 @@ setup.loadChains()
 from StopsDilepton.analysis.DataDrivenDYEstimate import DataDrivenDYEstimate
 estimateDY = DataDrivenDYEstimate(name='DY-DD', cacheDir=setup.defaultCacheDir())
 
-regionDY = region('dl_mt2ll', (140,-1))
+regionDY = Region('dl_mt2ll', (140,-1))
 
 for channel in ['MuMu','EE','EMu']:
   res = estimateDY.cachedEstimate(regionDY,channel,setup)

@@ -1,9 +1,9 @@
-from StopsDilepton.analysis.region import region
+from StopsDilepton.analysis.Region import Region
 
 #Put all sets of regions that are used in the analysis, closure, tables, etc.
 
 def getRegionsFromThresholds(var, vals):
-  return [region(var, (vals[i], vals[i+1])) for i in range(len(vals)-1)]+[region(var, (vals[-1], -1))]
+  return [Region(var, (vals[i], vals[i+1])) for i in range(len(vals)-1)]+[Region(var, (vals[-1], -1))]
 
 regions1D = getRegionsFromThresholds('dl_mt2ll', [140, 240])
 

@@ -1,6 +1,6 @@
 from optparse import OptionParser
 parser = OptionParser()
-parser.add_option("--skipIfCachefileExists", dest="skipIfCachefileExists", default = True, action="store_false", help="skipIfCachefileExists?")
+parser.add_option("--dontSkipIfCachefileExists", dest="dontSkipIfCachefileExists", default = False, action="store_true", help="dontSkipIfCachefileExists?")
 parser.add_option("--metSigMin", dest="metSigMin", default=5, type="int", action="store", help="metSigMin?")
 parser.add_option("--metMin", dest="metMin", default=80, type="int", action="store", help="metMin?")
 parser.add_option("--multiIsoWP", dest="multiIsoWP", default="", type="string", action="store", help="multiIsoWP?")
@@ -43,7 +43,7 @@ def wrapper(args):
 
 for isSignal, bkgEstimators_ in [ [ True, signalEstimators ], [ False, bkgEstimators ] ]:
   for estimate in bkgEstimators_:
-    if options.skipIfCachefileExists and estimate.cache.cacheFileLoaded: 
+    if not options.dontSkipIfCachefileExists and estimate.cache.cacheFileLoaded: 
       print "Cache file %s was loaded -> Skipping."%estimate.cache.filename
       continue
     jobs=[]
