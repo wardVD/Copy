@@ -1,3 +1,4 @@
+import shutil
 class cardFileWriter:
   def __init__(self):
     self.reset()
@@ -86,8 +87,8 @@ class cardFileWriter:
       print "Process ", p," is not in bin",b,". Available for ", b,":",self.processes[b]
       return
     if val<0:
-      assert self.expectation[(b, p)]<0.1, "Found negative uncertainty %f for yield %f in %r."%(val, self.expectation[(b, p)], (u,b,p))
-      print "Warning! Found negative uncertainty %f for yield %f in %r. Replacing with 1.0 under the assumption that it is irrelevant (check!)."%(val, self.expectation[(b, p)], (u,b,p))
+#      assert self.expectation[(b, p)]<0.1, "Found negative uncertainty %f for yield %f in %r."%(val, self.expectation[(b, p)], (u,b,p))
+      print "Warning! Found negative uncertainty %f for yield %f in %r. Reversing sign under the assumption that the correlation pattern is irrelevant (check!)."%(val, self.expectation[(b, p)], (u,b,p))
       _val=1.0
     else:
       _val = val
@@ -196,32 +197,34 @@ class cardFileWriter:
     f.Close()
     return limit
 
-  def calcLimit(self, fname="", options=""):
+  def calcLimit(self, fname=None, options=""):
     import uuid, os 
     uniqueDirname="."
     unique=False
-    if fname=="":
-      uniqueDirname = str(uuid.uuid4())
-      unique=True
-      os.system('mkdir '+uniqueDirname)
-      fname = str(uuid.uuid4())+".txt"
-      self.writeToFile(uniqueDirname+"/"+fname)
-    else:
-      assert os.path.exists(fname), "File not found: %s"%fname 
-    print "pushd "+self.releaseLocation+";eval `scramv1 runtime -sh`;popd;cd "+uniqueDirname+";combine --saveWorkspace -M Asymptotic "+fname
-    os.system("pushd "+self.releaseLocation+";eval `scramv1 runtime -sh`;popd;cd "+uniqueDirname+";combine --saveWorkspace -M Asymptotic "+fname)
+    ustr = str(uuid.uuid4())
+    uniqueDirname = os.path.join(self.releaseLocation, ustr)
+    print "Creating %s"%uniqueDirname
+    if not os.path.exists(uniqueDirname): os.makedirs(uniqueDirname) 
+
+    filename = fname if fname else os.path.join(uniqueDirname, ustr+".txt")
+    filename = os.path.abspath(filename)
+    resultFilename = filename.replace('.txt','')+'.root'
+    self.writeToFile( filename )
+
+    assert os.path.exists(filename), "File not found: %s"%filename 
+
+    print "cd "+uniqueDirname+";eval `scramv1 runtime -sh`;combine --saveWorkspace -M Asymptotic "+filename
+    os.system("cd "+uniqueDirname+";eval `scramv1 runtime -sh`;combine --saveWorkspace -M Asymptotic "+filename)
+    tempResFile = uniqueDirname+"/higgsCombineTest.Asymptotic.mH120.root"
     try:
-      res= self.readResFile(uniqueDirname+"/higgsCombineTest.Asymptotic.mH120.root")
+      res= self.readResFile(tempResFile)
     except:
       res=None
-      print "Did not succeed."
-    os.system("rm -rf roostats-*")
-    if unique:
-       os.system("rm -rf "+uniqueDirname)
-    else:
-      if res:
-        os.system("cp higgsCombineTest.Asymptotic.mH120.root "+fname.replace('.txt','')+'.root')
+      print "[cardFileWrite] Did not succeed reeding result."
+    if res:
+      shutil.copyfile(tempResFile, resultFilename)
     
+    if os.path.exists(uniqueDirname): shutil.rmtree(uniqueDirname)
     return res
 
 

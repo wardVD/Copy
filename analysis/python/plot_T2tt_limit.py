@@ -1,24 +1,34 @@
 import ROOT
-
-import sys, ctypes
-
+import sys, ctypes, os
 from StopsDilepton.tools.helpers import getObjFromFile
 #from StopsDilepton.tools.tdrStyle import tdrStyle
 #tdrStyle(padRightMargin=0.15)
 from StopsDilepton.tools.interpolate import interpolate, rebin
 from StopsDilepton.tools.niceColorPalette import niceColorPalette
+from StopsDilepton.tools.localInfo import plotDir
 
 #ifile = '/afs/hephy.at/data/rschoefbeck01/StopsDilepton/results/test/isOS-nJets2p-nbtag1p-met80-metSig5-dPhiJet0-dPhiJet-mll20/limits/T2tt.root'
 
 limitPosFix='2'
-ifile = "/afs/hephy.at/data/rschoefbeck01/StopsDilepton/results/test/isOS-nJets2p-nbtag1p-met80-metSig5-dPhiJet0-dPhiJet-mll20/limits/flavSplit_almostAllReg/T2tt_limitResults.root"
-ofileName = '/afs/hephy.at/user/r/rschoefbeck/www/etc/T2tt_flavSplit_almostAllReg_'+limitPosFix+'_'
+#ifile = "/afs/hephy.at/data/rschoefbeck01/StopsDilepton/results/test/isOS-nJets2p-nbtag1p-met80-metSig5-dPhiJet0-dPhiJet-mll20/limits/flavSplit_almostAllReg/T2tt_limitResults.root"
+#ifile = "/afs/hephy.at/data/rschoefbeck01/StopsDilepton/results/test/isOS-nJets2p-nbtag1p-met60-metSig3-dPhiJet0-dPhiJet-mll20/limits/flavSplit_almostAllReg/T2tt_limitResults.root"
 
-T2tt_exp        = getObjFromFile(ifile, "T2tt_exp")
-T2tt_exp_up     = getObjFromFile(ifile, "T2tt_exp_up")
-T2tt_exp_down   = getObjFromFile(ifile, "T2tt_exp_down")
+from optparse import OptionParser
+parser = OptionParser()
+parser.add_option("--file", dest="filename", default="", type="string", action="store", help="Which file?")
+(options, args) = parser.parse_args()
 
-T2tt_obs        = getObjFromFile(ifile, "T2tt_exp").Clone('T2tt_obs') #FIXME!!! This is just for now...
+#ofilename = '/afs/hephy.at/user/r/rschoefbeck/www/etc/T2tt_flavSplit_almostAllReg_'+limitPosFix+'_'
+ifs = options.filename.split('/')
+ofilename = os.path.join(plotDir, 'T2tt', ifs[-4], ifs[-2], 'T2tt_limit')
+if not os.path.exists(os.path.dirname(ofilename)):
+  os.makedirs(os.path.dirname(ofilename))
+
+T2tt_exp        = getObjFromFile(options.filename, "T2tt_exp")
+T2tt_exp_up     = getObjFromFile(options.filename, "T2tt_exp_up")
+T2tt_exp_down   = getObjFromFile(options.filename, "T2tt_exp_down")
+
+T2tt_obs        = getObjFromFile(options.filename, "T2tt_exp").Clone('T2tt_obs') #FIXME!!! This is just for now...
 T2tt_obs_UL     = T2tt_obs.Clone("T2tt_obs_UL") 
 #theory uncertainty on observed limit
 T2tt_obs_up   = T2tt_obs.Clone("T2tt_obs_up") 
@@ -140,14 +150,15 @@ cleanContour(contour_obs_down)
 for g in [contour_exp, contour_exp_up, contour_exp_down, contour_obs_up, contour_obs_down]:
   g.Draw('same')
 
-c1.Print(ofileName+'.png')
+c1.Print(ofilename+'.png')
+
 from StopsDilepton.PlotsSMS.inputFile import inputFile
 from StopsDilepton.PlotsSMS.smsPlotXSEC import smsPlotXSEC
 from StopsDilepton.PlotsSMS.smsPlotCONT import smsPlotCONT
 from StopsDilepton.PlotsSMS.smsPlotBrazil import smsPlotBrazil
 
-tempFileName = "tmp.root"
-temp = ROOT.TFile(tempFileName,"recreate")
+tempfilename = "tmp.root"
+temp = ROOT.TFile(tempfilename,"recreate")
 T2tt_obs_UL_int.Clone("T2tt_temperature").Write()
 contour_exp.Write()
 contour_exp_up.Write()
@@ -160,7 +171,7 @@ temp.Close()
 # read input arguments
 modelname = "T2tt" 
 analysisLabel = "SUS-16-NaN" 
-outputname = ofileName 
+outputname = ofilename 
 
 # read the config file
 fileIN = inputFile('T2tt_limit.cfg')

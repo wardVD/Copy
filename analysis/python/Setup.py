@@ -1,9 +1,6 @@
 from StopsDilepton.tools.localInfo import analysisOutputDir
 import copy
 
-#List some prefixes
-prefixes = []
-
 #Numerical constants
 zMassRange=15
 
@@ -39,13 +36,13 @@ default_nBTags = (1, -1)
 default_leptonCharges = "isOS"
 default_useTriggers = True
 
-
 class Setup:
   def __init__(self):
     self.verbose=False
     self.analysisOutputDir = analysisOutputDir
     self.zMassRange   = zMassRange
-    self.prefixes = prefixes
+    self.prefixes = [] 
+    self.externalCuts = [] 
 
     #Default cuts and requirements. Those three things below are used to determine the key in the cache!
     self.parameters      = {'mllMin':default_mllMin, 'metMin':default_metMin, 'metSigMin':default_metSigMin, 'dPhiJetMet':default_dPhiJetMet, 'nJets': default_nJets, 'nBTags': default_nBTags, 'leptonCharges': default_leptonCharges, 'useTriggers':True}
@@ -68,7 +65,7 @@ class Setup:
   def prefix(self):
     return '_'.join(self.prefixes+[self.preselection('MC')['prefix']])
 
-  def getDefaultCacheDir(self):
+  def defaultCacheDir(self):
     return os.path.join(self.analysisOutputDir, self.prefix(), 'cacheFiles')
 
   #Clone the setup and optinally modify the systematic variation
@@ -209,7 +206,7 @@ hadronicSelection: whether to return only the hadronic selection
       filterCut = "(Flag_HBHENoiseFilter&&Flag_goodVertices&&Flag_CSCTightHaloFilter&&Flag_eeBadScFilter&&weight>0)"
       res['cuts'].append(filterCut)
 
-    print res['cuts']
+    res['cuts'].extend(self.externalCuts)
 
     return {'cut':"&&".join(res['cuts']), 'prefix':'-'.join(res['prefixes']), 'weightStr':"*".join([self.sys['weight']]+res['reweight'])} 
 

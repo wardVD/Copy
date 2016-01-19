@@ -26,19 +26,22 @@ btagVariationWeights = [
 import os
 import abc
 from math import sqrt
-from StopsDilepton.analysis.cache import cache
+from StopsDilepton.analysis.Cache import Cache
 import json
 class SystematicBaseClass:
   __metaclass__ = abc.ABCMeta
 
   def __init__(self, name, cacheDir=None):
     self.name = name
+    self.initCache(cacheDir)
+
+  def initCache(self, cacheDir):
     if cacheDir:
       self.cacheDir=cacheDir
       cacheFileName = os.path.join(cacheDir, self.name+'.pkl')
       if not os.path.exists(os.path.dirname(cacheFileName)):
         os.makedirs(os.path.dirname(cacheFileName))
-      self.cache = cache(cacheFileName, verbosity=2)
+      self.cache = Cache(cacheFileName, verbosity=2)
     else:
       self.cache=None
 

@@ -46,17 +46,30 @@ def looseMuID(l, ptCut=20, absEtaCut=2.4):
 
 def looseMuIDString(ptCut=20, absEtaCut=2.4):
   string = []
-  LepString = "LepGood_"
-  string.append(LepString+"pt>="+str(ptCut))
-  string.append("abs("+LepString+"pdgId)==13")
-  string.append("abs("+LepString+"eta)<"+str(absEtaCut))
-  string.append(LepString+"mediumMuonId=="+str(Muon_mediumMuonId))
-  string.append(LepString+"miniRelIso<"+str(Muon_miniRelIso))
-  string.append(LepString+"sip3d<"+str(Muon_sip3d))
-  string.append("abs("+LepString+"dxy)<"+str(Muon_dxy))
-  string.append("abs("+LepString+"dz)<"+str(Muon_dz))
+  string.append("LepGood_pt>="+str(ptCut))
+  string.append("abs("+"LepGood_pdgId)==13")
+  string.append("abs("+"LepGood_eta)<"+str(absEtaCut))
+  string.append("LepGood_mediumMuonId=="+str(Muon_mediumMuonId))
+  string.append("LepGood_miniRelIso<"+str(Muon_miniRelIso))
+  string.append("LepGood_sip3d<"+str(Muon_sip3d))
+  string.append("abs("+"LepGood_dxy)<"+str(Muon_dxy))
+  string.append("abs("+"LepGood_dz)<"+str(Muon_dz))
   string = 'Sum$('+'&&'.join(string)+')'
   return string
+
+multiIsoWP = {'VL':{'mRelIso':0.25, 'ptRatiov2':0.67, 'ptRelv2':4.4},
+              'L' :{'mRelIso':0.20, 'ptRatiov2':0.69, 'ptRelv2':6.0},
+              'M' :{'mRelIso':0.16, 'ptRatiov2':0.76, 'ptRelv2':7.2},
+              'T' :{'mRelIso':0.12, 'ptRatiov2':0.80, 'ptRelv2':7.2},
+              'VT':{'mRelIso':0.09, 'ptRatiov2':0.84, 'ptRelv2':7.2},
+              }
+def multiIsoLepString(wp, i):
+  assert wp in multiIsoWP.keys(), "Unknown MultiIso WP. Use one of %s"%",".join(multiIsoWP.keys())
+  if type(i)==type(()) or type(i)==type([]):
+    return "&&".join([multiIsoLepString(wp,j) for j in i])
+  stri = str(i) if type(i)==type("") else i
+  return "LepGood_miniRelIso["+stri+"]<"+str(multiIsoWP[wp]['mRelIso'])+"&&"\
+        +"(LepGood_jetPtRatiov2["+stri+"]>"+str(multiIsoWP[wp]['ptRatiov2'])+"||LepGood_jetPtRelv2["+stri+"]>"+str(multiIsoWP[wp]['ptRelv2'])+")"
 
 def cmgMVAEleID(l,mva_cuts):
   aeta = abs(l["eta"])
@@ -97,17 +110,16 @@ def looseEleID(l, ptCut=20, absEtaCut=2.4):
 
 def looseEleIDString(ptCut=20, absEtaCut=2.4):
   string = []
-  LepString = "LepGood_"
-  string.append(LepString+"pt>="+str(ptCut))
-  string.append("abs("+LepString+"eta)<"+str(absEtaCut))
-  string.append("abs("+LepString+"pdgId)==11")
+  string.append("LepGood_pt>="+str(ptCut))
+  string.append("abs("+"LepGood_eta)<"+str(absEtaCut))
+  string.append("abs("+"LepGood_pdgId)==11")
   string.append(cmgMVAEleIDString(ele_MVAID_cuts_tight))
-  string.append(LepString+"miniRelIso<"+str(Ele_miniRelIso))
-  string.append(LepString+"convVeto")
-  string.append(LepString+"lostHits=="+str(Ele_lostHits))
-  string.append(LepString+"sip3d<"+str(Ele_sip3d))
-  string.append("abs("+LepString+"dxy)<"+str(Ele_dxy))
-  string.append("abs("+LepString+"dz)<"+str(Ele_dz))
+  string.append("LepGood_miniRelIso<"+str(Ele_miniRelIso))
+  string.append("LepGood_convVeto")
+  string.append("LepGood_lostHits=="+str(Ele_lostHits))
+  string.append("LepGood_sip3d<"+str(Ele_sip3d))
+  string.append("abs(LepGood_dxy)<"+str(Ele_dxy))
+  string.append("abs(LepGood_dz)<"+str(Ele_dz))
   string = 'Sum$('+'&&'.join(string)+')'
   return string
 

@@ -1,4 +1,4 @@
-from StopsDilepton.analysis.region import region
+from StopsDilepton.analysis.Region import Region
 from StopsDilepton.analysis.defaultAnalysis import setup
 
 #Always taking data lumi
@@ -10,7 +10,7 @@ setup.verbose = True
 
 estimateTTZ = DataDrivenTTZEstimate(name='TTZ-DD', cacheDir=None)
 
-regionTTZ = region('dl_mt2ll', (0,-1))
+regionTTZ = Region('dl_mt2ll', (0,-1))
 
 for channel in ['MuMu']:
   res = estimateTTZ.cachedEstimate(regionTTZ,channel,setup)
