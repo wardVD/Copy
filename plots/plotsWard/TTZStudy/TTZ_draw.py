@@ -29,8 +29,6 @@ from StopsDilepton.samples.cmgTuples_Data25ns_mAODv2_postProcessed import *
 #######################################################
 makedraw1D = True
 makeTexFile = True
-mt2llcutscaling = False
-noscaling = False
 
 MedBtagcoeff       = 0.89
 LooseBtagcoeff     = 0.605
@@ -39,9 +37,9 @@ metsignifcut       = 0.
 dphicut            = 0.
 mllcut             = 0
 mt2llcut           = 100.
-njetscut           = [">=4",'2m']
-nMedBjetscut       = [">=2",'1m']
+njetscut           = [">=4",'4m']
 nLooseBjetscut     = [">=2",'2m']
+nMedBjetscut       = [">=0",'0m']
 
 
 presel_met         = 'met_pt>'+str(metcut)
@@ -50,6 +48,7 @@ presel_nMedBjet    = 'nBTags'+nMedBjetscut[0]
 presel_nLooseBjet  = 'Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id&&Jet_btagCSV>'+str(LooseBtagcoeff)+')'+nLooseBjetscut[0]
 presel_metsig      = 'met_pt/sqrt(Sum$(Jet_pt*(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id)))>'+str(metsignifcut)
 presel_dPhi        = 'cos(met_phi-Jet_phi[0])<cos('+str(dphicut)+')&&cos(met_phi-Jet_phi[1])<cos('+str(dphicut)+')'
+presel_mlmZ        = "(abs(mlmZ_mass-91.2)<10)"
 
 data = [DoubleMuon_Run2015D,DoubleEG_Run2015D,MuonEG_Run2015D]
 
@@ -62,9 +61,9 @@ luminosity = data[0]["lumi"]
 
 datacut = "(Flag_HBHENoiseFilter&&Flag_goodVertices&&Flag_CSCTightHaloFilter&&Flag_eeBadScFilter&&weight>0)"
 
-preselection = presel_njet+'&&'+presel_nLooseBjet+'&&'+presel_nMedBjet+'&&'+presel_met+'&&'+presel_metsig+'&&'+presel_dPhi
+preselection = presel_njet+'&&'+presel_nLooseBjet+'&&'+presel_nMedBjet+'&&'+presel_met+'&&'+presel_metsig+'&&'+presel_dPhi+'&&'+presel_mlmZ
 
-backgrounds = [DY_HT_LO,TTJets_Lep,TTZ,singleTop, diBoson, triBoson, TTXNoZ, WJetsToLNu_HT]
+backgrounds = [DY_HT_LO,TTJets_Lep,TTZ,singleTop, diBoson, triBoson, TTXNoZ, WJetsToLNu_HT, QCD_HT]
 #backgrounds = [TTZ,TTH,TTW]
 
 #######################################################
@@ -74,7 +73,7 @@ for s in backgrounds+data:
   s['chain'] = getChain(s,histname="")
 
 mt2llbinning = "(15,0,300)"
-mllbinning = "(50,0,150)"
+mllbinning = "(50,0,250)"
 metbinning = "(30,0,300)"
 lepbinning = "(50,0,300)"
 
@@ -119,6 +118,7 @@ print "MuMuMu", MuMuMudatayield
 print "EEE", EEEdatayield
 print "EEMu", EEMudatayield
 print "MuMuE", MuMuEdatayield
+
 
 #######################################################
 #            Start filling in the histograms          #
@@ -199,8 +199,8 @@ histopad =  [0.0, 0.2, 1.0, .95]
 datamcpad = [0.0, 0.0, 1.0, 0.2]
 lumitagpos = [0.4,0.95,0.6,1.0]
 channeltagpos = [0.45,0.8,0.6,0.85]
-legendpos = [0.6,0.6,1.0,1.0]
-scalepos = [0.8,0.95,1.0,1.0]
+legendpos = [0.6,0.6,1.0,0.97]
+scalepos = [0.8,0.95,1.0,0.97]
 
 if makedraw1D:
   for lepton in plots.keys():
@@ -229,10 +229,10 @@ if makedraw1D:
       a.append(pad1)
       pad1.SetBottomMargin(0)
       pad1.SetTopMargin(0)
-      pad1.SetRightMargin(0)
+      pad1.SetRightMargin(0.03)
       pad1.Draw()
       pad1.cd()
-      pad1.SetLogy()
+      #pad1.SetLogy()
 
       datatotal = plots[lepton][plot]['histo'][data[0]["name"]].Clone()
       datatotal.Add(plots[lepton][plot]['histo'][data[1]["name"]])
@@ -240,7 +240,7 @@ if makedraw1D:
 
       datatotal.GetXaxis().SetTitle(plots[lepton][plot]['title'])
       datatotal.GetYaxis().SetTitle("Events (A.U.)")
-      datatotal.GetYaxis().SetRangeUser(0.01,100*bkg_stack.GetMaximum())
+      datatotal.GetYaxis().SetRangeUser(0.01,1.3*bkg_stack.GetMaximum())
       l.AddEntry(datatotal,lepton+" data")
 
       datatotal.SetMarkerColor(ROOT.kBlack)
@@ -271,7 +271,7 @@ if makedraw1D:
       pad2.SetGrid()
       pad2.SetBottomMargin(0.4)
       pad2.SetTopMargin(0)
-      pad2.SetRightMargin(0)
+      pad2.SetRightMargin(0.03)
       pad2.Draw()
       pad2.cd()
 
@@ -283,7 +283,7 @@ if makedraw1D:
       ratio.GetYaxis().SetTitle("Data/Bkg.")
       #ratio.GetYaxis().SetNdivisions(502)
       ratio.GetXaxis().SetTitle(plots[lepton][plot]['title'])
-      ratio.GetXaxis().SetTitleSize(0.2)
+      ratio.GetXaxis().SetTitleSize(0.18)
       ratio.GetYaxis().SetTitleSize(0.18)
       ratio.GetYaxis().SetTitleOffset(0.29)
       ratio.GetXaxis().SetTitleOffset(0.8)
@@ -378,70 +378,4 @@ if makeTexFile:
   output.write('\\end{document}')
 
 
-  #WITH MT2LLCUT
-  output = open("./texfiles/TTZnumbers"+flavour+"_MT2llcut_"+str(mt2llcut)+".tex",'w')
-  
-
-  output.write("\\documentclass[8pt,landscape]{article}" + '\n')
-  output.write("\\usepackage[margin=0.5in]{geometry}" + '\n')
-  output.write("\\usepackage{verbatim}" + '\n')
-  output.write("\\usepackage{hyperref}" + '\n')
-  output.write("\\usepackage{epsfig}" + '\n')
-  output.write("\\usepackage{graphicx}" + '\n')
-  output.write("\\usepackage{epsfig}" + '\n')
-  output.write("\\usepackage{subfigure,              rotating,              rotate}" + '\n')
-  output.write("\\usepackage{relsize}" + '\n')
-  output.write("\\usepackage{fancyheadings}" + '\n')
-  output.write("\usepackage{multirow}" + '\n')
-  output.write("\\usepackage[latin1]{inputenc}" + '\n')
-  output.write("\\usepackage{footnpag}" + '\n')
-  output.write("\\usepackage{enumerate}" + '\n')
-  output.write("\\usepackage{color}" + '\n')
-  output.write("\\newcommand{\\doglobally}[1]{{\\globaldefs=1#1}}" + '\n')
-  output.write("\\begin{document}" + '\n' )
-
-  output.write("\\begin{tabular}{|c||c|c|c||c|c|c|}" + '\n')
-  string = '\\multirow{2}{*}{MT2ll $\\geq$ '+str(mt2llcut)+'}'
-  string2 = ''
-  string3 = ''
-  string4 = ''
-  string4_5 = 'Total Bkg'
-  string5 = 'Scale Factor'
-  output.write("\\hline" + "\n")
-  for lepton in sorted(plots_cut.keys()):
-    string += "& \\multicolumn{3}{|c||}{" +lepton+"}" if (lepton != sorted(plots_cut.keys())[-1]) else "& \\multicolumn{3}{|c|}{" +lepton+"}"
-    for selection in sorted(plots_cut[lepton]["dl_mass"].keys()):
-      string2 += "& " + selection
-  for s in backgrounds:
-    string3 += s["name"].replace("_","\\_") + " & "
-    for lepton in sorted(plots_cut.keys()):
-      for selection in sorted(plots_cut[lepton]["dl_mass"].keys()):
-        nbins    = plots_cut[lepton][plot][selection]['histo'][s["name"]].GetNbinsX()
-        integral = round(plots_cut[lepton][plot][selection]['histo'][s["name"]].IntegralAndError(1,nbins,double),2)
-        plots_cut[lepton][plot][selection]['histo']['totalbkg'] += integral
-        error    = round(double[0],2)
-        string3 += str(integral) + " $\\pm$ " +str(error) if ((selection == sorted(plots_cut[lepton]["dl_mass"].keys())[-1]) and (lepton == sorted(plots_cut.keys())[-1])) else str(integral) + " $\\pm$ " +str(error) + " & "
-    string3 += '\\\\ \\hline \n'
-  for s in data:
-    string4 += s["name"].replace("_","\\_") + " & "
-    for lepton in sorted(plots_cut.keys()):
-      for selection in sorted(plots_cut[lepton]["dl_mass"].keys()):
-        nbins    = plots_cut[lepton][plot][selection]['histo'][s["name"]].GetNbinsX()
-        integral = round(plots_cut[lepton][plot][selection]['histo'][s["name"]].IntegralAndError(1,nbins,double),2)
-        error    = round(double[0],2)
-        string4 += str(integral) + " $\\pm$ " +str(error) if ((selection == sorted(plots_cut[lepton]["dl_mass"].keys())[-1]) and (lepton == sorted(plots_cut.keys())[-1])) else str(integral) + " $\\pm$ " +str(error) + " & "
-    string4 += '\\\\ \\hline \n'
-  for lepton in sorted(plots.keys()):
-    for selection in sorted(plots[lepton]["dl_mass"].keys()):
-      string4_5 += " & " + str(round(plots_cut[lepton][plot][selection]['histo']['totalbkg'],2))
-      string5 += " & " + str(round(plots_cut[lepton][plot][selection]['SF'],2))
-  output.write(string + '\\\\ \\cline{2-7} \n')
-  output.write(string2 + '\\\\ \\hline \\hline \n')
-  output.write(string3)
-  output.write(string4 + "\\hline" + '\n')
-  output.write(string4_5 + " \\\\ \\hline" + '\n')
-  output.write(string5 + " \\\\ \\hline" + '\n')
-
-  output.write("\\end{tabular}" + '\n')
-  output.write('\\end{document}')
 """

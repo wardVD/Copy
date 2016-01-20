@@ -34,7 +34,7 @@ metsignifcut       = 5.
 dphicut            = 0.25
 mllcut             = 20
 ngoodleptons       = 2
-#luminosity         = 1549.
+mt2llcut           = 140.
 flavour            = "MuMu"
 
 presel_met         = 'met_pt>'+str(metcut)
@@ -43,7 +43,7 @@ presel_metsig      = 'met_pt/sqrt(Sum$(Jet_pt*(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_
 presel_mll         = 'dl_mass>'+str(mllcut)
 presel_OS          = 'isOS'
 presel_dPhi        = 'cos(met_phi-Jet_phi[0])<cos('+str(dphicut)+')&&cos(met_phi-Jet_phi[1])<cos('+str(dphicut)+')'
-
+presel_mt2ll       = 'dl_mt2ll>='+str(mt2llcut)
 
 if flavour=="MuMu": 
   presel_flavour     = 'isMuMu==1&&nGoodElectrons==0&&nGoodMuons==2&&HLT_mumuIso'
@@ -56,9 +56,9 @@ luminosity = data[0]["lumi"]
 
 datacut = "(Flag_HBHENoiseFilter&&Flag_goodVertices&&Flag_CSCTightHaloFilter&&Flag_eeBadScFilter&&weight>0)"
 
-preselection = presel_njet+'&&'+presel_OS+'&&'+presel_mll+'&&'+presel_dPhi+'&&'+presel_met+'&&'+presel_metsig+'&&'+presel_flavour
+preselection = presel_njet+'&&'+presel_OS+'&&'+presel_mll+'&&'+presel_dPhi+'&&'+presel_met+'&&'+presel_metsig+'&&'+presel_flavour+'&&'+presel_mt2ll
 
-backgrounds = [DY_HT_LO,TTJets,WJetsToLNu,singleTop,QCD_Mu5,TTX,diBoson]
+backgrounds = [DY_HT_LO,TTJets_Lep,TTZ,singleTop, diBoson, triBoson, TTXNoZ, WJetsToLNu_HT, QCD_HT]
 #backgrounds = [DY_HT_LO,TTJets]
 
 #######################################################
@@ -89,12 +89,19 @@ plots = {\
 #######################################################
 #            Start filling in the histograms          #
 #######################################################
-weight = str(luminosity/1000.)+'*weightPU'+'*reweightTopPt'
+weight = str(luminosity/1000.)+'*weightPU'#+'*reweightTopPt'
 
 datayield_onZ_0b = getYieldFromChain(getChain(data[0],histname=""), cutString = "&&".join([preselection, datacut,'abs(dl_mass-91.2)<=15&&nBTags==0']), weight="1.") 
 bkgyield_onZ_0b  = 0. 
+
+print "&&".join([preselection,'abs(dl_mass-91.2)<=15&&nBTags==0'])
+
 for s in backgrounds:
-  bkgyield_onZ_0b+= getYieldFromChain(getChain(s,histname=""), "&&".join([preselection,'abs(dl_mass-91.2)<=15&&nBTags==0']), weight=weight)
+  
+  bkgyield_onZ_0b_tmp = getYieldFromChain(getChain(s,histname=""), "&&".join([preselection,'abs(dl_mass-91.2)<=15&&nBTags==0']), weight=weight)
+  bkgyield_onZ_0b += bkgyield_onZ_0b_tmp
+
+  print s['name'], ": ", bkgyield_onZ_0b_tmp
 
 datayield_offZ_0b = getYieldFromChain(getChain(data[0],histname=""), cutString = "&&".join([preselection, datacut,'abs(dl_mass-91.2)>15&&nBTags==0']), weight="1.") 
 bkgyield_offZ_0b  = 0. 
@@ -191,11 +198,11 @@ if makedraw1D:
       bkg_stack = ROOT.THStack("bkgs","bkgs")
       
       for b in sorted(backgrounds,key=lambda sort:plots[plot][selection]['histo'][sort['name']].Integral()):
-        #plots[plot][selection]['histo'][b["name"]].SetLineColor(b['color'])
-        if selection == "_onZ_0b": plots[plot][selection]['histo'][b["name"]].Scale(scaleFac_onZ_0b)
-        elif selection == "_offZ_0b": plots[plot][selection]['histo'][b["name"]].Scale(scaleFac_offZ_0b)
-        elif selection == "_onZ_1mb": plots[plot][selection]['histo'][b["name"]].Scale(scaleFac_onZ_1mb)
-        elif selection == "_offZ_1mb": plots[plot][selection]['histo'][b["name"]].Scale(scaleFac_offZ_1mb)
+        ##plots[plot][selection]['histo'][b["name"]].SetLineColor(b['color'])
+        #if selection == "_onZ_0b": plots[plot][selection]['histo'][b["name"]].Scale(scaleFac_onZ_0b)
+        #elif selection == "_offZ_0b": plots[plot][selection]['histo'][b["name"]].Scale(scaleFac_offZ_0b)
+        #elif selection == "_onZ_1mb": plots[plot][selection]['histo'][b["name"]].Scale(scaleFac_onZ_1mb)
+        #elif selection == "_offZ_1mb": plots[plot][selection]['histo'][b["name"]].Scale(scaleFac_offZ_1mb)
         plots[plot][selection]['histo'][b["name"]].SetFillColor(b["color"])
         plots[plot][selection]['histo'][b["name"]].SetMarkerColor(b["color"])
         plots[plot][selection]['histo'][b["name"]].SetMarkerSize(0)      
@@ -236,7 +243,7 @@ if makedraw1D:
 
       l.Draw()
       ROOT.gPad.RedrawAxis()
-      path = plotDir+'/test/DYstudy/njet_2m_isOS'+'_ngoodlep_'+str(ngoodleptons)+'_dPhi_0.25_met_'+str(int(metcut))+'_metsig_'+str(int(metsignifcut))+'_mll_'+str(int(mllcut))+'/'
+      path = plotDir+'/test/DYstudy/njet_2m_isOS'+'_ngoodlep_'+str(ngoodleptons)+'_dPhi_0.25_met_'+str(int(metcut))+'_metsig_'+str(int(metsignifcut))+'_mll_'+str(int(mllcut))+'_mt2ll_'+str(int(mt2llcut))+'/'
       if not os.path.exists(path): os.makedirs(path)
       c1.Print(path+flavour+selection+"_"+plot+".png")
 

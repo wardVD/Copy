@@ -8,10 +8,10 @@ setup.loadChains()
 from StopsDilepton.analysis.DataDrivenTTZEstimate import DataDrivenTTZEstimate
 setup.verbose = True
 
-estimateTTZ = DataDrivenTTZEstimate(name='TTZ-DD', cacheDir=None)
+estimateTTZ = DataDrivenTTZEstimate(name='TTZ-DD', cacheDir=setup.defaultCacheDir())
 
 regionTTZ = Region('dl_mt2ll', (0,-1))
 
-for channel in ['MuMu']:
+for channel in ['MuMu','EE','EMu']:
   res = estimateTTZ.cachedEstimate(regionTTZ,channel,setup)
   print "\n Result in ", channel," for estimate ", estimateTTZ.name, regionTTZ,":", res#, 'jer',jer, 'jec', jec

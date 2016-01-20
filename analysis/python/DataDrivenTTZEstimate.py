@@ -9,9 +9,9 @@ from StopsDilepton.tools.objectSelection import looseMuIDString,looseEleIDString
 class DataDrivenTTZEstimate(SystematicBaseClass):
   def __init__(self, name, cacheDir=None):
     super(DataDrivenTTZEstimate, self).__init__(name, cacheDir=cacheDir)
-    self.nJets = (4,-1) #jet selection
+    self.nJets = (3,-1) #jet selection
     self.nLooseBTags = (2,-1) #loose bjet selection
-    self.nMediumBTags = (1,-1) #bjet selection
+    self.nMediumBTags = None #bjet selection
 #Concrete implementation of abstract method 'estimate' as defined in Systematic
   def _estimate(self, region, channel, setup):
     printHeader("DD TTZ prediction for '%s' channel %s" %(self.name, channel))
@@ -57,9 +57,10 @@ class DataDrivenTTZEstimate(SystematicBaseClass):
         )['cut']
 
       #loose bjet selection added here
-      MC_hadronSelection += '&&Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id&&Jet_btagCSV>0.605)>='+str(self.nLooseBTags[0])
-      data_hadronSelection += '&&Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id&&Jet_btagCSV>0.605)>='+str(self.nLooseBTags[0])
-      if self.nLooseBTags[1]>0:  
+      if self.nLooseBTags[0]>=0:  
+        MC_hadronSelection += '&&Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id&&Jet_btagCSV>0.605)>='+str(self.nLooseBTags[0])
+        data_hadronSelection += '&&Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id&&Jet_btagCSV>0.605)>='+str(self.nLooseBTags[0])
+      if self.nLooseBTags[1]>=0:  
         MC_hadronSelection += '&&Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id&&Jet_btagCSV>0.605)<='+str(self.nLooseBTags[1])
         data_hadronSelection += '&&Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id&&Jet_btagCSV>0.605)<='+str(self.nLooseBTags[1])
 

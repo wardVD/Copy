@@ -66,24 +66,21 @@ piechart = {}
 for cut in mt2llcuts:
   piechart[str(cut)] = {\
     "EE":{\
-      "(0,0)" :{},
-      "(1,0)" :{},
-      "(1,1)" :{},
-      "(>=2,0)" :{},
+      #"(1,0)" :{},
+      #"(1,1)" :{},
+      #"(>=2,0)" :{},
       "(>=2,>=1)" :{},
     },
     "MuMu":{\
-      "(0,0)" :{},
-      "(1,0)" :{},
-      "(1,1)" :{},
-      "(>=2,0)" :{},
+      #"(1,0)" :{},
+      #"(1,1)" :{},
+      #"(>=2,0)" :{},
       "(>=2,>=1)" :{},
     },
     "EMu":{\
-      "(0,0)" :{},
-      "(1,0)" :{},
-      "(1,1)" :{},
-      "(>=2,0)" :{},
+      #"(1,0)" :{},
+      #"(1,1)" :{},
+      #"(>=2,0)" :{},
       "(>=2,>=1)" :{},
     }
 }
@@ -115,41 +112,41 @@ for s in backgrounds:
         
       yield_ = getYieldFromChain(getChain(s,histname=""), cutString = '&&'.join([preselection,flavourcut]),weight=weight)
       
-      yield_0j_0bj = getYieldFromChain(getChain(s,histname=""), cutString = '&&'.join([preselection,"nGoodJets==0","nBTags==0","dl_mt2ll>="+cut,flavourcut]),weight=weight)
-      yield_1j_0bj = getYieldFromChain(getChain(s,histname=""), cutString = '&&'.join([preselection,"nGoodJets==1","nBTags==0","dl_mt2ll>="+cut,flavourcut]),weight=weight)
-      yield_1j_1bj = getYieldFromChain(getChain(s,histname=""), cutString = '&&'.join([preselection,"nGoodJets==1","nBTags==1","dl_mt2ll>="+cut,flavourcut]),weight=weight)
-      yield_2mj_0bj = getYieldFromChain(getChain(s,histname=""), cutString = '&&'.join([preselection,"nGoodJets>=2","nBTags==0","dl_mt2ll>="+cut,flavourcut]),weight=weight)
+      #yield_1j_0bj = getYieldFromChain(getChain(s,histname=""), cutString = '&&'.join([preselection,"nGoodJets==1","nBTags==0","dl_mt2ll>="+cut,flavourcut]),weight=weight)
+      #yield_1j_1bj = getYieldFromChain(getChain(s,histname=""), cutString = '&&'.join([preselection,"nGoodJets==1","nBTags==1","dl_mt2ll>="+cut,flavourcut]),weight=weight)
+      #yield_2mj_0bj = getYieldFromChain(getChain(s,histname=""), cutString = '&&'.join([preselection,"nGoodJets>=2","nBTags==0","dl_mt2ll>="+cut,flavourcut]),weight=weight)
       yield_2mj_1mbj = getYieldFromChain(getChain(s,histname=""), cutString = '&&'.join([preselection,"nGoodJets>=2","nBTags>=1","dl_mt2ll>="+cut,flavourcut]),weight=weight)
 
-      piechart[cut][flavor]["(0,0)"][s["name"]] =     yield_0j_0bj
-      piechart[cut][flavor]["(1,0)"][s["name"]] =     yield_1j_0bj
-      piechart[cut][flavor]["(1,1)"][s["name"]] =     yield_1j_1bj
-      piechart[cut][flavor]["(>=2,0)"][s["name"]] =   yield_2mj_0bj
+      #piechart[cut][flavor]["(1,0)"][s["name"]] =     yield_1j_0bj
+      #piechart[cut][flavor]["(1,1)"][s["name"]] =     yield_1j_1bj
+      #piechart[cut][flavor]["(>=2,0)"][s["name"]] =   yield_2mj_0bj
       piechart[cut][flavor]["(>=2,>=1)"][s["name"]] = yield_2mj_1mbj
+
+print piechart
 
 def makefigure(piechart,mt2llcut):
 
 
-  diBoson["color"]       = "yellow"
+  diBoson["color"]       = "goldenrod"
   WJetsToLNu_HT["color"] = "lightsalmon"
   TTZ["color"]           = "deeppink"
-  TTXNoZ["color"]        = "deeppink"
+  TTXNoZ["color"]        = "red"
   singleTop["color"]     = "grey"
-  QCD_HT["color"]         = "darkred"
+  QCD_HT["color"]         = "indianred"
   DY_HT_LO["color"]      = "yellowgreen"
   TTJets_Lep["color"]    = "cyan"
-  triBoson["color"]      = "gold"
+  triBoson["color"]      = "yellow"
 
 
   piechart = piechart[str(mt2llcut)]
 
-  fig1 = plt.figure(figsize=(11,11))
+  fig1 = plt.figure(figsize=(15,7)) #width,height
   gridx= len(piechart["EE"])+1
   gridy= 5  #jet multiplicity, SF and OF and add one for legend
   colors = [b["color"] for b in sorted(backgrounds)]
   for ikey,key in enumerate(piechart.keys()):
     plt.subplot(gridx,gridy,ikey+2)
-    plt.text(0.5,0.5,key,fontsize=20)
+    plt.text(0.5,0.5,key,fontsize=18)
     plt.axis("off")
     k = ikey+gridy+2
     for icolumn,column in enumerate(sorted(piechart[key].keys())):
@@ -183,7 +180,7 @@ def makefigure(piechart,mt2llcut):
   #plt.legend([yellowgreen_patch,gold_patch,lightskyblue_patch,lightcoral_patch,mediumblue_patch,red_patch,magenta_patch],bkgs)
   plt.legend(patches,bkgs)
   plt.axis('off')
-  plt.savefig('./piecharts/piecharts_mt2llcut_'+str(int(mt2llcut))+'.png')
+  plt.savefig(plotDir+'/test/piecharts/piecharts_mt2llcut_'+str(int(mt2llcut))+'.png')
   
 for cut in mt2llcuts:
   makefigure(piechart,cut)
