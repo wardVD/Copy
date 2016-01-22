@@ -27,8 +27,6 @@ class DataDrivenTTZEstimate(SystematicBaseClass):
       assert abs(1.-setup.lumi[channel]/setup.sample['Data'][channel]['lumi'])<0.01, "Lumi specified in setup %f does not match lumi in data sample %f in channel %s"%(setup.lumi[channel], setup.sample['Data'][channel]['lumi'], channel)
       selection_MC_2l = "&&".join([region.cutString(setup.sys['selectionModifier']), preSelection['cut']])
       weight = preSelection['weightStr']
-      
-      print "weight: ", weight
 
       yield_MC_2l =  setup.lumi[channel]/1000.*u_float(getYieldFromChain(setup.sample['TTZ'][channel]['chain'], cutString = selection_MC_2l, weight=weight, returnError = True) )
       if setup.verbose: print "yield_MC_2l: %s"%yield_MC_2l 

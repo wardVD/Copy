@@ -8,7 +8,7 @@ setup.loadChains()
 from StopsDilepton.analysis.DataDrivenTTZEstimate import DataDrivenTTZEstimate
 setup.verbose = True
 
-estimateTTZ = DataDrivenTTZEstimate(name='TTZ-DD', cacheDir=setup.defaultCacheDir())
+estimateTTZ = DataDrivenTTZEstimate(name='TTZ-DD', cacheDir=None)
 
 regionTTZ = Region('dl_mt2ll', (0,-1))
 

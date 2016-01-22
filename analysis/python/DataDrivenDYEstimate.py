@@ -60,4 +60,6 @@ class DataDrivenDYEstimate(SystematicBaseClass):
       mcRatio = yield_offZ_1b / yield_onZ_0b
       res = mcRatio * normRegYield
 
+      print "mcRatio is: ", mcRatio
+
       return res

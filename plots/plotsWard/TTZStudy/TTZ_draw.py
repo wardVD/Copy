@@ -42,11 +42,11 @@ nLooseBjetscut     = [">=2",'2m']
 nMedBjetscut       = [">=0",'0m']
 
 
-presel_met         = 'met_pt>'+str(metcut)
+presel_met         = 'met_pt>='+str(metcut)
 presel_njet        = 'nGoodJets'+njetscut[0]
 presel_nMedBjet    = 'nBTags'+nMedBjetscut[0]
 presel_nLooseBjet  = 'Sum$(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id&&Jet_btagCSV>'+str(LooseBtagcoeff)+')'+nLooseBjetscut[0]
-presel_metsig      = 'met_pt/sqrt(Sum$(Jet_pt*(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id)))>'+str(metsignifcut)
+presel_metsig      = 'met_pt/sqrt(Sum$(Jet_pt*(Jet_pt>30&&abs(Jet_eta)<2.4&&Jet_id)))>='+str(metsignifcut)
 presel_dPhi        = 'cos(met_phi-Jet_phi[0])<cos('+str(dphicut)+')&&cos(met_phi-Jet_phi[1])<cos('+str(dphicut)+')'
 presel_mlmZ        = "(abs(mlmZ_mass-91.2)<10)"
 
@@ -61,9 +61,10 @@ luminosity = data[0]["lumi"]
 
 datacut = "(Flag_HBHENoiseFilter&&Flag_goodVertices&&Flag_CSCTightHaloFilter&&Flag_eeBadScFilter&&weight>0)"
 
-preselection = presel_njet+'&&'+presel_nLooseBjet+'&&'+presel_nMedBjet+'&&'+presel_met+'&&'+presel_metsig+'&&'+presel_dPhi+'&&'+presel_mlmZ
+preselection = presel_njet+'&&'+presel_nLooseBjet+'&&'+presel_mlmZ
 
-backgrounds = [DY_HT_LO,TTJets_Lep,TTZ,singleTop, diBoson, triBoson, TTXNoZ, WJetsToLNu_HT, QCD_HT]
+#backgrounds = [DY_HT_LO,TTJets_Lep,TTZ,singleTop, diBoson, triBoson, TTXNoZ, WJetsToLNu_HT, QCD_HT]
+backgrounds = [TTZ,TTW,diBoson,TTJets_Lep,singleTop,TTH, TZQ, DY_HT_LO, triBoson, WJetsToLNu_HT, QCD_HT]
 #backgrounds = [TTZ,TTH,TTW]
 
 #######################################################
@@ -72,10 +73,12 @@ backgrounds = [DY_HT_LO,TTJets_Lep,TTZ,singleTop, diBoson, triBoson, TTXNoZ, WJe
 for s in backgrounds+data:
   s['chain'] = getChain(s,histname="")
 
-mt2llbinning = "(15,0,300)"
-mllbinning = "(50,0,250)"
-metbinning = "(30,0,300)"
-lepbinning = "(50,0,300)"
+mt2llbinning = "(5,0,300)"
+metbinning = "(20,0,180)"
+lepbinning = "(10,0,300)"
+njetbinning = "(10,0,10)"
+nbjetbinning = "(5,0,5)"
+mZbinning = "(11,80,102)"
 
 plots = {\
   # '2l':{\
@@ -88,36 +91,34 @@ plots = {\
   #   },
   '3l':{\
     'dl_mt2ll':{'title':'MT2ll (GeV)', 'name':'MT2ll_3l', 'binning': mt2llbinning, 'histo':{'totalbkg':0.,}},
-    'dl_mass':{'title':'M_{ll} (GeV)', 'name':'Mll_3l', 'binning': mllbinning, 'histo':{'totalbkg':0.,}},
     'met_pt':{'title':'MET (GeV)', 'name':'MET_3l', 'binning': metbinning, 'histo':{'totalbkg':0.,}},
     'LepGood_pt[0]':{'title':'l1 p_{T} (GeV)', 'name':'l1pt_3l', 'binning': lepbinning, 'histo':{'totalbkg':0.,}},
     'LepGood_pt[1]':{'title':'l2 p_{T} (GeV)', 'name':'l2pt_3l', 'binning': lepbinning, 'histo':{'totalbkg':0.,}},
     'LepGood_pt[2]':{'title':'l3 p_{T} (GeV)', 'name':'l3pt_3l', 'binning': lepbinning, 'histo':{'totalbkg':0.,}},
+    'nGoodJets':{'title':'jets', 'name':'njets_3l', 'binning': njetbinning, 'histo':{'totalbkg':0.,}},
+    'nBTags':{'title':'bjets', 'name':'nbjets_3l', 'binning': nbjetbinning, 'histo':{'totalbkg':0.,}},
+    'mlmZ_mass':{'title':'mZ (GeV)', 'name':'mZ_3l', 'binning': mZbinning, 'histo':{'totalbkg':0.,}},
     },
   }
 
 weight = str(luminosity/1000.)+'*weightPU'#+'*reweightTopPt'
 
 
-MuMuMudatayield = getYieldFromChain(getChain(data[0],histname=""), cutString = "&&".join([preselection, datacut, presel_flavour_MuMuMu]), weight="1.") 
-EEEdatayield = getYieldFromChain(getChain(data[1],histname=""), cutString = "&&".join([preselection, datacut, presel_flavour_EEE]), weight="1.") 
-MuMuEdatayield = getYieldFromChain(getChain(data[2],histname=""), cutString = "&&".join([preselection, datacut, presel_flavour_MuMuE]), weight="1.") 
-EEMudatayield = getYieldFromChain(getChain(data[2],histname=""), cutString = "&&".join([preselection, datacut, presel_flavour_EEMu]), weight="1.") 
+MuMuMudatayield = getYieldFromChain(getChain(data[0],histname=""), cutString = "&&".join([preselection, datacut, presel_flavour_MuMuMu]), weight="1.",returnError = True) 
+EEEdatayield = getYieldFromChain(getChain(data[1],histname=""), cutString = "&&".join([preselection, datacut, presel_flavour_EEE]), weight="1.",returnError = True) 
+MuMuEdatayield = getYieldFromChain(getChain(data[2],histname=""), cutString = "&&".join([preselection, datacut, presel_flavour_MuMuE]), weight="1.",returnError = True) 
+EEMudatayield = getYieldFromChain(getChain(data[2],histname=""), cutString = "&&".join([preselection, datacut, presel_flavour_EEMu]), weight="1.",returnError = True) 
 
-datayield = MuMuMudatayield+EEEdatayield+MuMuEdatayield+EEMudatayield
+datayield = MuMuMudatayield[0]+EEEdatayield[0]+MuMuEdatayield[0]+EEMudatayield[0]
 
 bkgyield  = 0. 
 
 for s in backgrounds:
-  bkgyield_temp = getYieldFromChain(getChain(s,histname=""), cutString = '&&'.join([preselection,"(("+presel_flavour_MuMuMu+")||("+presel_flavour_EEE+")||("+presel_flavour_EEMu+")||("+presel_flavour_MuMuE+"))"]), weight=weight)
-  bkgyield+= bkgyield_temp 
-  print s['name'], ": ", bkgyield_temp
+  bkgyield_temp = getYieldFromChain(getChain(s,histname=""), cutString = '&&'.join([preselection,"(("+presel_flavour_MuMuMu+")||("+presel_flavour_EEE+")||("+presel_flavour_EEMu+")||("+presel_flavour_MuMuE+"))"]), weight=weight,returnError = True)
+  bkgyield+= bkgyield_temp[0] 
+  print s['name'], ": ", bkgyield_temp[0], "+-", bkgyield_temp[1]
 
 print "datayield: ", datayield, " , bkgyield: ", bkgyield
-print "MuMuMu", MuMuMudatayield
-print "EEE", EEEdatayield
-print "EEMu", EEMudatayield
-print "MuMuE", MuMuEdatayield
 
 
 #######################################################
@@ -141,14 +142,15 @@ for s in backgrounds+data:
         if s in backgrounds:
           chain.Draw(plot+">>"+plot+lepton+"_"+s['name']+plots[lepton][plot]['binning'],"("+weight+")*("+preselection+"&&(("+presel_flavour_MuMuMu+")||("+presel_flavour_EEE+")||("+presel_flavour_EEMu+")||("+presel_flavour_MuMuE+")))")
         elif s == DoubleMuon_Run2015D:
-          chain.Draw(plot+">>"+plot+lepton+"_"+s['name']+plots[lepton][plot]['binning'],"("+weight+")*("+preselection+"&&("+presel_flavour_MuMuMu+"))")
+          chain.Draw(plot+">>"+plot+lepton+"_"+s['name']+plots[lepton][plot]['binning'],"("+weight+")*("+preselection+"&&("+presel_flavour_MuMuMu+"))&&"+datacut)
         elif s == DoubleEG_Run2015D:
-          chain.Draw(plot+">>"+plot+lepton+"_"+s['name']+plots[lepton][plot]['binning'],"("+weight+")*("+preselection+"&&("+presel_flavour_EEE+"))")
+          chain.Draw(plot+">>"+plot+lepton+"_"+s['name']+plots[lepton][plot]['binning'],"("+weight+")*("+preselection+"&&("+presel_flavour_EEE+"))&&"+datacut)
         elif s == MuonEG_Run2015D:
-          chain.Draw(plot+">>"+plot+lepton+"_"+s['name']+plots[lepton][plot]['binning'],"("+weight+")*("+preselection+"&&(("+presel_flavour_EEMu+")||("+presel_flavour_MuMuE+")))")
+          chain.Draw(plot+">>"+plot+lepton+"_"+s['name']+plots[lepton][plot]['binning'],"("+weight+")*("+preselection+"&&(("+presel_flavour_EEMu+")||("+presel_flavour_MuMuE+")))&&"+datacut)
 
         plots[lepton][plot]['histo'][s['name']] = ROOT.gDirectory.Get(plot+lepton+"_"+s['name'])
 
+for s in backgrounds+data:
   #overflow
   for lepton in plots.keys():
     for plot in plots[lepton].keys():  
@@ -164,7 +166,7 @@ for s in backgrounds+data:
         #Remove bins with negative events
       for i in range(nbinsx):
         if plots[lepton][plot]['histo'][s['name']].GetBinContent(i+1) < 0: plots[lepton][plot]['histo'][s['name']].SetBinContent(i+1,0.)
-        
+
 processtime = datetime.now()
 print "Time to process chains: ", processtime - start
 
@@ -199,8 +201,8 @@ histopad =  [0.0, 0.2, 1.0, .95]
 datamcpad = [0.0, 0.0, 1.0, 0.2]
 lumitagpos = [0.4,0.95,0.6,1.0]
 channeltagpos = [0.45,0.8,0.6,0.85]
-legendpos = [0.6,0.6,1.0,0.97]
-scalepos = [0.8,0.95,1.0,0.97]
+legendpos = [0.7,0.6,0.97,1.0]
+scalepos = [0.8,0.95,0.97,1.0]
 
 if makedraw1D:
   for lepton in plots.keys():
@@ -240,7 +242,7 @@ if makedraw1D:
 
       datatotal.GetXaxis().SetTitle(plots[lepton][plot]['title'])
       datatotal.GetYaxis().SetTitle("Events (A.U.)")
-      datatotal.GetYaxis().SetRangeUser(0.01,1.3*bkg_stack.GetMaximum())
+      datatotal.GetYaxis().SetRangeUser(0.01,1.8*bkg_stack.GetMaximum())
       l.AddEntry(datatotal,lepton+" data")
 
       datatotal.SetMarkerColor(ROOT.kBlack)

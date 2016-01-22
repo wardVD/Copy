@@ -83,13 +83,19 @@ plots = {\
     '_onZ_1mb': {'title':'m_{ll} (GeV)', 'name':'Mll_onZ_b>=1', "legend":"(onZ,>0 b-tag)", 'binning': mllbinning, 'histo':{}},
     '_offZ_1mb': {'title':'m_{ll} (GeV)', 'name':'Mll_offZ_b>=1', "legend":"(offZ,>0 b-tag)", 'binning': mllbinning, 'histo':{}},
     },
+  'met':{\
+    '_onZ_0b': {'title':'MET (GeV)', 'name':'MET_onZ_b==0b', "legend":"(onZ,0 b-tag)",'binning': mllbinning, 'histo':{}},
+    '_offZ_0b': {'title':'MET (GeV)', 'name':'MET_offZ_b==0b', "legend":"(offZ,0 b-tag)", 'binning': mllbinning, 'histo':{}},
+    '_onZ_1mb': {'title':'MET (GeV)', 'name':'MET_onZ_b>=1', "legend":"(onZ,>0 b-tag)", 'binning': mllbinning, 'histo':{}},
+    '_offZ_1mb': {'title':'MET (GeV)', 'name':'MET_offZ_b>=1', "legend":"(offZ,>0 b-tag)", 'binning': mllbinning, 'histo':{}},
+    },
   }
 
 
 #######################################################
 #            Start filling in the histograms          #
 #######################################################
-weight = str(luminosity/1000.)+'*weightPU'#+'*reweightTopPt'
+weight = str(luminosity/1000.)+'*weight'#+'*reweightTopPt'
 
 datayield_onZ_0b = getYieldFromChain(getChain(data[0],histname=""), cutString = "&&".join([preselection, datacut,'abs(dl_mass-91.2)<=15&&nBTags==0']), weight="1.") 
 bkgyield_onZ_0b  = 0. 

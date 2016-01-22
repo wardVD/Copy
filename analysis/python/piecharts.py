@@ -61,7 +61,7 @@ for s in backgrounds:
 #######################################################
 #         Define piecharts you want to make           #
 #######################################################
-mt2llcuts = [0.,80.,100.,120.,140.,200.]
+mt2llcuts = [0.,100.,120.,140.]
 piechart = {}
 for cut in mt2llcuts:
   piechart[str(cut)] = {\
@@ -105,12 +105,14 @@ for s in backgrounds:
     for flavor in piechart[cut].keys():
       if flavor == "EE":
         flavourcut = 'isEE==1&&nGoodElectrons==2&&nGoodMuons==0&&HLT_ee_DZ'
+        flavourcut += '&&abs(dl_mass-91.2)>15'
       elif flavor == "EMu":
         flavourcut = 'isEMu==1&&nGoodElectrons==1&&nGoodMuons==1&&HLT_mue'
       elif flavor == "MuMu":
         flavourcut = 'isMuMu==1&&nGoodElectrons==0&&nGoodMuons==2&&HLT_mumuIso'
+        flavourcut += '&&abs(dl_mass-91.2)>15'
         
-      yield_ = getYieldFromChain(getChain(s,histname=""), cutString = '&&'.join([preselection,flavourcut]),weight=weight)
+      print '&&'.join([preselection,"nGoodJets>=2","nBTags>=1","dl_mt2ll>="+cut,flavourcut])
       
       #yield_1j_0bj = getYieldFromChain(getChain(s,histname=""), cutString = '&&'.join([preselection,"nGoodJets==1","nBTags==0","dl_mt2ll>="+cut,flavourcut]),weight=weight)
       #yield_1j_1bj = getYieldFromChain(getChain(s,histname=""), cutString = '&&'.join([preselection,"nGoodJets==1","nBTags==1","dl_mt2ll>="+cut,flavourcut]),weight=weight)
@@ -121,8 +123,6 @@ for s in backgrounds:
       #piechart[cut][flavor]["(1,1)"][s["name"]] =     yield_1j_1bj
       #piechart[cut][flavor]["(>=2,0)"][s["name"]] =   yield_2mj_0bj
       piechart[cut][flavor]["(>=2,>=1)"][s["name"]] = yield_2mj_1mbj
-
-print piechart
 
 def makefigure(piechart,mt2llcut):
 
@@ -140,7 +140,7 @@ def makefigure(piechart,mt2llcut):
 
   piechart = piechart[str(mt2llcut)]
 
-  fig1 = plt.figure(figsize=(15,7)) #width,height
+  fig1 = plt.figure(figsize=(16,6)) #width,height
   gridx= len(piechart["EE"])+1
   gridy= 5  #jet multiplicity, SF and OF and add one for legend
   colors = [b["color"] for b in sorted(backgrounds)]
@@ -166,7 +166,7 @@ def makefigure(piechart,mt2llcut):
   plt.subplot(gridx,gridy,1)
   plt.text(0.5,0.5,"mt2ll>"+str(mt2llcut), fontsize=13)
   plt.axis('off')
-  plt.subplot(gridx,gridy,2*gridy)
+  plt.subplot(gridx,gridy,gridy)
   
   # yellow_patch       = mpatches.Patch(color="yellow",label=bkgs[0])
   # grey_patch         = mpatches.Patch(color='0.75',label=)
